@@ -1,0 +1,334 @@
+# 這是爬取 104 人力銀行資料工程師職缺的 Python 腳本。
+# 適合初學者學習網路爬蟲（Web Scraping）、Selenium 使用、資料處理（Pandas）。
+# 注意：爬蟲可能違反網站政策，請確保合法使用，並尊重網站的 robots.txt。
+# 執行前需安裝所需套件：pip install pandas selenium undetected-chromedriver psutil beautifulsoup4
+
+import pandas as pd  # 用來處理資料表格，像是 Excel 的 Python 版本
+import time  # 用來暫停程式，避免太快被網站偵測
+import random  # 用來產生隨機數字，模擬人類行為
+import argparse  # 用來處理命令列輸入，讓程式更靈活
+from datetime import datetime  # 用來取得當前日期
+import re  # 用來處理文字正則表達式（Regex），例如解析薪資
+from selenium.webdriver.chrome.options import Options  # Selenium 的 Chrome 設定
+from selenium.webdriver.support.ui import WebDriverWait  # 用來等待網頁元素出現
+from selenium.webdriver.support import expected_conditions as EC  # 等待條件的定義
+from selenium.webdriver.common.by import By  # 用來指定網頁元素的尋找方式
+import undetected_chromedriver as uc  # 隱藏 Selenium 的偵測，避開反爬蟲
+import psutil  # 用來管理系統進程，清理 Chrome
+import os  # 用來處理檔案和系統命令
+
+# 在程式開始時清理 Chrome 進程
+# os.system("taskkill /im chrome.exe /f")  # 這行註解掉了，因為 Windows 專用；初學者可視情況開啟，強制關閉 Chrome
+
+# user-agent 列表
+# User-Agent 是瀏覽器的身分證，用不同 UA 可以假裝不同瀏覽器，避開反爬蟲
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:129.0) Gecko/20100101 Firefox/129.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
+]
+
+def parse_arguments():
+    """解析命令列引數"""
+    # argparse 讓你可以從命令提示字元輸入參數，例如 python script.py --start_page 1 --end_page 5
+    # 這對初學者來說很方便，可以不用改程式碼就調整設定
+    parser = argparse.ArgumentParser(description="爬取 104 人力銀行資料工程師職缺所有欄位，儲存為 CSV")
+    parser.add_argument("--base_url", default="https://www.104.com.tw/jobs/search",
+                        help="目標網站的基底 URL")
+    parser.add_argument("--query_params", default="jobcat=2007001022&mode=s",
+                        help="查詢參數，針對資料工程師職缺")  # jobcat=2007001022 是資料工程師的代碼
+    parser.add_argument("--pagination", default="page={page}",
+                        help="分頁參數格式，104 使用 'page={page}'")
+    parser.add_argument("--start_page", type=int, default=1, help="起始頁碼")
+    parser.add_argument("--end_page", type=int, default=1, help="結束頁碼")
+    parser.add_argument("--output_csv", default="job_data.csv", help="輸出 CSV 檔名")
+    parser.add_argument("--headless", action="store_true", default=False,
+                        help="使用 headless 模式運行 Chrome（預設關閉）")  # headless 模式不開瀏覽器視窗，適合伺服器運行
+    return parser.parse_args()
+
+def cleanup_chrome_processes():
+    """清理殞地 Chrome 和 chromedriver 進程"""
+    # 這函式用來殺掉殘留的 Chrome 進程，避免程式卡住
+    # psutil 可以檢查系統所有進程
+    terminated = 0
+    try:
+        for proc in psutil.process_iter(['name']):
+            if proc.info['name'] in ['chrome.exe', 'chromedriver.exe']:
+                proc.kill()
+                terminated += 1
+                print(f"已終止進程: {proc.info['name']} (PID: {proc.pid})")
+        return terminated
+    except Exception as e:
+        print(f"清理進程時發生錯誤: {e}")
+        return terminated
+
+def parse_salary(salary):
+    """解析薪資，提取 min、max、avg 和 note"""
+    # 這函式用 Regex 解析不同格式的薪資文字，例如 "月薪40,000~60,000元"
+    # Regex 是文字匹配的工具，初學者可以想想成搜尋模式
+    if not salary or salary == "待遇面議":
+        return None, None, None, "無薪資資訊"
+
+    # 移除逗號
+    salary = salary.replace(",", "")
+
+    # 月薪範圍（例如 "月薪40,000~60,000元"）
+    match = re.match(r"月薪(\d+)(?:~(\d+))?元", salary)
+    if match:
+        min_salary = int(match.group(1))
+        max_salary = int(match.group(2)) if match.group(2) else None
+        avg_salary = (min_salary + max_salary) / 2 if max_salary else min_salary
+        note = "最低保證薪資" if not max_salary else ""
+        return min_salary, max_salary, avg_salary, note
+
+    # 年薪範圍（例如 "年薪600,000~1,200,000元"）
+    match = re.match(r"年薪(\d+)(?:~(\d+))?元", salary)
+    if match:
+        min_salary = int(match.group(1)) // 12
+        max_salary = int(match.group(2)) // 12 if match.group(2) else None
+        avg_salary = (min_salary + max_salary) / 2 if max_salary else min_salary
+        note = "年薪轉換為月薪"
+        return min_salary, max_salary, avg_salary, note
+
+    # 時薪（例如 "時薪180元"）
+    match = re.match(r"時薪(\d+)元", salary)
+    if match:
+        hourly = int(match.group(1))
+        min_salary = hourly * 8 * 22  # 假設 8 小時 × 22 天
+        max_salary = None
+        avg_salary = min_salary
+        note = "推估（時薪 × 8小時 × 22天）"
+        return min_salary, max_salary, avg_salary, note
+
+    # 日薪（例如 "日薪1,500元"）
+    match = re.match(r"日薪(\d+)元", salary)
+    if match:
+        daily = int(match.group(1))
+        min_salary = daily * 22  # 假設 22 天
+        max_salary = None
+        avg_salary = min_salary
+        note = "推估（日薪 × 22天）"
+        return min_salary, max_salary, avg_salary, note
+
+    return None, None, None, "無法解析薪資格式"
+
+# 104人力銀行search job list
+def download_page(driver, url, max_retries=1):
+    """爬取單頁職缺資料，返回 DataFrame"""
+    # 這是核心函式，用 Selenium 開瀏覽器抓取一頁資料
+    # Selenium 模擬真人瀏覽，適合動態網頁；初學者記得安裝 ChromeDriver
+    for attempt in range(max_retries):
+        try:
+            driver.get(url)  # 開啟網頁
+            time.sleep(10)  # 等待 10 秒，讓網頁載入
+            print(f"頁面標題: {driver.title}")
+
+            # 檢查 Cloudflare
+            if "Just a moment..." in driver.title:
+                print("檢測到 Cloudflare，等待繞過...")
+                time.sleep(random.uniform(180, 240))  # 3-4 分鐘等待
+                print(f"Cloudflare 等待後標題: {driver.title}")
+                print("請在瀏覽器完成 Cloudflare 驗證（若有），然後按 Enter 繼續")
+                input()  # 暫停，等使用者輸入
+
+            # 滾動頁面
+            for _ in range(4):
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # 滾到底部載入更多內容
+                time.sleep(random.uniform(5, 10))  # 隨機等待
+
+            # 存頁面 HTML
+            page_source = driver.page_source  # 取得網頁原始碼
+            with open(f"page_source_attempt_{attempt + 1}.html", "w", encoding="utf-8") as f:
+                f.write(page_source)
+            print(f"已存頁面到 page_source_attempt_{attempt + 1}.html")
+
+            # 用 BeautifulSoup 檢查（學習靜態解析）
+            from bs4 import BeautifulSoup  # BeautifulSoup 是解析 HTML 的工具，比 Selenium 快但不處理 JavaScript
+            soup = BeautifulSoup(page_source, 'html.parser')
+            containers = soup.find_all('div', class_='info-container')
+            dates = soup.find_all('div', class_='date-container')
+            print(f"BeautifulSoup 找到 info-container 數: {len(containers)}")
+            print(f"BeautifulSoup 找到日期元素數: {len(dates)}")
+
+            # 等待穩定選擇器
+            WebDriverWait(driver, 45).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.info-container"))
+            )  # 等待元素出現，最多 45 秒
+            time.sleep(random.uniform(15, 30))  # 額外等待
+
+            job_elements = driver.find_elements(By.CSS_SELECTOR, "div.info-container")  # 找所有職缺區塊
+            print(f"URL: {url}, 找到職缺數: {len(job_elements)}, 嘗試: {attempt + 1}/{max_retries}")
+
+            if len(job_elements) == 0:
+                print("警告：未找到職缺項目，可能選擇器失效或頁面未正確加載")
+                print(f"頁面前 15000 字元:\n{page_source[:15000]}")
+                return pd.DataFrame()  # 返回空 DataFrame
+
+            # 全域抓日期
+            date_elements = driver.find_elements(By.CSS_SELECTOR, "div.date-container")
+            print(f"Selenium 找到日期元素數: {len(date_elements)}")
+
+            data = []  # 存資料的列表
+            for idx, job in enumerate(job_elements):  # 迴圈處理每個職缺
+                row = {}  # 每筆資料的字典
+                # 職缺名稱
+                title_elem = job.find_elements(By.CSS_SELECTOR, "h2 a[data-gtm-joblist=\"職缺-職缺名稱\"]")
+                row["job_title"] = title_elem[0].text.strip() if title_elem else "N/A"
+
+                # 職缺 ID
+                job_id = "N/A"
+                if title_elem and title_elem[0].get_attribute("href"):
+                    href = title_elem[0].get_attribute("href")
+                    match = re.search(r"/job/(\w+)", href)  # 用 Regex 抓 ID
+                    job_id = match.group(1) if match else "N/A"
+                row["job_id"] = job_id
+
+                # 公司名稱
+                company_elem = job.find_elements(By.CSS_SELECTOR, "a[data-gtm-joblist=\"職缺-公司名稱\"]")
+                row["company"] = company_elem[0].text.strip() if company_elem else "N/A"
+
+                # 產業（用 XPath）
+                industry_elem = job.find_elements(By.XPATH, ".//span[contains(@data-gtm-joblist, '職缺-產業')]/a")
+                if industry_elem:
+                    row["industry"] = industry_elem[0].text.strip()  # 直接取 <a> 的文字
+                else:
+                    row["industry"] = "N/A"
+                    print("警告：未找到產業元素")
+
+                # 地區
+                location_elem = job.find_elements(By.CSS_SELECTOR, "div.info-tags a[data-gtm-joblist*=\"職缺-地區\"]")
+                row["location"] = location_elem[0].text.strip() if location_elem else "N/A"
+
+                # 經驗要求
+                experience_elem = job.find_elements(By.CSS_SELECTOR, "div.info-tags a[data-gtm-joblist*=\"職缺-經歷\"]")
+                row["experience"] = experience_elem[0].text.strip() if experience_elem else "N/A"
+
+                # 學歷要求
+                education_elem = job.find_elements(By.CSS_SELECTOR, "div.info-tags a[data-gtm-joblist*=\"職缺-學歷\"]")
+                row["education"] = education_elem[0].text.strip() if education_elem else "N/A"
+
+                # 薪資
+                salary_elem = job.find_elements(By.CSS_SELECTOR, "div.info-tags a[data-gtm-joblist*=\"職缺-薪資\"]")
+                salary = salary_elem[0].text.strip() if salary_elem else "N/A"
+                row["salary"] = salary
+                min_salary, max_salary, avg_salary, salary_note = parse_salary(salary)  # 呼叫解析函式
+                row["salary_min"] = min_salary
+                row["salary_max"] = max_salary
+                row["salary_avg"] = avg_salary
+                row["salary_note"] = salary_note
+
+                # 標籤
+                tags_elem = job.find_elements(By.CSS_SELECTOR, "div.info-othertags a")
+                row["tags"] = ", ".join([tag.text.strip() for tag in tags_elem]) if tags_elem else "N/A"
+
+                # 更新日期和企業認證（全域索引匹配）
+                if idx < len(date_elements):
+                    row["update_date"] = date_elements[idx].text.strip()
+                else:
+                    row["update_date"] = "N/A"
+                    print("警告：日期元素數量不匹配（可能廣告影響）")
+
+                row["source_url"] = url  # 記錄來源網址
+                data.append(row)  # 加到列表
+
+            df = pd.DataFrame(data)  # 轉成 Pandas DataFrame
+            if len(df) < 10:
+                print(f"警告：職缺數量 {len(df)} 低於預期，可能被反爬蟲限制")
+            return df
+        except Exception as e:
+            print(f"請求錯誤，URL: {url}, 錯誤: {e}, 嘗試: {attempt + 1}/{max_retries}")
+            time.sleep(random.uniform(20, 60))  # 等待重試
+            continue
+    return pd.DataFrame()
+
+def save_data(df, output_csv, query_params, page=None, start_page=None):
+    """儲存資料到 CSV，檔案名稱包含日期和 jobcat"""
+    # 這函式處理儲存，包含去重和命名
+    if df.empty:
+        print("無職缺資料可存")
+        return
+
+    # 獲取當前日期，格式為 YYYYMMDD
+    current_date = datetime.now().strftime("%Y%m%d")
+
+    # 從 query_params 提取 jobcat
+    jobcat_match = re.search(r"jobcat=(\w+)", query_params)
+    jobcat = jobcat_match.group(1) if jobcat_match else "unknown"
+    # 可選：簡化 jobcat，只取後4位
+    jobcat_short = jobcat[-4:] if len(jobcat) > 4 else jobcat
+
+    # 動態生成檔案名稱
+    base_name = output_csv.replace(".csv", "")  # 移除 .csv 後綴
+    if page and start_page:
+        filename = f"{base_name}_jobcat_{jobcat_short}_{current_date}_pages_{start_page}_to_{page}.csv"
+    else:
+        filename = f"{base_name}_jobcat_{jobcat_short}_{current_date}.csv"
+
+    df.to_csv(filename, index=False, encoding="utf-8-sig")  # 存成 CSV，utf-8-sig 支援中文
+    print(f"已存為 {filename}")
+
+def main():
+    args = parse_arguments()  # 讀取命令列參數
+
+    options = Options()  # 設定 Chrome 選項
+    options.add_argument(f"user-agent={random.choice(user_agents)}")  # 隨機 UA
+    options.add_argument("--disable-blink-features=AutomationControlled")  # 隱藏自動化
+    options.add_argument("--start-maximized")  # 最大化視窗
+    options.add_argument("--disable-gpu")  # 關閉 GPU，穩定性
+    options.add_argument("--window-size=1920,1080")  # 設定視窗大小
+    options.add_argument("--disable-web-security")  # 關閉安全檢查
+
+    if args.headless:
+        options.add_argument("--headless=new")  # 無頭模式
+
+    driver = None
+    try:
+        driver = uc.Chrome(options=options)  # 啟動瀏覽器
+        print("瀏覽器初始化成功")
+    except Exception as e:
+        print(f"瀏覽器初始化失敗: {e}")
+        return
+
+    all_data = []  # 存所有頁資料
+    try:
+        for page in range(args.start_page, args.end_page + 1):  # 迴圈爬多頁
+            url = f"{args.base_url}?{args.query_params}&{args.pagination.format(page=page)}"  # 組合 URL
+            df_page = download_page(driver, url)  # 爬一頁
+            if not df_page.empty:
+                all_data.append(df_page)
+
+            if (page % 5 == 0 or page == args.end_page) and all_data:  # 每 5 頁存一次
+                df = pd.concat(all_data, ignore_index=True)  # 合併
+                # 去重
+                df.drop_duplicates(subset=['job_id'], keep='first', inplace=True)
+                save_data(df, args.output_csv, args.query_params, page, args.start_page)
+
+            print(f"第 {page} 頁完成")
+            time.sleep(random.uniform(5, 10))  # 頁間等待
+
+        if all_data:
+            df = pd.concat(all_data, ignore_index=True)
+            # 去重
+            df.drop_duplicates(subset=['job_id'], keep='first', inplace=True)
+            save_data(df, args.output_csv, args.query_params)
+        else:
+            print("無職缺資料可存")
+
+    except Exception as e:
+        print(f"程式執行錯誤: {e}")
+    finally:
+        if driver:
+            try:
+                driver.quit()  # 關閉瀏覽器
+                print("瀏覽器已關閉")
+            except Exception as e:
+                print(f"關閉瀏覽器時發生錯誤，已忽略: {e}")
+            try:
+                terminated = cleanup_chrome_processes()  # 清理進程
+                print(f"清理終止 {terminated} 個進程")
+            except Exception as e:
+                print(f"清理進程時發生錯誤，已忽略: {e}")
+
+if __name__ == "__main__":
+    main()  # 程式入口
