@@ -19,6 +19,7 @@ import psutil  # 管理進程（確保導入）
 import os  # 處理檔案
 import json  # 儲存斷點和 JSON 輸出
 from bs4 import BeautifulSoup  # 用於解析 HTML，檢查頁面內容
+import logging
 
 # User-Agent 列表，模擬不同瀏覽器
 user_agents = [
@@ -37,9 +38,9 @@ def parse_arguments():
     parser.add_argument("--pagination", default="page={page}",
                         help="分頁參數，104 用 page={page}")
     parser.add_argument("--start_page", type=int, default=1, help="起始頁碼")
-    parser.add_argument("--end_page", type=int, default=1, help="結束頁碼")
-    parser.add_argument("--output_csv", default="job_data_combined.csv", help="輸出 CSV 檔名")
-    parser.add_argument("--existing_csv", default=None, help="現有 CSV，用來比對 job_id")
+    parser.add_argument("--end_page", type=int, default=20, help="結束頁碼")
+    parser.add_argument("--output_csv", default="job_data.csv", help="輸出 CSV 檔名")
+    parser.add_argument("--existing_csv", default="job_data_jobcat_1022.csv", help="現有 CSV，用來比對 job_id")
     parser.add_argument("--headless", action="store_true", default=False,
                         help="使用 headless 模式（不開視窗）")
     return parser.parse_args()
@@ -428,13 +429,17 @@ def save_data(data, output_csv, query_params, page=None, start_page=None):
     jobcat = jobcat_match.group(1) if jobcat_match else "unknown"
     jobcat_short = jobcat[-4:] if len(jobcat) > 4 else jobcat
 
+
     base_name = output_csv.replace(".csv", "")
-    if page and start_page:
-        filename = f"{base_name}_jobcat_{jobcat_short}_{current_date}_pages_{start_page}_to_{page}.csv"
-        json_filename = f"{base_name}_jobcat_{jobcat_short}_{current_date}_pages_{start_page}_to_{page}.json"
-    else:
-        filename = f"{base_name}_jobcat_{jobcat_short}_{current_date}.csv"
-        json_filename = f"{base_name}_jobcat_{jobcat_short}_{current_date}.json"
+    filename = f"{base_name}_jobcat_{jobcat_short}.csv"
+    json_filename = f"{base_name}_jobcat_{jobcat_short}.json"
+    # 如果要階段頁面紀錄:
+    # if page and start_page:
+    #     filename = f"{base_name}_jobcat_{jobcat_short}_{current_date}_pages_{start_page}_to_{page}.csv"
+    #     json_filename = f"{base_name}_jobcat_{jobcat_short}_{current_date}_pages_{start_page}_to_{page}.json"
+    # else:
+    #     filename = f"{base_name}_jobcat_{jobcat_short}_{current_date}.csv"
+    #     json_filename = f"{base_name}_jobcat_{jobcat_short}_{current_date}.json"
 
     # 去重並附加到現有 CSV
     if os.path.exists(filename):
@@ -450,6 +455,17 @@ def save_data(data, output_csv, query_params, page=None, start_page=None):
     print(f"已存為 JSON: {json_filename}")
 
 def main():
+    # 初始化 logging
+    logging.basicConfig(
+        filename = f"crawler_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+        level = logging.INFO,
+        format = "%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    logging.info("start")
+
+    start_time = time.time()
+
     global args  # 為了 restart_driver 使用
     args = parse_arguments()
     checkpoint_file = "checkpoint.json"
@@ -499,6 +515,10 @@ def main():
             if all_data:
                 save_data(all_data, args.output_csv, args.query_params, args.end_page, args.start_page)
             print("已儲存當前爬取結果，並去重複。")
+
+            # ... 爬蟲程式結束log（例如 download_page 迴圈）
+            end_time = time.time()
+            logging.info(f"end total: {end_time - start_time:.2f} s")
     except Exception as e:
         print(f"程式執行錯誤: {e}")
     finally:
