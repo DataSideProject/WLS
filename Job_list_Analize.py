@@ -1,3 +1,6 @@
+'''
+簡易的職缺python分析範例
+'''
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -379,3 +382,4 @@ fig_main.subplots_adjust(wspace=0.4, hspace=0.5)
 plt.savefig('main_analysis.png', dpi=300, bbox_inches='tight')
 plt.show()
 plt.close(fig_main)
+
