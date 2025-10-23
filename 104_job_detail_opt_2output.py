@@ -1,3 +1,7 @@
+'''
+已經有職缺位置的list(csv)再去爬職缺頁面
+'''
+
 import pandas as pd
 import time
 import random
@@ -210,3 +214,4 @@ with open(output_file, 'w', encoding='utf-8') as f:
 # 關閉瀏覽器
 driver.quit()
 print(f"資料已儲存至 {output_file} 和 detailed_job_data_jobcat_202510{time.localtime().tm_mday:02d}.csv")
+
