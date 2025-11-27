@@ -159,7 +159,7 @@ def extract_field_value(driver, keyword, default="未知"):
 # -------------------------------------------------
 # 6. 細節頁爬蟲（使用全域 extract_field_value）
 # -------------------------------------------------
-def crawl_job_details(driver, job_id, list_data):
+def crawl_job_details(driver, job_id, list_data, args):
     url = f"https://www.104.com.tw/job/{job_id}"
     max_retries = 3
     for attempt in range(max_retries):
@@ -236,20 +236,28 @@ def crawl_job_details(driver, job_id, list_data):
                 "work_skills": work_skills,
                 "other_conditions": other_conditions
             }
-            return job_detail
+            return job_detail, driver
 
         except Exception as e:
             if attempt < max_retries - 1:
-                time.sleep(random.uniform(15, 30))
+                err_str = str(e).lower()
+                if "invalid session id" in err_str or "disconnected" in err_str or "browser has closed" in err_str:
+                    print(f"細節頁偵測到瀏覽器異常，重啟 driver...")
+                    try:
+                        driver = restart_driver(driver, args)
+                    except Exception as restart_e:
+                        print(f"重啟 driver 失敗: {restart_e}")
+                else:
+                    time.sleep(random.uniform(15, 30))
                 continue
             print(f"細節頁 {job_id} 失敗: {e}")
-            return None
-    return None
+            return None, driver
+    return None, driver
 
 # -------------------------------------------------
 # 7. 列表頁爬蟲（保持您原本成功的選擇器）
 # -------------------------------------------------
-def download_page(driver, url, existing_keys, crawl_date_str):
+def download_page(driver, url, existing_keys, crawl_date_str, args):
     max_retries = 3
     for attempt in range(max_retries):
         try:
@@ -318,7 +326,7 @@ def download_page(driver, url, existing_keys, crawl_date_str):
                     print(f"跳過重複: {uniq}")
                     continue
 
-                detail = crawl_job_details(driver, job_id, row)
+                detail, driver = crawl_job_details(driver, job_id, row, args)
                 if detail:
                     detail["update_date_clean"] = upd_clean
                     detail["unique_key"] = uniq
@@ -330,16 +338,26 @@ def download_page(driver, url, existing_keys, crawl_date_str):
                 if len(data) % 30 == 0:
                     driver = restart_driver(driver, args)
 
-            return data
+            return data, driver
 
         except Exception as e:
             if attempt < max_retries - 1:
                 print(f"頁面重試 {attempt+1}: {e}")
+                
+                # 針對 "invalid session id" 或 "disconnected" 進行特別處理
+                err_str = str(e).lower()
+                if "invalid session id" in err_str or "disconnected" in err_str or "browser has closed" in err_str:
+                    print("偵測到瀏覽器連線中斷，嘗試重啟 driver...")
+                    try:
+                        driver = restart_driver(driver, args)
+                    except Exception as restart_e:
+                        print(f"重啟 driver 失敗: {restart_e}")
+
                 time.sleep(random.uniform(15, 30))
                 continue
             print(f"頁面最終失敗: {e}")
-            return []
-    return []
+            return [], driver
+    return [], driver
 
 # -------------------------------------------------
 # 8. 儲存（每日 + master，檔名含 raw_YYYYMMDD）
@@ -417,7 +435,7 @@ def main():
     try:
         for page in range(start_page, args.end_page + 1):
             url = f"{args.base_url}?{args.query_params}&{args.pagination.format(page=page)}"
-            page_data = download_page(driver, url, existing_keys, crawl_date_str)
+            page_data, driver = download_page(driver, url, existing_keys, crawl_date_str, args)
 
             if page_data:
                 all_data.extend(page_data)
