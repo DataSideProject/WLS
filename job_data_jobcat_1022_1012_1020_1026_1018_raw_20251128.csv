@@ -1,0 +1,32 @@
+﻿job_id,job_title,company,industry,location,experience,education,salary,tags,update_date,job_description,job_categories,management_responsibility,work_shift,remote_work,BT_EXP,languages,tools,work_skills,other_conditions,update_date_clean,unique_key
+7858n,AI工程師,鴻享科技股份有限公司,網際網路相關業,桃園市桃園區,經歷不拘,大學,"月薪35,000~45,000元",,11/26,"主動積極有樂於團隊合作, 有良好溝通能力, 具追根究柢的精神。
+熟悉 
+1.Python 等程式語言 
+2.影像分析
+3.參數最佳化 
+4.資料視覺化工具 
+5.機器人對話LinBot
+
+
+加分條件: 
+
+1.熟悉 Google Cloud Platform 或 AWS","演算法工程師, 軟體工程師, Internet程式設計師",不需負擔管理責任,日班,未知,無需出差外派,英文,"Linux, Python, AWS","軟體工程系統開發, 軟體程式設計, 網路程式設計, Machine Learning",無,2025-11-26,7858n|2025-11-26
+8ljwe,演算法工程師/A6C0(林口),致茂電子股份有限公司,其他電子零組件相關業,桃園市龜山區,經歷不拘,大學,待遇面議,"上市上櫃, 年終獎金, 節日獎金/禮品, 津貼/補助, 分紅配股",11/26,"我們正在尋找具備紮實數學與演算法基礎的專業人才，專注於機器人運動控制、路徑規劃及機器視覺等核心技術的開發與優化。
+本職位將參與關鍵演算法設計與實作，確保機器人系統具備高效、穩定且精確的運行能力。
+
+職責範圍：
+
+機器人運動學與動力學演算法開發：設計並優化運動控制策略，提升機器人運動精度與穩定性。
+路徑規劃與機器視覺開發：研究並實現最適化路徑規劃方法，並結合機器視覺技術，完成相關量測及自動化生產能力。
+數值計算與演算法開發：針對不同應用場景開發高效數值計算方法，優化演算法計算效能與可靠性。
+我們期待具備相關背景與實務經驗的專業人士加入，共同推動機器人技術的發展與應用。",演算法工程師,不需負擔管理責任,日班,未知,需出差，一年累積時間約一個月以下,英文,--,不拘,"C/C++  
+MATLAB
+freshlink skillup freshlink chillwork",2025-11-26,8ljwe|2025-11-26
+8agk6,雲端服務維運工程師-B336,精誠資訊股份有限公司,電腦系統整合服務業,台中市西屯區,3年以上,專科,待遇面議,"上市上櫃, 年終獎金, 節日獎金/禮品, 津貼/補助, 分紅配股",11/26,"1. 設計、部署和維護 AWS 基礎架構：包括 EC2、S3、RDS、Lambda、VPC、AutoScaling、Load balancers、Cloudfront、Cloudwatch、WAF 、AWS CLI 等 AWS 服務的配置和管理。
+2. 維護和監控 AWS 系統：確保 AWS 系統的穩定性、安全性和可靠性，並進行定期的監控和故障排除。
+3. 開發和維護 AWS 應用程式：開發和維護運行於 AWS 上的應用程式，並確保其符合 AWS 的最佳實踐和性能要求。
+4. 與其他團隊合作：與開發、運維、數據庫管理和安全團隊合作，確保 AWS 系統和應用程式的順利運行。","雲端工程師, 系統工程師, 資料庫管理人員",不需負擔管理責任,日班,未知,無需出差外派,不拘,"Linux, Github, Git, PHP, MySQL, AWS, Firewall, ssh","資料備份與復原, 系統架構規劃, 系統維護操作, 系統整合分析, 安全性測試(Security test), 測試環境建置規劃, 壓力測試(stress test), 測試計劃及測試報告書撰寫, 軟體程式設計, 網路程式設計, 資料庫系統管理維護, 安裝與維護網路安全系統, 規劃與管理入侵防護系統（IPS）, 規劃與管理防火牆, 規劃與管理網路入侵檢測系統（NIDS）, 設計網路安全系統, 網路安全架構分析與設計, 網路系統危機管理","1. 熟悉 AWS 的各種服務和功能：熟悉 AWS 的各種服務和功能，包括 EC2、S3、RDS、Lambda、VPC、AutoScaling、Load balancers、Cloudfront、Cloudwatch 、WAF 、AWS CLI 等。
+2. 熟悉 Linux/Unix 系統：熟悉 Linux/Unix 系統的基本操作和管理
+3. 能夠在 Linux/Unix 系統上部署 Nginx、PHP-FPM、MySql 及維護
+4. 編寫及熟悉 Linux Bash script 的編寫。
+5. 安全意識：熟悉 AWS 安全機制和最佳實踐，能夠設計和實現安全的 AWS 系統和應用程式。",2025-11-26,8agk6|2025-11-26

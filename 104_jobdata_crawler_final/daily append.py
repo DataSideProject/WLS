@@ -65,9 +65,9 @@ def import_safe():
 
 # 主程式（可無限迴圈）
 if __name__ == "__main__":
-    print("開始監聽匯入（每 5 分鐘檢查一次）")
+    print("開始監聽匯入（每 30 分鐘檢查一次）")
     while True:
         imported = import_safe()
         if imported > 0:
             print(f"{datetime.now()} 成功匯入 {imported} 筆")
-        time.sleep(1800)  # 5 分鐘
+        time.sleep(1800)  # 30 分鐘
