@@ -6,7 +6,7 @@ import re
 # ==================== 1. 設定 ====================
 # 請修改成你的 GCP MariaDB 資訊
 HOST = '34.81.186.201'          # 你的 GCP 外部 IP
-USER = ''
+USER = 'datauser'
 PASSWORD = '123456'
 DATABASE = 'rawdata'
 TABLE = '104rawdata'
