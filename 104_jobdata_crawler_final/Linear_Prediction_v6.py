@@ -50,22 +50,6 @@ def parse_salary(salary):
         max_salary = int(match.group(2)) // 12 if match.group(2) else None
         note = "年薪轉換為月薪"
         return min_salary, max_salary, note
-    match = re.match(r"時薪(\d+)元", salary)
-    if match:
-        hourly = int(match.group(1))
-        min_salary = hourly * 8 * 22
-        max_salary = None
-        note = "推估（時薪 × 8小時 × 22天）"
-        return min_salary, max_salary, note
-    match = re.match(r"日薪(\d+)元", salary)
-    if match:
-        daily = int(match.group(1))
-        min_salary = daily * 22
-        max_salary = None
-        note = "推估（日薪 × 22天）"
-        return min_salary, max_salary, note
-    return None, None, "無法解析薪資格式"
-
 # ====================== 1. 載入資料 ======================
 log_print("載入資料...")
 
@@ -103,72 +87,6 @@ except Exception as e:
         log_print(f"讀取本地 CSV 失敗: {e_csv}")
         raise
 
-df['job_identifier'] = df['job_title'].fillna('Unknown')
-# 確保 job_id 存在
-if 'job_id' not in df.columns:
-    df['job_id'] = df.index
-
-# 資料清洗：排除異常薪資
-df_has_salary = df[df['salary_min'].notna() | df['salary_max'].notna()].copy()
-df_has_salary = df_has_salary[
-    (df_has_salary['salary_min'].between(5000, 500000) | df_has_salary['salary_min'].isna()) &
-    (df_has_salary['salary_max'].between(5000, 500000) | df_has_salary['salary_max'].isna())
-]
-df_no_salary = df[df['salary_min'].isna() & df['salary_max'].isna()].copy()
-df = pd.concat([df_has_salary, df_no_salary], ignore_index=True)
-
-log_print(f"清洗後資料：{len(df)} 筆")
-
-# ====================== 2. 特徵工程 ======================
-log_print("進行特徵工程...")
-
-def extract_work_years(desc):
-    if pd.isna(desc): return 0
-    match = re.search(r'(\d+)[年|以上]', str(desc))
-    return int(match.group(1)) if match else 0
-df['work_years'] = df['job_description'].apply(extract_work_years)
-
-def exp_to_num(exp):
-    if pd.isna(exp): return 3
-    if '不拘' in str(exp): return 3
-    if '年以上' in str(exp):
-        return int(''.join(filter(str.isdigit, str(exp))))
-    return 3
-df['exp_years'] = df['experience'].apply(exp_to_num)
-
-def extract_city(loc, counts):
-    if pd.isna(loc): return '其他'
-    city = loc.split('市')[0] + '市' if '市' in loc else loc
-    city = city.split('縣')[0] + '縣' if '縣' in loc else city
-    return city if counts.get(city, 0) > 10 else '其他'
-
-temp = df['location'].apply(lambda x: x.split('市')[0] + '市' if pd.notna(x) and '市' in x
-                            else (x.split('縣')[0] + '縣' if pd.notna(x) and '縣' in x else x))
-city_counts = temp.value_counts()
-df['city'] = df['location'].apply(lambda x: extract_city(x, city_counts))
-df['city_for_stratify'] = df['city']
-
-# 處理 job_categories
-job_list = [j.strip() for row in df['job_categories'].dropna() for j in row.split(',')]
-top10_jobs = pd.Series(job_list).value_counts().head(10).index
-for job in top10_jobs:
-    safe = f"is_{job.replace('/', '_').replace(' ', '_')}"
-    df[safe] = df['job_categories'].fillna('').apply(lambda x: 1 if job in x else 0)
-
-# 處理 skills & tools
-df['skills'] = df['skills'].str.lower()
-df['tools'] = df['tools'].str.lower()
-skills_list = [s.strip() for row in df['skills'].dropna() for s in row.split(',')]
-tools_list = [t.strip() for row in df['tools'].dropna() for t in row.split(',')]
-combined = [s for s in skills_list + tools_list if s != '--']
-skill_map = {'ms sql': 'sql', 'mysql': 'sql'}
-combined = [skill_map.get(s, s) for s in combined]
-top_skills = pd.Series(combined).value_counts().head(10).index
-weights = pd.Series(combined).value_counts(normalize=True)
-for skill in top_skills:
-    df[f'skill_{skill}'] = (df['skills'].fillna('').str.contains(skill) | df['tools'].fillna('').str.contains(skill)).astype(int)
-    df[f'skill_{skill}_weighted'] = df[f'skill_{skill}'] * weights.get(skill, 1)
-
 # 交叉特徵
 top_cities = city_counts.head(10).index
 for job in top10_jobs:
@@ -180,38 +98,8 @@ for skill in top_skills:
     for city in top_cities:
         col = f'skill_{skill}_in_{city}'
         df[col] = df[f'skill_{skill}'] * (df['city_for_stratify'] == city).astype(int)
-
-# One-hot encoding
-df = pd.get_dummies(df, columns=['industry', 'city', 'education'], prefix=['ind', 'city', 'edu'], dtype=int)
-
-# 其他特徵
-df['is_listed_company'] = df['tags'].fillna('').apply(lambda x: 1 if '上市上櫃' in x else 0)
-df['is_remote_work'] = df['tags'].fillna('').apply(lambda x: 1 if '遠端工作' in x else 0)
-df['is_senior'] = df['job_description'].fillna('').apply(lambda x: 1 if '資深' in x or '高階' in x else 0)
-df['requires_english'] = df['languages'].fillna('').apply(lambda x: 1 if '英文' in x else 0)
-df['has_management'] = df['management_responsibility'].fillna('').apply(lambda x: 1 if '需負擔管理責任' in x else 0)
-df['is_exp_unrestricted'] = df['experience'].apply(lambda x: 1 if '不拘' in str(x) else 0)
-
-# 數值標準化
-numerical_cols = ['exp_years', 'work_years']
-scaler_num = StandardScaler()
 df[numerical_cols] = scaler_num.fit_transform(df[numerical_cols])
 df.rename(columns={'exp_years': 'exp_years_scaled', 'work_years': 'work_years_scaled'}, inplace=True)
-
-# ====================== 3. 定義特徵欄位 ======================
-feature_cols = [c for c in df.columns if c not in [
-    'job_categories', 'skills', 'tools', 'tags', 'job_description', 'languages',
-    'management_responsibility', 'experience', 'location', 'industry', 'education',
-    'job_title', 'company', 'job_identifier', 'job_id', 'city_for_stratify',
-    'salary_min', 'salary_max', 'salary_note', 'salary', 'update_date', 'source_url',
-    'work_shift', 'remote_work', 'BT_EXP', 'work_skills', 'other_conditions',
-    'raw_text', 'created_at', 'updated_at', 'update_date_clean', 'unique_key', 'id'
-]]
-
-# 確保所有特徵都是數值
-df[feature_cols] = df[feature_cols].apply(pd.to_numeric, errors='coerce').fillna(0)
-
-# ====================== 4. 階段一：預測 salary_max ======================
 log_print("\n=== 階段一：預測 salary_max ===")
 # 標記原始完整資料的索引，用於階段二避免資料洩漏
 original_complete_indices = df[df['salary_min'].notna() & df['salary_max'].notna()].index
