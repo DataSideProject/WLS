@@ -37,5 +37,5 @@ for col in text_columns:
         df[col] = df[col].apply(clean_text)
 
 # 匯出（保證成功！）
-df.to_excel('104rawdata_全部資料_安全版.xlsx', index=False, engine='openpyxl')
+df.to_csv('job_data_master_raw_export.csv', index=False, encoding='UTF-8')
 print(f"匯出成功！共 {len(df):,} 筆")
