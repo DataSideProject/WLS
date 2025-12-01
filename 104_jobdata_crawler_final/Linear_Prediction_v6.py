@@ -1,6 +1,7 @@
 # predict_salary_v6_hybrid_optimized.py
 # 優化版：加入公司特徵、擴大 NLP 特徵、增強模型參數
 # 新增：MAE, RMSE, 殘差圖, 預測區間
+# V7新增：資料淨化 (Outlier Removal) & 分群訓練 (Segmentation)
 
 import pandas as pd
 import numpy as np
@@ -113,16 +114,38 @@ except Exception as e:
 # ====================== 1.5 資料去重 ======================
 if 'job_id' in df.columns:
     initial_count = len(df)
-    # 嘗試轉換日期格式以確保排序正確 (假設有 update_date)
     if 'update_date' in df.columns:
         df['update_date'] = pd.to_datetime(df['update_date'], errors='coerce')
         df = df.sort_values(by=['job_id', 'update_date'])
     
-    # 保留最後一筆 (最新的)
     df = df.drop_duplicates(subset=['job_id'], keep='last')
     log_print(f"已移除重複資料: {initial_count - len(df)} 筆 (剩餘 {len(df)} 筆)")
 else:
     log_print("警告: 無法去重 (找不到 job_id 欄位)")
+
+# ====================== 1.6 資料淨化 (Outlier Removal) ======================
+log_print("執行資料淨化 (剔除極端值)...")
+# 只針對有薪資的資料進行過濾
+mask_has_salary = df['salary_min'].notna() & df['salary_max'].notna()
+df_salary = df[mask_has_salary]
+df_no_salary = df[~mask_has_salary]
+
+q01_min = df_salary['salary_min'].quantile(0.01)
+q99_min = df_salary['salary_min'].quantile(0.99)
+q01_max = df_salary['salary_max'].quantile(0.01)
+q99_max = df_salary['salary_max'].quantile(0.99)
+
+log_print(f"薪資範圍過濾: Min({q01_min:.0f}~{q99_min:.0f}), Max({q01_max:.0f}~{q99_max:.0f})")
+
+df_salary_clean = df_salary[
+    (df_salary['salary_min'] >= q01_min) & (df_salary['salary_min'] <= q99_min) &
+    (df_salary['salary_max'] >= q01_max) & (df_salary['salary_max'] <= q99_max)
+]
+
+log_print(f"已剔除極端值: {len(df_salary) - len(df_salary_clean)} 筆")
+# 合併回主 dataframe (保留無薪資資料用於預測)
+df = pd.concat([df_salary_clean, df_no_salary], ignore_index=True)
+log_print(f"淨化後總筆數: {len(df)}")
 
 # ====================== 2. 特徵工程 ======================
 log_print("進行特徵工程...")
@@ -164,14 +187,14 @@ top_industries = df['industry'].value_counts().head(10).index
 for ind in top_industries:
     df[f'industry_{ind}'] = (df['industry'] == ind).astype(int)
 
-# 7. 經驗
+# 7. 經驗 (保留原始數值用於分群)
 def parse_exp(exp):
     if pd.isna(exp): return 0
     exp = str(exp)
     match = re.search(r'(\d+)', exp)
     if match: return int(match.group(1))
     return 0
-df['exp_years'] = df['experience'].apply(parse_exp)
+df['exp_years_raw'] = df['experience'].apply(parse_exp)
 
 # 8. 職務類別 (job_categories)
 all_cats = []
@@ -182,29 +205,25 @@ top_cats = [c[0] for c in Counter(all_cats).most_common(20)]
 for cat in top_cats:
     df[f'cat_{cat}'] = df['job_categories'].astype(str).str.contains(cat, regex=False, na=False).astype(int)
 
-# 9. 公司名稱 (New)
-# 注意：根據之前的 debug，欄位名稱是 'company'
+# 9. 公司名稱
 top_companies = df['company'].value_counts().head(30).index
 for comp in top_companies:
     safe_comp = re.sub(r'[^\w]', '', str(comp))
     if not safe_comp: safe_comp = 'unknown_company'
     df[f'company_{safe_comp}'] = (df['company'] == comp).astype(int)
 
-# 10. 文字特徵 (TF-IDF) - Expanded to 100
+# 10. 文字特徵 (TF-IDF)
 def process_tfidf(col_name, prefix, max_features=100):
     texts = df[col_name].fillna('').astype(str)
-    # 使用字元級 n-gram (1~3) 捕捉中英文關鍵字
     vectorizer = TfidfVectorizer(max_features=max_features, analyzer='char', ngram_range=(1, 3))
     tfidf_matrix = vectorizer.fit_transform(texts)
     feature_names = vectorizer.get_feature_names_out()
     
     new_cols = []
     for i, name in enumerate(feature_names):
-        # 簡單清理欄位名
         clean_name = re.sub(r'[^\w]', '', name)
         if not clean_name: clean_name = f'feat{i}'
         col = f'{prefix}_{clean_name}'
-        # 避免欄位名重複
         if col in df.columns: col = f'{col}_{i}'
         df[col] = tfidf_matrix[:, i].toarray().flatten()
         new_cols.append(col)
@@ -229,10 +248,11 @@ for skill in top_skills:
         df[col] = df[f'skill_{skill}'] * (df['city_for_stratify'] == city).astype(int)
 
 # 數值欄位標準化
-numerical_cols = ['exp_years', 'edu_level']
+# 注意：這裡創建一個新的 scaled 欄位，保留 raw 用於分群
+df['exp_years_scaled'] = df['exp_years_raw'] # 暫存
+numerical_cols = ['exp_years_scaled', 'edu_level']
 scaler_num = StandardScaler()
 df[numerical_cols] = scaler_num.fit_transform(df[numerical_cols])
-df.rename(columns={'exp_years': 'exp_years_scaled'}, inplace=True)
 
 # 定義 feature_cols
 feature_cols = []
@@ -243,7 +263,7 @@ feature_cols.append('is_manager')
 feature_cols.append('exp_years_scaled')
 feature_cols.append('edu_level')
 feature_cols.extend([f'cat_{cat}' for cat in top_cats])
-feature_cols.extend([f'company_{re.sub(r"[^\w]", "", str(comp))}' for comp in top_companies]) # Add companies
+feature_cols.extend([f'company_{re.sub(r"[^\w]", "", str(comp))}' for comp in top_companies])
 feature_cols.extend(desc_cols)
 feature_cols.extend(cond_cols)
 
@@ -255,226 +275,196 @@ for skill in top_skills:
     for city in top_cities:
         feature_cols.append(f'skill_{skill}_in_{city}')
 
-log_print("\n=== 階段一：預測 salary_max ===")
-# 標記原始完整資料的索引，用於階段二避免資料洩漏
-original_complete_indices = df[df['salary_min'].notna() & df['salary_max'].notna()].index
+# ====================== 通用訓練函式 ======================
+def build_ensemble():
+    rf = RandomForestRegressor(n_estimators=300, random_state=42)
+    gb = GradientBoostingRegressor(n_estimators=300, random_state=42)
+    xgb = XGBRegressor(n_estimators=500, learning_rate=0.05, max_depth=6, random_state=42)
+    cat = CatBoostRegressor(iterations=500, depth=8, learning_rate=0.05, random_seed=42, verbose=0)
+    return VotingRegressor([('rf', rf), ('xgb', xgb), ('gb', gb), ('cat', cat)])
 
-train_max = df[df['salary_min'].notna() & df['salary_max'].notna()].copy()
-predict_max = df[df['salary_min'].notna() & df['salary_max'].isna()].copy()
+def train_segment_model(df_train, df_predict, target_col, segment_name):
+    """
+    針對特定分群進行訓練與預測
+    """
+    if len(df_train) < 10:
+        log_print(f"  [{segment_name}] 訓練資料不足 ({len(df_train)} 筆)，跳過")
+        return None, None, [], []
 
-r2_stage1, mape_stage1, mae_stage1, rmse_stage1 = 0, 0, 0, 0
-residuals_stage1 = []
-
-if len(train_max) > 0:
-    scaler_min = StandardScaler()
-    train_max['salary_min_scaled'] = scaler_min.fit_transform(train_max[['salary_min']])
-    
-    if len(predict_max) > 0:
-        predict_max['salary_min_scaled'] = scaler_min.transform(predict_max[['salary_min']])
-
-    X_train = train_max[feature_cols + ['salary_min_scaled']].copy()
+    X_train = df_train[feature_cols].copy()
     X_train = X_train.apply(pd.to_numeric, errors='coerce').fillna(0)
-    
-    y_train = np.log1p(train_max['salary_max'])
+    y_train_log = np.log1p(df_train[target_col])
 
+    # Lasso 特徵篩選
     lasso = LassoCV(cv=5, random_state=42, n_jobs=-1)
-    lasso.fit(X_train, y_train)
+    lasso.fit(X_train, y_train_log)
     sel_features = X_train.columns[np.abs(lasso.coef_) > 1e-4]
     X_train_sel = X_train[sel_features]
+    
+    log_print(f"  [{segment_name}] 特徵篩選: {len(feature_cols)} -> {len(sel_features)}")
 
-    def build_ensemble():
-        # 增強模型參數
-        rf = RandomForestRegressor(n_estimators=300, random_state=42)
-        gb = GradientBoostingRegressor(n_estimators=300, random_state=42)
-        xgb = XGBRegressor(n_estimators=500, learning_rate=0.05, max_depth=6, random_state=42)
-        cat = CatBoostRegressor(iterations=500, depth=8, learning_rate=0.05, random_seed=42, verbose=0)
-        return VotingRegressor([('rf', rf), ('xgb', xgb), ('gb', gb), ('cat', cat)])
-
-    def evaluate_log_model(model, X, y, name="Model"):
-        kf = KFold(n_splits=5, shuffle=True, random_state=42)
-        r2s, mapes, maes, rmses = [], [], [], []
-        all_residuals = []
+    # 訓練 Ensemble
+    ensemble = build_ensemble()
+    
+    # CV 評估
+    kf = KFold(n_splits=5, shuffle=True, random_state=42)
+    r2s, mapes, maes, rmses = [], [], [], []
+    residuals = []
+    
+    for tr, te in kf.split(X_train_sel):
+        ensemble.fit(X_train_sel.iloc[tr], y_train_log.iloc[tr])
+        pred = np.expm1(ensemble.predict(X_train_sel.iloc[te]))
+        true = np.expm1(y_train_log.iloc[te])
         
-        for tr, te in kf.split(X):
-            model.fit(X.iloc[tr], y.iloc[tr])
-            pred = np.expm1(model.predict(X.iloc[te]))
-            true = np.expm1(y.iloc[te])
-            
-            # Metrics
-            r2s.append(r2_score(true, pred))
-            mapes.append(np.mean(np.abs((true - pred) / true)) * 100)
-            maes.append(mean_absolute_error(true, pred))
-            rmses.append(np.sqrt(mean_squared_error(true, pred)))
-            
-            # Residuals for plotting
-            all_residuals.extend(true - pred)
-            
-        return np.mean(r2s), np.mean(mapes), np.mean(maes), np.mean(rmses), all_residuals
+        r2s.append(r2_score(true, pred))
+        mapes.append(np.mean(np.abs((true - pred) / true)) * 100)
+        maes.append(mean_absolute_error(true, pred))
+        rmses.append(np.sqrt(mean_squared_error(true, pred)))
+        residuals.extend(true - pred)
+    
+    metrics = {
+        'R2': np.mean(r2s),
+        'MAPE': np.mean(mapes),
+        'MAE': np.mean(maes),
+        'RMSE': np.mean(rmses)
+    }
+    
+    log_print(f"  [{segment_name}] R²={metrics['R2']:.4f}, MAE={metrics['MAE']:.0f}, RMSE={metrics['RMSE']:.0f}")
 
-    ensemble_max = build_ensemble()
-    r2_stage1, mape_stage1, mae_stage1, rmse_stage1, residuals_stage1 = evaluate_log_model(ensemble_max, X_train_sel, y_train, "Stage1_Max")
-    log_print(f"階段一 (log+CV): R²={r2_stage1:.4f}, MAPE={mape_stage1:.2f}%, MAE={mae_stage1:.0f}, RMSE={rmse_stage1:.0f}")
-
-    if len(predict_max) > 0:
-        ensemble_max.fit(X_train_sel, y_train)
-        X_pred = predict_max[feature_cols + ['salary_min_scaled']].copy()
+    # 最終全量訓練與預測
+    ensemble.fit(X_train_sel, y_train_log)
+    
+    predictions = None
+    if len(df_predict) > 0:
+        X_pred = df_predict[feature_cols].copy()
         X_pred = X_pred.apply(pd.to_numeric, errors='coerce').fillna(0)
-        X_pred = X_pred[sel_features]
-        pred = np.expm1(ensemble_max.predict(X_pred))
-        df.loc[predict_max.index, 'salary_max'] = np.maximum(pred, predict_max['salary_min'])
-else:
-    log_print("無足夠資料進行階段一訓練")
+        predictions = np.expm1(ensemble.predict(X_pred[sel_features]))
 
-# ====================== 5. 階段二：面議預測 ======================
-log_print("\n=== 階段二：面議預測 ===")
-# 修正：只使用原始就有 min 和 max 的資料進行訓練
+    # 特徵重要性 (取 XGB)
+    xgb = ensemble.named_estimators_['xgb']
+    imp = pd.Series(xgb.feature_importances_, index=sel_features).sort_values(ascending=False)
+    
+    return metrics, predictions, residuals, imp
+
+# ====================== 3. 執行分群訓練 (Segmentation) ======================
+log_print("\n=== 開始分群訓練 (Junior vs Senior) ===")
+
+# 準備資料
+original_complete_indices = df[df['salary_min'].notna() & df['salary_max'].notna()].index
 train_full = df.loc[original_complete_indices].copy()
-log_print(f"階段二訓練資料集大小 (Ground Truth): {len(train_full)} 筆")
 predict_none = df[df['salary_min'].isna() & df['salary_max'].isna()].copy()
 
-r2_min_full, mape_min_full, mae_min_full, rmse_min_full = 0, 0, 0, 0
-r2_max_full, mape_max_full, mae_max_full, rmse_max_full = 0, 0, 0, 0
-residuals_min = []
-residuals_max = []
-imp_avg = pd.Series()
+# 定義分群
+def get_segment_mask(dframe, segment):
+    if segment == 'Junior':
+        return dframe['exp_years_raw'] < 3
+    else:
+        return dframe['exp_years_raw'] >= 3
 
-if len(train_full) > 0 and len(predict_none) > 0:
-    X_train = train_full[feature_cols].copy()
-    X_train = X_train.apply(pd.to_numeric, errors='coerce').fillna(0)
-    y_min_log = np.log1p(train_full['salary_min'])
-    y_max_log = np.log1p(train_full['salary_max'])
+segments = ['Junior', 'Senior']
+targets = ['salary_min', 'salary_max']
 
-    lasso_min = LassoCV(cv=5, random_state=42, n_jobs=-1)
-    lasso_min.fit(X_train, y_min_log)
-    sel_min = X_train.columns[np.abs(lasso_min.coef_) > 1e-4]
-    X_train_sel_min = X_train[sel_min]
+results = {}
+all_residuals_min = []
+all_residuals_max = []
+feature_imps = []
 
-    lasso_max = LassoCV(cv=5, random_state=42, n_jobs=-1)
-    lasso_max.fit(X_train, y_max_log)
-    sel_max = X_train.columns[np.abs(lasso_max.coef_) > 1e-4]
-    X_train_sel_max = X_train[sel_max]
+for target in targets:
+    log_print(f"\n--- 預測目標: {target} ---")
+    for seg in segments:
+        # 分割訓練集
+        mask_train = get_segment_mask(train_full, seg)
+        df_train_seg = train_full[mask_train]
+        
+        # 分割預測集
+        mask_pred = get_segment_mask(predict_none, seg)
+        df_pred_seg = predict_none[mask_pred]
+        
+        log_print(f"正在訓練 {seg} 模型 (Train: {len(df_train_seg)}, Pred: {len(df_pred_seg)})...")
+        
+        metrics, preds, resids, imp = train_segment_model(df_train_seg, df_pred_seg, target, f"{seg}_{target}")
+        
+        if metrics:
+            results[f"{seg}_{target}"] = metrics
+            if target == 'salary_min':
+                all_residuals_min.extend(resids)
+            else:
+                all_residuals_max.extend(resids)
+            feature_imps.append(imp)
+            
+            # 填補預測值
+            if preds is not None:
+                # 這裡需要用原始 index 來填值
+                pred_indices = df_pred_seg.index
+                df.loc[pred_indices, target] = preds
 
-    ensemble_min = build_ensemble()
-    ensemble_max = build_ensemble()
+# ====================== 4. 彙整報告 ======================
+# 計算整體加權平均指標
+total_samples = len(train_full)
+weighted_mae_min = 0
+weighted_mae_max = 0
 
-    r2_min_full, mape_min_full, mae_min_full, rmse_min_full, residuals_min = evaluate_log_model(ensemble_min, X_train_sel_min, y_min_log, "Stage2_Min")
-    r2_max_full, mape_max_full, mae_max_full, rmse_max_full, residuals_max = evaluate_log_model(ensemble_max, X_train_sel_max, y_max_log, "Stage2_Max")
-    
-    log_print(f"面議預測 salary_min (log+CV): R²={r2_min_full:.4f}, MAPE={mape_min_full:.2f}%, MAE={mae_min_full:.0f}, RMSE={rmse_min_full:.0f}")
-    log_print(f"面議預測 salary_max (log+CV): R²={r2_max_full:.4f}, MAPE={mape_max_full:.2f}%, MAE={mae_max_full:.0f}, RMSE={rmse_max_full:.0f}")
+for seg in segments:
+    count = len(train_full[get_segment_mask(train_full, seg)])
+    if f"{seg}_salary_min" in results:
+        weighted_mae_min += results[f"{seg}_salary_min"]['MAE'] * count
+    if f"{seg}_salary_max" in results:
+        weighted_mae_max += results[f"{seg}_salary_max"]['MAE'] * count
 
-    # 繪製殘差圖 (Persuasiveness)
-    plt.figure(figsize=(15, 5))
-    
-    plt.subplot(1, 3, 1)
-    sns.histplot(residuals_min, kde=True, color='blue')
-    plt.title(f'Residuals Distribution (Min Salary)\nMean: {np.mean(residuals_min):.0f}, Std: {np.std(residuals_min):.0f}')
-    plt.xlabel('Error (True - Pred)')
-    
-    plt.subplot(1, 3, 2)
-    sns.histplot(residuals_max, kde=True, color='green')
-    plt.title(f'Residuals Distribution (Max Salary)\nMean: {np.mean(residuals_max):.0f}, Std: {np.std(residuals_max):.0f}')
-    plt.xlabel('Error (True - Pred)')
+avg_mae_min = weighted_mae_min / total_samples
+avg_mae_max = weighted_mae_max / total_samples
 
-    plt.subplot(1, 3, 3)
-    plt.scatter(range(len(residuals_min)), residuals_min, alpha=0.3, label='Min Residuals', s=10)
-    plt.scatter(range(len(residuals_max)), residuals_max, alpha=0.3, label='Max Residuals', s=10, color='green')
-    plt.axhline(0, color='red', linestyle='--')
-    plt.title('Residuals Scatter Plot')
-    plt.legend()
-    
-    plt.tight_layout()
-    plt.savefig('model_diagnostics.png')
-    log_print("殘差分析圖已儲存：model_diagnostics.png")
+# 繪製殘差圖
+plt.figure(figsize=(15, 5))
+plt.subplot(1, 2, 1)
+sns.histplot(all_residuals_min, kde=True, color='blue')
+plt.title(f'Overall Residuals (Min)\nMAE: {avg_mae_min:.0f}')
 
-    # 特徵重要性
-    ensemble_min.fit(X_train_sel_min, y_min_log)
-    ensemble_max.fit(X_train_sel_max, y_max_log)
-    
-    xgb_min = ensemble_min.named_estimators_['xgb']
-    xgb_max = ensemble_max.named_estimators_['xgb']
+plt.subplot(1, 2, 2)
+sns.histplot(all_residuals_max, kde=True, color='green')
+plt.title(f'Overall Residuals (Max)\nMAE: {avg_mae_max:.0f}')
 
-    imp_min = pd.Series(xgb_min.feature_importances_, index=sel_min).sort_values(ascending=False)
-    imp_max = pd.Series(xgb_max.feature_importances_, index=sel_max).sort_values(ascending=False)
-    imp_avg = (imp_min.add(imp_max, fill_value=0) / 2).sort_values(ascending=False).head(20)
+plt.tight_layout()
+plt.savefig('model_diagnostics_segmented.png')
 
-    log_print("\n特徵重要性（Top 20，平均 min 和 max）：")
-    log_print(imp_avg.round(6))
+# 彙整特徵重要性
+avg_imp = pd.concat(feature_imps).groupby(level=0).mean().sort_values(ascending=False).head(20)
 
-    # 最終預測
-    X_pred = predict_none[feature_cols].copy()
-    X_pred = X_pred.apply(pd.to_numeric, errors='coerce').fillna(0)
-    pred_min = np.expm1(ensemble_min.predict(X_pred[sel_min]))
-    pred_max = np.expm1(ensemble_max.predict(X_pred[sel_max]))
-
-    df.loc[predict_none.index, 'salary_min'] = pred_min
-    df.loc[predict_none.index, 'salary_max'] = pred_max
-else:
-    log_print("無足夠資料進行階段一訓練")
-
-# ====================== 6. 最終計算 ======================
-df['salary_avg'] = df[['salary_min', 'salary_max']].mean(axis=1)
-df.to_csv('job_data_with_full_salary_v6.csv', index=False)
-log_print("預測完成！結果已存為 job_data_with_full_salary_v6.csv")
-
-# ====================== 7. 報告 ======================
-# 計算 95% 預測區間 (Prediction Interval)
-# 假設殘差常態分佈，95% 區間約為 ± 1.96 * std(residuals)
-std_min = np.std(residuals_min) if residuals_min else 0
-std_max = np.std(residuals_max) if residuals_max else 0
-interval_min = 1.96 * std_min
-interval_max = 1.96 * std_max
-
+# 生成報告
 report_content = f"""
-# 就業市場薪資預測報告 (增強版)
+# 就業市場薪資預測報告 (分群優化版)
 **生成時間**：{datetime.now().strftime('%Y-%m-%d %H:%M')}
+**優化策略**：資料淨化 (Outlier Removal) + 年資分群 (Junior/Senior)
 
-## 模型表現 (Model Performance)
-模型經過公司特徵、NLP 擴增與參數優化，並加入 MAE/RMSE 指標評估。
+## 整體表現 (Weighted Average)
+- **Salary Min MAE**: {avg_mae_min:.0f} 元
+- **Salary Max MAE**: {avg_mae_max:.0f} 元
 
-### 階段一（上限預測 - 已知下限求上限）
-- **R² (解釋力)**: {r2_stage1:.4f} (模型解釋了 {r2_stage1*100:.1f}% 的變異)
-- **MAPE (平均誤差率)**: {mape_stage1:.2f}%
-- **MAE (平均誤差金額)**: {mae_stage1:.0f} 元
-- **RMSE (均方根誤差)**: {rmse_stage1:.0f} 元
+## 分群詳細表現
+### Junior (年資 < 3年)
+- **Min Salary**: R²={results.get('Junior_salary_min', {}).get('R2', 0):.4f}, MAE={results.get('Junior_salary_min', {}).get('MAE', 0):.0f}
+- **Max Salary**: R²={results.get('Junior_salary_max', {}).get('R2', 0):.4f}, MAE={results.get('Junior_salary_max', {}).get('MAE', 0):.0f}
 
-### 階段二（面議預測 - 全盲預測）
-對於完全沒有薪資資訊的「面議」職缺：
-
-#### Salary Min (下限)
-- **R²**: {r2_min_full:.4f}
-- **MAPE**: {mape_min_full:.2f}%
-- **MAE**: {mae_min_full:.0f} 元
-- **RMSE**: {rmse_min_full:.0f} 元
-- **95% 信心預測區間**: 預測值 ± {interval_min:.0f} 元
-
-#### Salary Max (上限)
-- **R²**: {r2_max_full:.4f}
-- **MAPE**: {mape_max_full:.2f}%
-- **MAE**: {mae_max_full:.0f} 元
-- **RMSE**: {rmse_max_full:.0f} 元
-- **95% 信心預測區間**: 預測值 ± {interval_max:.0f} 元
-
-> [!TIP]
-> **如何解讀預測區間？**
-> 如果模型預測某個面議職缺的起薪是 40,000 元，我們有 95% 的信心，實際起薪會落在 {40000 - interval_min:.0f} ~ {40000 + interval_min:.0f} 元之間。
+### Senior (年資 >= 3年)
+- **Min Salary**: R²={results.get('Senior_salary_min', {}).get('R2', 0):.4f}, MAE={results.get('Senior_salary_min', {}).get('MAE', 0):.0f}
+- **Max Salary**: R²={results.get('Senior_salary_max', {}).get('R2', 0):.4f}, MAE={results.get('Senior_salary_max', {}).get('MAE', 0):.0f}
 
 ## 資料概況
-- 總職缺：{len(df)}
-- 真實薪資：{len(df[df['salary_min'].notna() & ~df['salary'].astype(str).str.contains('面議', na=False)])}
-- 面議填補：{len(predict_none)}
+- 淨化後總職缺：{len(df)}
+- 訓練集 (有薪資)：{len(train_full)}
+- 預測集 (面議)：{len(predict_none)}
 
 ## 特徵重要性分析（Top 20）
-{imp_avg.round(6).to_string() if not imp_avg.empty else "N/A"}
-
-## 執行日誌
-{chr(10).join([str(x) for x in log_lines])}
+{avg_imp.round(6).to_string() if not avg_imp.empty else "N/A"}
 
 ## 結論
-模型成功填補 {len(predict_none)} 筆面議薪資。殘差分析圖 (model_diagnostics.png) 顯示誤差分佈情形。
+透過分群訓練，針對不同年資族群建立專屬模型，以降低整體預測誤差。
 """
 
 with open('salary_prediction_report.txt', 'w', encoding='utf-8') as f:
     f.write(report_content)
 
+df['salary_avg'] = df[['salary_min', 'salary_max']].mean(axis=1)
+df.to_csv('job_data_with_full_salary_v7_segmented.csv', index=False)
+log_print("預測完成！結果已存為 job_data_with_full_salary_v7_segmented.csv")
 log_print("報告已生成：salary_prediction_report.txt")
