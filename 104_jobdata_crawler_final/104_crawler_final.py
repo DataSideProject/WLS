@@ -122,20 +122,38 @@ def clean_update_date(date_str, crawl_date_str):
 # 4. 瀏覽器重啟
 # -------------------------------------------------
 def restart_driver(driver, args):
+    """
+    嘗試重啟 driver，若失敗會重試 3 次。
+    若全部失敗，回傳 None，讓呼叫端決定是否中斷程式。
+    """
     try:
-        driver.quit()
+        if driver:
+            driver.quit()
     except:
         pass
-    options = Options()
-    options.add_argument(f"user-agent={random.choice(user_agents)}")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--start-maximized")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")
-    options.add_argument("--disable-web-security")
-    if args.headless:
-        options.add_argument("--headless=new")
-    return uc.Chrome(options=options)
+
+    max_retries = 3
+    for i in range(max_retries):
+        try:
+            print(f"正在重啟 driver (嘗試 {i+1}/{max_retries})...")
+            options = Options()
+            options.add_argument(f"user-agent={random.choice(user_agents)}")
+            options.add_argument("--disable-blink-features=AutomationControlled")
+            options.add_argument("--start-maximized")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--window-size=1920,1080")
+            options.add_argument("--disable-web-security")
+            if args.headless:
+                options.add_argument("--headless=new")
+            
+            new_driver = uc.Chrome(options=options)
+            return new_driver
+        except Exception as e:
+            print(f"重啟 driver 失敗 ({i+1}/{max_retries}): {e}")
+            time.sleep(5)
+    
+    print("重啟 driver 最終失敗，無法繼續爬蟲。")
+    return None
 
 # -------------------------------------------------
 # 5. **全域** 欄位抽取函式（修正點）
@@ -160,6 +178,9 @@ def extract_field_value(driver, keyword, default="未知"):
 # 6. 細節頁爬蟲（使用全域 extract_field_value）
 # -------------------------------------------------
 def crawl_job_details(driver, job_id, list_data, args):
+    if driver is None:
+        return None, None
+
     url = f"https://www.104.com.tw/job/{job_id}"
     max_retries = 3
     for attempt in range(max_retries):
@@ -245,8 +266,12 @@ def crawl_job_details(driver, job_id, list_data, args):
                     print(f"細節頁偵測到瀏覽器異常，重啟 driver...")
                     try:
                         driver = restart_driver(driver, args)
+                        if driver is None:
+                            print("Driver 重啟失敗，放棄此職缺並中斷")
+                            return None, None
                     except Exception as restart_e:
-                        print(f"重啟 driver 失敗: {restart_e}")
+                        print(f"重啟 driver 異常: {restart_e}")
+                        return None, None
                 else:
                     time.sleep(random.uniform(15, 30))
                 continue
@@ -258,6 +283,8 @@ def crawl_job_details(driver, job_id, list_data, args):
 # 7. 列表頁爬蟲（保持您原本成功的選擇器）
 # -------------------------------------------------
 def download_page(driver, url, existing_keys, crawl_date_str, args):
+    if driver is None:
+        return [], None
     max_retries = 3
     for attempt in range(max_retries):
         try:
@@ -337,6 +364,9 @@ def download_page(driver, url, existing_keys, crawl_date_str, args):
                 time.sleep(random.uniform(2, 5))
                 if len(data) % 30 == 0:
                     driver = restart_driver(driver, args)
+                    if driver is None:
+                        print("定期重啟 driver 失敗，停止本頁爬取")
+                        break
 
             return data, driver
 
@@ -350,8 +380,12 @@ def download_page(driver, url, existing_keys, crawl_date_str, args):
                     print("偵測到瀏覽器連線中斷，嘗試重啟 driver...")
                     try:
                         driver = restart_driver(driver, args)
+                        if driver is None:
+                            print("Driver 重啟失敗，停止本頁爬取")
+                            return [], None
                     except Exception as restart_e:
-                        print(f"重啟 driver 失敗: {restart_e}")
+                        print(f"重啟 driver 異常: {restart_e}")
+                        return [], None
 
                 time.sleep(random.uniform(15, 30))
                 continue
@@ -434,6 +468,10 @@ def main():
 
     try:
         for page in range(start_page, args.end_page + 1):
+            if driver is None:
+                print("Driver 已失效，結束爬蟲")
+                break
+
             url = f"{args.base_url}?{args.query_params}&{args.pagination.format(page=page)}"
             page_data, driver = download_page(driver, url, existing_keys, crawl_date_str, args)
 
