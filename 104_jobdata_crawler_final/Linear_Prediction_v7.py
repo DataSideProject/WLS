@@ -1,7 +1,8 @@
-# predict_salary_v6_hybrid_optimized.py
+# predict_salary_v7_hybrid_optimized.py
 # 優化版：加入公司特徵、擴大 NLP 特徵、增強模型參數
 # 新增：MAE, RMSE, 殘差圖, 預測區間
 # V7新增：資料淨化 (Outlier Removal) & 分群訓練 (Segmentation)
+# V8新增：NLP 可解釋性優化 (jieba 分詞)
 
 import pandas as pd
 import numpy as np
@@ -20,6 +21,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
 from collections import Counter
+import jieba
 
 warnings.filterwarnings("ignore")
 
@@ -125,7 +127,6 @@ else:
 
 # ====================== 1.6 資料淨化 (Outlier Removal) ======================
 log_print("執行資料淨化 (剔除極端值)...")
-# 只針對有薪資的資料進行過濾
 mask_has_salary = df['salary_min'].notna() & df['salary_max'].notna()
 df_salary = df[mask_has_salary]
 df_no_salary = df[~mask_has_salary]
@@ -143,7 +144,6 @@ df_salary_clean = df_salary[
 ]
 
 log_print(f"已剔除極端值: {len(df_salary) - len(df_salary_clean)} 筆")
-# 合併回主 dataframe (保留無薪資資料用於預測)
 df = pd.concat([df_salary_clean, df_no_salary], ignore_index=True)
 log_print(f"淨化後總筆數: {len(df)}")
 
@@ -170,7 +170,8 @@ for job in top10_jobs:
 # 3. 技能
 all_tools = []
 for tools in df['tools'].dropna():
-    all_tools.extend([t.strip().lower() for t in str(tools).split(',') if t.strip()])
+    # 過濾掉 '--', '不拘' 等無效值
+    all_tools.extend([t.strip().lower() for t in str(tools).split(',') if t.strip() and t.strip() not in ['--', '不拘']])
 top_skills = [t[0] for t in Counter(all_tools).most_common(20)]
 
 for skill in top_skills:
@@ -186,8 +187,7 @@ df['is_manager'] = df['management_responsibility'].apply(parse_management)
 top_industries = df['industry'].value_counts().head(10).index
 for ind in top_industries:
     df[f'industry_{ind}'] = (df['industry'] == ind).astype(int)
-
-# 7. 經驗 (保留原始數值用於分群)
+# 7. 經驗
 def parse_exp(exp):
     if pd.isna(exp): return 0
     exp = str(exp)
@@ -212,27 +212,50 @@ for comp in top_companies:
     if not safe_comp: safe_comp = 'unknown_company'
     df[f'company_{safe_comp}'] = (df['company'] == comp).astype(int)
 
-# 10. 文字特徵 (TF-IDF)
+# 10. 文字特徵 (TF-IDF with jieba)
+def jieba_tokenizer(text):
+    return jieba.lcut(text)
+
 def process_tfidf(col_name, prefix, max_features=100):
     texts = df[col_name].fillna('').astype(str)
-    vectorizer = TfidfVectorizer(max_features=max_features, analyzer='char', ngram_range=(1, 3))
+    # 使用 jieba 分詞，並過濾過短的詞
+    vectorizer = TfidfVectorizer(
+        max_features=max_features, 
+        tokenizer=jieba_tokenizer,
+        token_pattern=None, # 使用自定義 tokenizer 時需設為 None
+        ngram_range=(1, 2) # 考慮單詞和雙詞組合
+    )
     tfidf_matrix = vectorizer.fit_transform(texts)
     feature_names = vectorizer.get_feature_names_out()
     
     new_cols = []
     for i, name in enumerate(feature_names):
+        # 保留原始詞彙以便辨識
         clean_name = re.sub(r'[^\w]', '', name)
         if not clean_name: clean_name = f'feat{i}'
+        
+        # 為了避免欄位名稱衝突或非法字元，還是要做一點處理，但盡量保留原意
+        # 例如: "C++" -> "C" (re.sub 會拿掉 ++)，這點要注意
+        # 這裡我們用一個簡單的 mapping 技巧：
+        # 欄位名用 safe string，但我們另外存一個 mapping dict 供報告使用
+        
         col = f'{prefix}_{clean_name}'
         if col in df.columns: col = f'{col}_{i}'
+        
         df[col] = tfidf_matrix[:, i].toarray().flatten()
         new_cols.append(col)
+        
+        # 記錄 mapping (全域變數 feature_map)
+        feature_map[col] = name
+        
     return new_cols
 
-log_print("處理 job_description TF-IDF (Top 100)...")
+feature_map = {} # 用來存儲 欄位名 -> 原始關鍵字 的對照表
+
+log_print("處理 job_description TF-IDF (Top 100, jieba)...")
 desc_cols = process_tfidf('job_description', 'desc', max_features=100)
 
-log_print("處理 other_conditions TF-IDF (Top 100)...")
+log_print("處理 other_conditions TF-IDF (Top 100, jieba)...")
 cond_cols = process_tfidf('other_conditions', 'cond', max_features=100)
 
 # 交叉特徵
@@ -248,8 +271,7 @@ for skill in top_skills:
         df[col] = df[f'skill_{skill}'] * (df['city_for_stratify'] == city).astype(int)
 
 # 數值欄位標準化
-# 注意：這裡創建一個新的 scaled 欄位，保留 raw 用於分群
-df['exp_years_scaled'] = df['exp_years_raw'] # 暫存
+df['exp_years_scaled'] = df['exp_years_raw']
 numerical_cols = ['exp_years_scaled', 'edu_level']
 scaler_num = StandardScaler()
 df[numerical_cols] = scaler_num.fit_transform(df[numerical_cols])
@@ -284,9 +306,6 @@ def build_ensemble():
     return VotingRegressor([('rf', rf), ('xgb', xgb), ('gb', gb), ('cat', cat)])
 
 def train_segment_model(df_train, df_predict, target_col, segment_name):
-    """
-    針對特定分群進行訓練與預測
-    """
     if len(df_train) < 10:
         log_print(f"  [{segment_name}] 訓練資料不足 ({len(df_train)} 筆)，跳過")
         return None, None, [], []
@@ -295,7 +314,6 @@ def train_segment_model(df_train, df_predict, target_col, segment_name):
     X_train = X_train.apply(pd.to_numeric, errors='coerce').fillna(0)
     y_train_log = np.log1p(df_train[target_col])
 
-    # Lasso 特徵篩選
     lasso = LassoCV(cv=5, random_state=42, n_jobs=-1)
     lasso.fit(X_train, y_train_log)
     sel_features = X_train.columns[np.abs(lasso.coef_) > 1e-4]
@@ -303,10 +321,8 @@ def train_segment_model(df_train, df_predict, target_col, segment_name):
     
     log_print(f"  [{segment_name}] 特徵篩選: {len(feature_cols)} -> {len(sel_features)}")
 
-    # 訓練 Ensemble
     ensemble = build_ensemble()
     
-    # CV 評估
     kf = KFold(n_splits=5, shuffle=True, random_state=42)
     r2s, mapes, maes, rmses = [], [], [], []
     residuals = []
@@ -331,7 +347,6 @@ def train_segment_model(df_train, df_predict, target_col, segment_name):
     
     log_print(f"  [{segment_name}] R²={metrics['R2']:.4f}, MAE={metrics['MAE']:.0f}, RMSE={metrics['RMSE']:.0f}")
 
-    # 最終全量訓練與預測
     ensemble.fit(X_train_sel, y_train_log)
     
     predictions = None
@@ -340,7 +355,6 @@ def train_segment_model(df_train, df_predict, target_col, segment_name):
         X_pred = X_pred.apply(pd.to_numeric, errors='coerce').fillna(0)
         predictions = np.expm1(ensemble.predict(X_pred[sel_features]))
 
-    # 特徵重要性 (取 XGB)
     xgb = ensemble.named_estimators_['xgb']
     imp = pd.Series(xgb.feature_importances_, index=sel_features).sort_values(ascending=False)
     
@@ -349,12 +363,10 @@ def train_segment_model(df_train, df_predict, target_col, segment_name):
 # ====================== 3. 執行分群訓練 (Segmentation) ======================
 log_print("\n=== 開始分群訓練 (Junior vs Senior) ===")
 
-# 準備資料
 original_complete_indices = df[df['salary_min'].notna() & df['salary_max'].notna()].index
 train_full = df.loc[original_complete_indices].copy()
 predict_none = df[df['salary_min'].isna() & df['salary_max'].isna()].copy()
 
-# 定義分群
 def get_segment_mask(dframe, segment):
     if segment == 'Junior':
         return dframe['exp_years_raw'] < 3
@@ -372,11 +384,9 @@ feature_imps = []
 for target in targets:
     log_print(f"\n--- 預測目標: {target} ---")
     for seg in segments:
-        # 分割訓練集
         mask_train = get_segment_mask(train_full, seg)
         df_train_seg = train_full[mask_train]
         
-        # 分割預測集
         mask_pred = get_segment_mask(predict_none, seg)
         df_pred_seg = predict_none[mask_pred]
         
@@ -392,14 +402,11 @@ for target in targets:
                 all_residuals_max.extend(resids)
             feature_imps.append(imp)
             
-            # 填補預測值
             if preds is not None:
-                # 這裡需要用原始 index 來填值
                 pred_indices = df_pred_seg.index
                 df.loc[pred_indices, target] = preds
 
 # ====================== 4. 彙整報告 ======================
-# 計算整體加權平均指標
 total_samples = len(train_full)
 weighted_mae_min = 0
 weighted_mae_max = 0
@@ -414,7 +421,6 @@ for seg in segments:
 avg_mae_min = weighted_mae_min / total_samples
 avg_mae_max = weighted_mae_max / total_samples
 
-# 繪製殘差圖
 plt.figure(figsize=(15, 5))
 plt.subplot(1, 2, 1)
 sns.histplot(all_residuals_min, kde=True, color='blue')
@@ -427,14 +433,16 @@ plt.title(f'Overall Residuals (Max)\nMAE: {avg_mae_max:.0f}')
 plt.tight_layout()
 plt.savefig('model_diagnostics_segmented.png')
 
-# 彙整特徵重要性
+# 彙整特徵重要性 (並還原 NLP 關鍵字)
 avg_imp = pd.concat(feature_imps).groupby(level=0).mean().sort_values(ascending=False).head(20)
+# 替換 index 名稱為原始關鍵字 (如果有的話)
+new_index = [f"{i} ({feature_map.get(i, '')})" if i in feature_map else i for i in avg_imp.index]
+avg_imp.index = new_index
 
-# 生成報告
 report_content = f"""
-# 就業市場薪資預測報告 (分群優化版)
+# 就業市場薪資預測報告 (分群優化版 + NLP 可解釋性)
 **生成時間**：{datetime.now().strftime('%Y-%m-%d %H:%M')}
-**優化策略**：資料淨化 (Outlier Removal) + 年資分群 (Junior/Senior)
+**優化策略**：資料淨化 + 年資分群 + jieba 分詞
 
 ## 整體表現 (Weighted Average)
 - **Salary Min MAE**: {avg_mae_min:.0f} 元
@@ -455,10 +463,14 @@ report_content = f"""
 - 預測集 (面議)：{len(predict_none)}
 
 ## 特徵重要性分析（Top 20）
+(括號內為原始 NLP 關鍵字)
 {avg_imp.round(6).to_string() if not avg_imp.empty else "N/A"}
 
+## 執行日誌
+{chr(10).join([str(x) for x in log_lines])}
+
 ## 結論
-透過分群訓練，針對不同年資族群建立專屬模型，以降低整體預測誤差。
+透過分群訓練與 jieba 分詞，我們現在能更清楚看到哪些具體技能或描述影響薪資。
 """
 
 with open('salary_prediction_report.txt', 'w', encoding='utf-8') as f:
