@@ -6,7 +6,7 @@ import matplotlib.dates as mdates # 匯入 matplotlib 的 dates，用來格式�
 plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei', 'sans-serif'] # 設定畫圖時使用的字型為微軟正黑體，避免中文顯示亂碼
 
 # 設定參數 & 讀取資料 (使用您習慣的方式)
-symbol = 'TQQQ' # 股票代碼
+symbol = '00878.TW' # 股票代碼
 print(f'正在下載資料: {symbol} ...')
 data = yf.download(symbol, start='2015-01-01', progress=False) # 下載資料
 data.columns = data.columns.get_level_values(0) # 攤平多層索引
