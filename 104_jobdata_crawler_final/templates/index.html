@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Job Skill Tree - Cyberpunk Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+      :root {
+        --bg-color: #0a0a12;
+        --panel-bg: rgba(20, 20, 30, 0.7);
+        --neon-blue: #00f3ff;
+        --neon-pink: #bc13fe;
+        --neon-green: #0aff0a;
+        --text-color: #e0e0e0;
+        --card-bg: rgba(255, 255, 255, 0.05);
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        overflow: hidden;
+        background-image: linear-gradient(
+            rgba(0, 243, 255, 0.03) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+        background-size: 30px 30px;
+      }
+
+      .container {
+        display: flex;
+        height: 100vh;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 350px;
+        background: var(--panel-bg);
+        backdrop-filter: blur(10px);
+        border-right: 1px solid var(--neon-blue);
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+      }
+
+      .search-box {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--neon-blue);
+        color: var(--neon-blue);
+        border-radius: 5px;
+        outline: none;
+        font-size: 16px;
+      }
+
+      .job-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+      }
+
+      .job-card {
+        background: var(--card-bg);
+        margin-bottom: 10px;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 3px solid transparent;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .job-card:hover,
+      .job-card.active {
+        background: rgba(0, 243, 255, 0.1);
+        border-left: 3px solid var(--neon-blue);
+        box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+      }
+
+      .job-title {
+        font-weight: bold;
+        color: var(--neon-blue);
+        margin-bottom: 5px;
+      }
+
+      .job-company {
+        font-size: 0.9em;
+        color: #aaa;
+      }
+
+      .job-salary {
+        font-size: 0.85em;
+        color: var(--neon-green);
+        margin-top: 5px;
+      }
+
+      /* Main Content */
+      .main-content {
+        flex: 1;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .header {
+        padding: 20px;
+        background: var(--panel-bg);
+        border-bottom: 1px solid var(--neon-pink);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 24px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px var(--neon-pink);
+      }
+
+      #chart-container {
+        flex: 1;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0a0a12;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--neon-blue);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="sidebar">
+        <div class="search-box">
+          <input
+            type="text"
+            id="search"
+            class="search-input"
+            placeholder="Search Jobs..."
+          />
+        </div>
+        <div class="job-list" id="jobList">
+          <!-- Jobs will be loaded here -->
+        </div>
+      </div>
+      <div class="main-content">
+        <div class="header">
+          <h1 id="currentJobTitle">Select a Job</h1>
+          <div id="currentCompany" style="color: #aaa"></div>
+        </div>
+        <div id="chart-container"></div>
+      </div>
+    </div>
+
+    <script>
+      let allJobs = [];
+      const chartDom = document.getElementById("chart-container");
+      const myChart = echarts.init(chartDom, "dark");
+
+      // Fetch Jobs
+      fetch("/api/jobs")
+        .then((response) => response.json())
+        .then((data) => {
+          allJobs = data;
+          renderJobs(allJobs);
+        });
+
+      function renderJobs(jobs) {
+        const list = document.getElementById("jobList");
+        list.innerHTML = "";
+        jobs.forEach((job) => {
+          const card = document.createElement("div");
+          card.className = "job-card";
+          card.onclick = () => loadJobDetails(job.job_id, card);
+          card.innerHTML = `
+                    <div class="job-title">${job.job_title}</div>
+                    <div class="job-company">${job.company}</div>
+                    <div class="job-salary">${job.salary_min} - ${job.salary_max}</div>
+                `;
+          list.appendChild(card);
+        });
+      }
+
+      // Search Filter
+      document.getElementById("search").addEventListener("input", (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = allJobs.filter(
+          (job) =>
+            job.job_title.toLowerCase().includes(term) ||
+            job.company.toLowerCase().includes(term)
+        );
+        renderJobs(filtered);
+      });
+
+      function loadJobDetails(jobId, cardElement) {
+        // Highlight active card
+        document
+          .querySelectorAll(".job-card")
+          .forEach((c) => c.classList.remove("active"));
+        cardElement.classList.add("active");
+
+        fetch(`/api/job/${jobId}`)
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("currentJobTitle").innerText =
+              data.job.job_title;
+            document.getElementById("currentCompany").innerText =
+              data.job.company;
+            renderTree(data.tree);
+          });
+      }
+
+      function renderTree(treeData) {
+        const option = {
+          backgroundColor: "transparent",
+          tooltip: {
+            trigger: "item",
+            triggerOn: "mousemove",
+          },
+          series: [
+            {
+              type: "tree",
+              data: [treeData],
+              top: "10%",
+              left: "15%",
+              bottom: "10%",
+              right: "20%",
+              symbolSize: 15,
+              label: {
+                position: "left",
+                verticalAlign: "middle",
+                align: "right",
+                fontSize: 14,
+                color: "#fff",
+              },
+              leaves: {
+                label: {
+                  position: "right",
+                  verticalAlign: "middle",
+                  align: "left",
+                },
+              },
+              emphasis: {
+                focus: "descendant",
+              },
+              expandAndCollapse: true,
+              animationDuration: 550,
+              animationDurationUpdate: 750,
+              lineStyle: {
+                color: "#00f3ff",
+                curveness: 0.5,
+              },
+              itemStyle: {
+                color: "#bc13fe",
+                borderColor: "#00f3ff",
+              },
+            },
+          ],
+        };
+        myChart.setOption(option);
+      }
+
+      window.addEventListener("resize", myChart.resize);
+    </script>
+  </body>
+</html>

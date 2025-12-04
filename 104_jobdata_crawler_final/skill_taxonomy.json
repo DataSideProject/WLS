@@ -1,0 +1,17 @@
+{
+    "Programming Languages": [
+        "Python", "C++", "C#", "C", "Java", "JavaScript", "PHP", "R", "Go", "Matlab", "Shell", "Swift", "Kotlin", "Dart", "Rust", "TypeScript", "Scala"
+    ],
+    "Data & AI": [
+        "MS SQL", "MySQL", "PyTorch", "Power BI", "LLM", "Tableau", "tensorflow", "ETL", "PostgreSQL", "Oracle", "NLP", "PL/SQL", "Google Analytics", "OpenCV", "Prompt", "Hadoop", "Spark", "Keras", "Scikit-learn", "Pandas", "NumPy", "MongoDB", "NoSQL"
+    ],
+    "Web Development": [
+        "HTML", "CSS", "ASP.NET", "Node.js", "jQuery", "VueJS", "Django", "React", "Angular", "Flask", "Spring", "Laravel", "Bootstrap", "Tailwind"
+    ],
+    "Cloud & DevOps": [
+        "Linux", "Git", "AWS", "Github", "TCP/IP", "Vmware", "Microsoft Azure", "Docker", "Kubernetes", "GCP", "Jenkins", "CI/CD", "Ansible", "Terraform"
+    ],
+    "Office & Tools": [
+        "Excel", "PowerPoint", "Word", "Outlook", "SAP", "Visual Studio", "鼎新", "Jira", "Slack", "Trello", "Photoshop", "Illustrator", "Figma"
+    ]
+}

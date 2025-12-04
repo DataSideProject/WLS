@@ -1,0 +1,80 @@
+
+# 就業市場薪資預測報告 (分群優化版 + NLP 可解釋性)
+**生成時間**：2025-12-02 02:04
+**優化策略**：資料淨化 + 年資分群 + jieba 分詞
+
+## 整體表現 (Weighted Average)
+- **Salary Min MAE**: 7069 元
+- **Salary Max MAE**: 14660 元
+
+## 分群詳細表現
+### Junior (年資 < 3年)
+- **Min Salary**: R²=0.2597, MAE=6217
+- **Max Salary**: R²=0.2838, MAE=13940
+
+### Senior (年資 >= 3年)
+- **Min Salary**: R²=0.4323, MAE=11444
+- **Max Salary**: R²=0.5382, MAE=18359
+
+## 資料概況
+- 淨化後總職缺：5004
+- 訓練集 (有薪資)：1037
+- 預測集 (面議)：3511
+
+## 特徵重要性分析（Top 20）
+(括號內為原始 NLP 關鍵字)
+skill_oracle_in_新北市     0.095822
+industry_電腦軟體服務業        0.082873
+skill_mysql_in_台北市      0.080119
+skill_linux_in_台北市      0.078655
+skill_java_in_台北市       0.070845
+skill_mysql_in_台中市      0.056106
+cat_軟體工程師               0.052736
+industry_電腦及其週邊設備製造業    0.052638
+skill_pytorch           0.049556
+cat_演算法工程師              0.045984
+skill_python_in_台北市     0.044857
+company_緯創資通股份有限公司      0.044052
+industry_其他電子零組件相關業     0.041623
+desc_feat11 ( )         0.041203
+cat_資料科學家               0.039302
+skill_c++_in_台中市        0.038753
+cat_系統工程師               0.036127
+cat_AI工程師               0.035736
+skill_python            0.035357
+skill_tensorflow        0.033922
+
+## 執行日誌
+載入資料...
+連線至資料庫: 34.81.186.201...
+成功從資料庫讀取資料：10125 筆
+解析薪資欄位...
+已移除重複資料: 5094 筆 (剩餘 5031 筆)
+執行資料淨化 (剔除極端值)...
+薪資範圍過濾: Min(28590~121138), Max(32000~211385)
+已剔除極端值: 27 筆
+淨化後總筆數: 5004
+進行特徵工程...
+處理 job_description TF-IDF (Top 100, jieba)...
+處理 other_conditions TF-IDF (Top 100, jieba)...
+
+=== 開始分群訓練 (Junior vs Senior) ===
+
+--- 預測目標: salary_min ---
+正在訓練 Junior 模型 (Train: 868, Pred: 2367)...
+  [Junior_salary_min] 特徵篩選: 593 -> 28
+  [Junior_salary_min] R²=0.2597, MAE=6217, RMSE=10063
+正在訓練 Senior 模型 (Train: 169, Pred: 1144)...
+  [Senior_salary_min] 特徵篩選: 593 -> 38
+  [Senior_salary_min] R²=0.4323, MAE=11444, RMSE=16007
+
+--- 預測目標: salary_max ---
+正在訓練 Junior 模型 (Train: 868, Pred: 2367)...
+  [Junior_salary_max] 特徵篩選: 593 -> 31
+  [Junior_salary_max] R²=0.2838, MAE=13940, RMSE=20947
+正在訓練 Senior 模型 (Train: 169, Pred: 1144)...
+  [Senior_salary_max] 特徵篩選: 593 -> 32
+  [Senior_salary_max] R²=0.5382, MAE=18359, RMSE=25397
+
+## 結論
+透過分群訓練與 jieba 分詞，我們現在能更清楚看到哪些具體技能或描述影響薪資。
