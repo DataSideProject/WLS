@@ -1,6 +1,7 @@
 # export_from_database_fixed.py
 import pandas as pd
 from sqlalchemy import create_engine
+import mysql.connector
 import re
 
 # ==================== 1. 設定 ====================
@@ -12,7 +13,7 @@ DATABASE = 'rawdata'
 TABLE = '104rawdata'
 
 # 連線
-engine = create_engine(f'mysql+mysqlconnector://{USER}:{PASSWORD}@{HOST}:3306/{DATABASE}')
+engine = create_engine(f'mysql+pymysql://{USER}:{PASSWORD}@{HOST}:3306/{DATABASE}')
 
 print("正在匯出 104rawdata ...")
 df = pd.read_sql("SELECT * FROM 104rawdata", engine)
@@ -28,7 +29,7 @@ def clean_text(text):
     # 限制長度（Excel 單格上限 32767）
     return text[:32767]
 
-# 對所有文字欄位做清理
+# 
 text_columns = ['job_title', 'company', 'job_description', 'job_categories',
                 'other_conditions', 'tags', 'tools', 'work_skills']
 for col in text_columns:
