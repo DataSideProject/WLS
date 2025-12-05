@@ -8,10 +8,11 @@
     <style>
       :root {
         --bg-color: #0a0a12;
-        --panel-bg: rgba(20, 20, 30, 0.7);
+        --panel-bg: rgba(20, 20, 30, 0.8);
         --neon-blue: #00f3ff;
         --neon-pink: #bc13fe;
         --neon-green: #0aff0a;
+        --neon-red: #ff003c;
         --text-color: #e0e0e0;
         --card-bg: rgba(255, 255, 255, 0.05);
       }
@@ -45,11 +46,45 @@
         display: flex;
         flex-direction: column;
         box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        z-index: 10;
+        height: 100vh;
+      }
+
+      .nav-tabs {
+        display: flex;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
+      }
+
+      .nav-tab {
+        flex: 1;
+        padding: 15px;
+        text-align: center;
+        cursor: pointer;
+        color: #aaa;
+        transition: all 0.3s;
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      .nav-tab.active {
+        color: var(--neon-blue);
+        background: rgba(0, 243, 255, 0.1);
+        border-bottom: 2px solid var(--neon-blue);
+      }
+
+      /* Search Panel */
+      #searchPanel {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
       }
 
       .search-box {
         padding: 20px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
       }
 
       .search-input {
@@ -61,12 +96,45 @@
         border-radius: 5px;
         outline: none;
         font-size: 16px;
+        box-sizing: border-box;
       }
 
       .job-list {
         flex: 1;
         overflow-y: auto;
         padding: 10px;
+      }
+
+      /* Filter Buttons */
+      .filter-group {
+        margin-bottom: 15px;
+        text-align: left;
+      }
+      .filter-label {
+        font-size: 0.8em;
+        color: var(--neon-blue);
+        margin-bottom: 5px;
+        display: block;
+      }
+      .filter-btn {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid #444;
+        color: #aaa;
+        padding: 5px 10px;
+        margin: 2px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85em;
+        transition: all 0.2s;
+      }
+      .filter-btn:hover {
+        border-color: var(--neon-blue);
+        color: #fff;
+      }
+      .filter-btn.active {
+        background: rgba(0, 243, 255, 0.2);
+        border-color: var(--neon-blue);
+        color: var(--neon-blue);
       }
 
       .job-card {
@@ -103,12 +171,19 @@
         margin-top: 5px;
       }
 
+      .pred-salary {
+        font-size: 0.85em;
+        color: var(--neon-pink);
+        margin-top: 2px;
+      }
+
       /* Main Content */
       .main-content {
         flex: 1;
         position: relative;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
       }
 
       .header {
@@ -128,11 +203,215 @@
         text-shadow: 0 0 10px var(--neon-pink);
       }
 
-      #chart-container {
+      /* Views */
+      .view-container {
         flex: 1;
         width: 100%;
         height: 100%;
+        display: none; /* Hidden by default */
+        overflow-y: auto;
       }
+
+      .view-container.active {
+        display: block;
+      }
+
+      #chart-container {
+        width: 100%;
+        height: 100%;
+      }
+
+      /* Dashboard Grid */
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 20px;
+        padding: 20px;
+        height: 100%;
+        box-sizing: border-box;
+      }
+
+      .chart-card {
+        background: rgba(20, 20, 30, 0.6);
+        border: 1px solid rgba(0, 243, 255, 0.3);
+        border-radius: 10px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .chart-title {
+        color: var(--neon-blue);
+        margin-bottom: 10px;
+        font-size: 1.1em;
+        border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+        padding-bottom: 5px;
+      }
+
+      .chart-body {
+        flex: 1;
+        width: 100%;
+        min-height: 0; /* Important for flex child height */
+      }
+
+      /* Prediction Info Panel */
+      .prediction-info {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+        border: 1px solid var(--neon-pink);
+        font-size: 0.9em;
+      }
+      
+      .error-tag {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: bold;
+        margin-left: 10px;
+      }
+      .error-good { background: rgba(10, 255, 10, 0.2); color: #0aff0a; }
+      .error-bad { background: rgba(255, 0, 60, 0.2); color: #ff003c; }
+
+      /* Job Link Styling */
+      #jobLink {
+        transition: all 0.3s ease;
+        padding: 5px 10px;
+        border-radius: 4px;
+        border: 1px solid transparent;
+      }
+      #jobLink:hover {
+        border-color: var(--neon-blue);
+        background: rgba(0, 243, 255, 0.1);
+        box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        text-shadow: 0 0 5px var(--neon-blue);
+      }
+
+      /* Filter Panel */
+      .filter-panel {
+        padding: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .filter-section {
+        margin-bottom: 15px;
+      }
+
+      .filter-label {
+        display: block;
+        font-size: 0.85em;
+        color: var(--neon-blue);
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      .filter-select, .filter-input {
+        width: 100%;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid #444;
+        color: var(--text-color);
+        border-radius: 4px;
+        font-size: 0.9em;
+        outline: none;
+        transition: border-color 0.3s;
+      }
+
+      .filter-select:focus, .filter-input:focus {
+        border-color: var(--neon-blue);
+      }
+
+      .filter-checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 5px;
+      }
+
+      .filter-checkbox {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+
+      .filter-checkbox-label {
+        font-size: 0.9em;
+        color: #ccc;
+        cursor: pointer;
+      }
+
+      .filter-range {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .filter-range input {
+        flex: 1;
+      }
+
+      .range-label {
+        font-size: 0.8em;
+        color: #888;
+      }
+
+      .clear-filters-btn {
+        width: 100%;
+        padding: 8px;
+        background: rgba(255, 0, 60, 0.2);
+        border: 1px solid var(--neon-red);
+        color: var(--neon-red);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: all 0.3s;
+      }
+
+      .clear-filters-btn:hover {
+        background: rgba(255, 0, 60, 0.4);
+        box-shadow: 0 0 10px rgba(255, 0, 60, 0.3);
+      }
+
+      /* Pagination */
+      .pagination {
+        padding: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .pagination-btn {
+        padding: 6px 12px;
+        background: rgba(0, 243, 255, 0.1);
+        border: 1px solid var(--neon-blue);
+        color: var(--neon-blue);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85em;
+        transition: all 0.3s;
+      }
+
+      .pagination-btn:hover:not(:disabled) {
+        background: rgba(0, 243, 255, 0.3);
+        box-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+      }
+
+      .pagination-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      .pagination-info {
+        font-size: 0.85em;
+        color: #aaa;
+      }
+
 
       /* Scrollbar */
       ::-webkit-scrollbar {
@@ -148,141 +427,730 @@
       ::-webkit-scrollbar-thumb:hover {
         background: var(--neon-blue);
       }
+
+      /* Mobile Responsiveness */
+      @media (max-width: 768px) {
+        .container {
+          flex-direction: column;
+          height: 100vh;
+          overflow: hidden;
+        }
+
+        .sidebar {
+          width: 100%;
+          height: 100%; /* Full height for list view */
+          border-right: none;
+          border-bottom: 1px solid var(--neon-blue);
+          display: flex;
+          flex-direction: column;
+          z-index: 10;
+        }
+
+        .main-content {
+          width: 100%;
+          height: 100%;
+          position: fixed;
+          top: 0;
+          left: 0;
+          background: #050505;
+          z-index: 20;
+          display: none; /* Hidden by default on mobile */
+          flex-direction: column;
+        }
+        
+        .main-content.active-mobile {
+            display: flex;
+        }
+
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto;
+          overflow-y: auto;
+          padding-bottom: 80px; /* Space for bottom nav if needed */
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        
+        .chart-card {
+            min-height: 350px; /* Fix chart collapse */
+            height: auto;
+        }
+        
+        .chart-body {
+            height: 300px !important; /* Force height for ECharts */
+        }
+
+        .filter-panel {
+          max-height: 150px;
+          overflow-y: auto;
+        }
+
+        .header {
+          padding: 10px;
+        }
+
+        .header h1 {
+          font-size: 18px;
+        }
+        
+        #searchPanel {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .job-list {
+            flex: 1;
+            height: auto;
+            overflow-y: auto;
+        }
+        
+        /* Dashboard Mobile Specifics */
+        .sidebar.dashboard-mode {
+            height: auto;
+            max-height: 40vh;
+            flex: 0 0 auto;
+        }
+        
+        .main-content.dashboard-mode {
+            position: relative;
+            display: flex;
+            height: auto;
+            flex: 1;
+            overflow-y: auto;
+            z-index: 1;
+        }
+        
+        .container.dashboard-mode {
+            overflow-y: auto;
+        }
+        
+        #backBtn {
+            display: inline-block !important;
+        }
+      }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="sidebar">
-        <div class="search-box">
-          <input
-            type="text"
-            id="search"
-            class="search-input"
-            placeholder="Search Jobs..."
-          />
+    <div class="container" id="appContainer">
+      <div class="sidebar" id="sidebar">
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('search')">Job Search</div>
+            <div class="nav-tab" onclick="switchTab('dashboard')">Market Dashboard</div>
         </div>
-        <div class="job-list" id="jobList">
-          <!-- Jobs will be loaded here -->
+
+        <div id="searchPanel">
+            <!-- Search Box -->
+            <div class="search-box">
+            <input
+                type="text"
+                id="search"
+                class="search-input"
+                placeholder="Search Jobs..."
+            />
+            </div>
+
+            <!-- Filter Panel -->
+            <div class="filter-panel">
+                <!-- Location Filter -->
+                <div class="filter-section">
+                    <label class="filter-label">📍 Location</label>
+                    <select id="filterLocation" class="filter-select">
+                        <option value="All">All Locations</option>
+                    </select>
+                </div>
+
+                <!-- Salary Range Filter -->
+                <div class="filter-section">
+                    <label class="filter-label">💰 Salary Range (TWD)</label>
+                    <div class="filter-range">
+                        <input type="number" id="filterSalaryMin" class="filter-input" placeholder="Min" style="width: 45%;">
+                        <span style="color: #666;">-</span>
+                        <input type="number" id="filterSalaryMax" class="filter-input" placeholder="Max" style="width: 45%;">
+                    </div>
+                    <div class="range-label" style="margin-top: 5px;">Range: 28K - 200K</div>
+                </div>
+
+                <!-- Management Position Filter -->
+                <div class="filter-section">
+                    <div class="filter-checkbox-group">
+                        <input type="checkbox" id="filterManager" class="filter-checkbox">
+                        <label for="filterManager" class="filter-checkbox-label">👔 Management Positions Only</label>
+                    </div>
+                </div>
+
+                <!-- Remote Work Filter -->
+                <div class="filter-section">
+                    <label class="filter-label">🏠 Remote Work</label>
+                    <select id="filterRemote" class="filter-select">
+                        <option value="All">All Options</option>
+                        <option value="部分遠端">Partial Remote</option>
+                        <option value="完全遠端">Full Remote</option>
+                    </select>
+                </div>
+
+                <!-- Clear Filters Button -->
+                <button class="clear-filters-btn" onclick="clearFilters()">🔄 Clear All Filters</button>
+            </div>
+
+            <!-- Job List -->
+            <div class="job-list" id="jobList">
+            <!-- Jobs will be loaded here -->
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <button class="pagination-btn" id="prevPage" onclick="changePage(-1)">← Prev</button>
+                <span class="pagination-info" id="pageInfo">Page 1 of 1</span>
+                <button class="pagination-btn" id="nextPage" onclick="changePage(1)">Next →</button>
+            </div>
+        </div>
+        
+        <div id="dashboardPanel" style="display:none; padding: 20px;">
+            <div style="text-align: center; color: #aaa; margin-bottom: 20px;">
+                <p>Market Analysis</p>
+                <p style="font-size: 0.8em">Filter Data</p>
+            </div>
+            
+            <div class="filter-group">
+                <span class="filter-label">Job Category</span>
+                <button class="filter-btn active" onclick="setFilter('category', 'All', this)">All</button>
+                <button class="filter-btn" onclick="setFilter('category', 'Data Engineer', this)">Data Eng</button>
+                <button class="filter-btn" onclick="setFilter('category', 'AI Engineer', this)">AI Eng</button>
+                <button class="filter-btn" onclick="setFilter('category', 'Software Engineer', this)">Soft Eng</button>
+                <button class="filter-btn" onclick="setFilter('category', 'Analyst', this)">Analyst</button>
+                <button class="filter-btn" onclick="setFilter('category', 'Manager', this)">Manager</button>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label">Location</span>
+                <button class="filter-btn active" onclick="setFilter('city', 'All', this)">All</button>
+                <button class="filter-btn" onclick="setFilter('city', '台北市', this)">Taipei</button>
+                <button class="filter-btn" onclick="setFilter('city', '新北市', this)">New Taipei</button>
+                <button class="filter-btn" onclick="setFilter('city', '新竹', this)">Hsinchu</button>
+                <button class="filter-btn" onclick="setFilter('city', '台中', this)">Taichung</button>
+            </div>
+            
+            <div id="dataCount" style="text-align: center; color: var(--neon-green); font-size: 0.9em; margin-top: 20px;">
+                Loading...
+            </div>
         </div>
       </div>
-      <div class="main-content">
-        <div class="header">
-          <h1 id="currentJobTitle">Select a Job</h1>
-          <div id="currentCompany" style="color: #aaa"></div>
+
+      <div class="main-content" id="mainContent">
+        <!-- Job View -->
+        <div id="jobView" class="view-container active">
+            <div class="header">
+            <div style="flex:1">
+                <button id="backBtn" onclick="showMobileList()" style="display:none; background:none; border:none; color:var(--neon-blue); font-size:1.2em; cursor:pointer; margin-bottom: 10px;">← Back to Jobs</button>
+                <h1 id="currentJobTitle">Select a Job</h1>
+                <div id="currentCompany" style="color: #aaa"></div>
+                <a id="jobLink" href="#" target="_blank" style="display:none; color: var(--neon-blue); text-decoration: none; font-size: 0.9em; margin-top: 5px; display: inline-block;">
+                    🔗 View on 104 Job Bank →
+                </a>
+            </div>
+            <div id="predictionPanel" style="display:none; text-align: right;">
+                <div style="color: var(--neon-pink); font-size: 0.9em;">AI Predicted Salary</div>
+                <div id="predSalaryVal" style="font-size: 1.2em; font-weight: bold;"></div>
+                <div id="predErrorVal" style="font-size: 0.8em;"></div>
+            </div>
+            </div>
+            <div id="chart-container"></div>
         </div>
-        <div id="chart-container"></div>
+
+        <!-- Dashboard View -->
+        <div id="dashboardView" class="view-container">
+            <div class="dashboard-grid">
+                <div class="chart-card">
+                    <div class="chart-title">Salary Distribution</div>
+                    <div id="chart-salary-dist" class="chart-body"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Experience vs Salary</div>
+                    <div id="chart-exp-salary" class="chart-body"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Top Skills Demand</div>
+                    <div id="chart-top-skills" class="chart-body"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Highest Paying Skills</div>
+                    <div id="chart-skill-salary" class="chart-body"></div>
+                </div>
+            </div>
+        </div>
       </div>
     </div>
 
     <script>
       let allJobs = [];
-      const chartDom = document.getElementById("chart-container");
-      const myChart = echarts.init(chartDom, "dark");
+      let dashboardLoaded = false;
+      let currentFilters = { category: 'All', city: 'All' };
+      
+      // ECharts instances
+      let treeChart = echarts.init(document.getElementById("chart-container"), "dark");
+      let dashCharts = {};
+      let predErrorGood = 0;
+      let predErrorBad = 0;
+      let currentPage = 1;
 
-      // Fetch Jobs
-      fetch("/api/jobs")
-        .then((response) => response.json())
-        .then((data) => {
-          allJobs = data;
-          renderJobs(allJobs);
-        });
-
-      function renderJobs(jobs) {
-        const list = document.getElementById("jobList");
-        list.innerHTML = "";
-        jobs.forEach((job) => {
-          const card = document.createElement("div");
-          card.className = "job-card";
-          card.onclick = () => loadJobDetails(job.job_id, card);
-          card.innerHTML = `
-                    <div class="job-title">${job.job_title}</div>
-                    <div class="job-company">${job.company}</div>
-                    <div class="job-salary">${job.salary_min} - ${job.salary_max}</div>
-                `;
-          list.appendChild(card);
-        });
+      // Mobile Navigation
+      function showMobileList() {
+          document.getElementById('mainContent').classList.remove('active-mobile');
+      }
+      
+      function showMobileDetail() {
+          if (window.innerWidth <= 768) {
+              document.getElementById('mainContent').classList.add('active-mobile');
+              setTimeout(() => treeChart.resize(), 100);
+          }
       }
 
-      // Search Filter
-      document.getElementById("search").addEventListener("input", (e) => {
-        const term = e.target.value.toLowerCase();
-        const filtered = allJobs.filter(
-          (job) =>
-            job.job_title.toLowerCase().includes(term) ||
-            job.company.toLowerCase().includes(term)
-        );
-        renderJobs(filtered);
+      // Load filter options from API
+      async function loadFilterOptions() {
+          try {
+              const res = await fetch('/api/filters/options');
+              const options = await res.json();
+              
+              // Populate location dropdown
+              const locationSelect = document.getElementById('filterLocation');
+              locationSelect.innerHTML = '<option value="All">All Locations</option>';
+              options.locations.forEach(loc => {
+                  const option = document.createElement('option');
+                  option.value = loc;
+                  option.textContent = loc;
+                  locationSelect.appendChild(option);
+              });
+              
+              // Update salary range label
+              if (options.salary_range) {
+                  const rangeLabel = document.querySelector('.range-label');
+                  rangeLabel.textContent = `Range: ${(options.salary_range.min/1000).toFixed(0)}K - ${(options.salary_range.max/1000).toFixed(0)}K`;
+              }
+          } catch (err) {
+              console.error('Failed to load filter options:', err);
+          }
+      }
+
+      // Debounce function
+      function debounce(func, wait) {
+          let timeout;
+          return function executedFunction(...args) {
+              const later = () => {
+                  clearTimeout(timeout);
+                  func(...args);
+              };
+              clearTimeout(timeout);
+              timeout = setTimeout(later, wait);
+          };
+      }
+
+      // Load jobs with filters and pagination
+      async function loadJobs(page = 1) {
+          try {
+              currentPage = page;
+              
+              // Build query parameters
+              const params = new URLSearchParams();
+              params.append('page', page);
+              params.append('per_page', 50);
+              
+              // Add filters
+              const location = document.getElementById('filterLocation')?.value;
+              if (location && location !== 'All') params.append('location', location);
+              
+              const salaryMin = document.getElementById('filterSalaryMin')?.value;
+              if (salaryMin) params.append('salary_min', salaryMin);
+              
+              const salaryMax = document.getElementById('filterSalaryMax')?.value;
+              if (salaryMax) params.append('salary_max', salaryMax);
+              
+              const isManager = document.getElementById('filterManager')?.checked;
+              if (isManager) params.append('is_manager', 1);
+              
+              const remoteWork = document.getElementById('filterRemote')?.value;
+              if (remoteWork && remoteWork !== 'All') params.append('remote_work', remoteWork);
+              
+              // Add search term if exists
+              const searchTerm = document.getElementById('search')?.value;
+              if (searchTerm) {
+                  params.append('search', searchTerm);
+              }
+              
+              const res = await fetch(`/api/jobs?${params.toString()}`);
+              if (!res.ok) throw new Error('API returned error: ' + res.status);
+              
+              const data = await res.json();
+              
+              if (!data.jobs || data.jobs.length === 0) {
+                  document.getElementById('jobList').innerHTML = '<div style="color: #ff003c; padding: 20px; text-align: center;">No jobs found. Try adjusting your filters.</div>';
+                  updatePagination(0, 1, 1);
+                  return;
+              }
+              
+              renderJobs(data.jobs);
+              updatePagination(data.total_count, data.page, data.total_pages);
+              
+              console.log(`Loaded ${data.jobs.length} jobs (${data.total_count} total)`);
+          } catch (err) {
+              console.error('Failed to load jobs:', err);
+              document.getElementById('jobList').innerHTML = '<div style="color: #ff003c; padding: 20px; text-align: center;">Connection failed: ' + err.message + '. Press F12 to see console errors.</div>';
+          }
+      }
+
+      // Update pagination controls
+      function updatePagination(totalCount, page, totalPages) {
+          const pageInfo = document.getElementById('pageInfo');
+          const prevBtn = document.getElementById('prevPage');
+          const nextBtn = document.getElementById('nextPage');
+          
+          pageInfo.textContent = `Page ${page} of ${totalPages} (${totalCount} jobs)`;
+          prevBtn.disabled = page <= 1;
+          nextBtn.disabled = page >= totalPages;
+      }
+
+      // Change page
+      function changePage(delta) {
+          const newPage = currentPage + delta;
+          if (newPage >= 1) {
+              loadJobs(newPage);
+          }
+      }
+
+      // Clear all filters
+      function clearFilters() {
+          document.getElementById('filterLocation').value = 'All';
+          document.getElementById('filterSalaryMin').value = '';
+          document.getElementById('filterSalaryMax').value = '';
+          document.getElementById('filterManager').checked = false;
+          document.getElementById('filterRemote').value = 'All';
+          document.getElementById('search').value = '';
+          loadJobs(1);
+      }
+
+      // Apply filters when changed
+      document.addEventListener('DOMContentLoaded', () => {
+          loadFilterOptions();
+          loadJobs(1);
+          
+          // Add event listeners for filters
+          document.getElementById('filterLocation')?.addEventListener('change', () => loadJobs(1));
+          document.getElementById('filterSalaryMin')?.addEventListener('change', () => loadJobs(1));
+          document.getElementById('filterSalaryMax')?.addEventListener('change', () => loadJobs(1));
+          document.getElementById('filterManager')?.addEventListener('change', () => loadJobs(1));
+          document.getElementById('filterRemote')?.addEventListener('change', () => loadJobs(1));
+          
+          // Add debounce for search input
+          const searchInput = document.getElementById('search');
+          if (searchInput) {
+              searchInput.addEventListener('input', debounce(() => loadJobs(1), 500));
+          }
       });
 
-      function loadJobDetails(jobId, cardElement) {
-        // Highlight active card
-        document
-          .querySelectorAll(".job-card")
-          .forEach((c) => c.classList.remove("active"));
-        cardElement.classList.add("active");
+      function switchTab(tab) {
+          document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+          event.target.classList.add('active');
+          
+          const appContainer = document.getElementById('appContainer');
+          const sidebar = document.getElementById('sidebar');
+          const mainContent = document.getElementById('mainContent');
 
-        fetch(`/api/job/${jobId}`)
-          .then((response) => response.json())
-          .then((data) => {
-            document.getElementById("currentJobTitle").innerText =
-              data.job.job_title;
-            document.getElementById("currentCompany").innerText =
-              data.job.company;
-            renderTree(data.tree);
+          if (tab === 'search') {
+              // Search Mode
+              document.getElementById('searchPanel').style.display = 'flex';
+              document.getElementById('dashboardPanel').style.display = 'none';
+              document.getElementById('jobView').classList.add('active');
+              document.getElementById('dashboardView').classList.remove('active');
+              
+              // Reset Mobile View
+              appContainer.classList.remove('dashboard-mode');
+              sidebar.classList.remove('dashboard-mode');
+              mainContent.classList.remove('dashboard-mode');
+              
+              setTimeout(() => treeChart.resize(), 100);
+          } else {
+              // Dashboard Mode
+              document.getElementById('searchPanel').style.display = 'none';
+              document.getElementById('dashboardPanel').style.display = 'block';
+              document.getElementById('jobView').classList.remove('active');
+              document.getElementById('dashboardView').classList.add('active');
+              
+              // Mobile Dashboard Mode
+              appContainer.classList.add('dashboard-mode');
+              sidebar.classList.add('dashboard-mode');
+              mainContent.classList.add('dashboard-mode');
+              
+              // Add delay to ensure DOM is visible before ECharts init
+              setTimeout(loadDashboard, 100);
+          }
+      }
+      
+      function setFilter(type, value, btn) {
+          // Update active state
+          const group = btn.parentElement;
+          group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          currentFilters[type] = value;
+          loadDashboard();
+      }
+
+      function renderJobs(jobs) {
+          const list = document.getElementById('jobList');
+          list.innerHTML = '';
+          
+          jobs.forEach(job => {
+              const card = document.createElement('div');
+              card.className = 'job-card';
+              card.onclick = () => loadJobDetails(job.job_id, card);
+              
+              // Determine salary display
+              let salaryDisplay = '';
+              let predDisplay = '';
+              
+              if (job.salary_note === '無薪資資訊') {
+                  // Negotiable case
+                  salaryDisplay = '<span style="color: #aaa;">待遇面議</span>';
+                  // Use V7 prediction (which is in salary_min/max)
+                  if (job.salary_min && job.salary_max) {
+                      const avg = Math.round((job.salary_min + job.salary_max) / 2);
+                      predDisplay = `AI: ~$${avg.toLocaleString()}`;
+                  }
+              } else {
+                  // Actual salary case
+                  if (job.salary_min && job.salary_max) {
+                      salaryDisplay = `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`;
+                  } else {
+                      salaryDisplay = 'Salary Negotiable';
+                  }
+                  
+                  // Use generated prediction (pred_min/max)
+                  if (job.pred_min && job.pred_max) {
+                      const avg = Math.round((job.pred_min + job.pred_max) / 2);
+                      predDisplay = `AI: ~$${avg.toLocaleString()}`;
+                  }
+              }
+
+              card.innerHTML = `
+                  <div class="job-title">${job.job_title}</div>
+                  <div class="job-company">${job.company}</div>
+                  <div class="job-salary">${salaryDisplay}</div>
+                  <div class="pred-salary">${predDisplay}</div>
+              `;
+              list.appendChild(card);
           });
+      }
+
+      async function loadJobDetails(jobId, cardElement) {
+          // Highlight active card
+          document.querySelectorAll('.job-card').forEach(c => c.classList.remove('active'));
+          if (cardElement) cardElement.classList.add('active');
+          
+          // Mobile: Show Detail View
+          showMobileDetail();
+
+          try {
+              const res = await fetch(`/api/job/${jobId}`);
+              const data = await res.json();
+              
+              if (data.error) {
+                  console.error(data.error);
+                  return;
+              }
+
+              // Update Header
+              document.getElementById("currentJobTitle").innerText = data.job.job_title;
+              document.getElementById("currentCompany").innerText = data.job.company;
+              
+              // Update Job Link
+              const jobLink = document.getElementById("jobLink");
+              jobLink.href = `https://www.104.com.tw/job/${jobId}`;
+              jobLink.style.display = "inline-block";
+
+              // Update Prediction Panel
+              const predPanel = document.getElementById("predictionPanel");
+              const predVal = document.getElementById("predSalaryVal");
+              const predError = document.getElementById("predErrorVal");
+              
+              predPanel.style.display = "block";
+              
+              if (data.job.salary_note === '無薪資資訊') {
+                  // Negotiable: Show V7 Prediction
+                  if (data.job.salary_min && data.job.salary_max) {
+                      predVal.innerText = `$${data.job.salary_min.toLocaleString()} - $${data.job.salary_max.toLocaleString()}`;
+                      predVal.style.color = "var(--neon-blue)"; // Use blue to indicate estimation
+                      predError.innerText = "(Estimated for Negotiable Salary)";
+                      predError.style.color = "#aaa";
+                  } else {
+                      predVal.innerText = "N/A";
+                      predError.innerText = "";
+                  }
+              } else {
+                  // Actual Salary: Show Generated Prediction
+                  if (data.job.pred_min && data.job.pred_max) {
+                      predVal.innerText = `$${Math.round(data.job.pred_min).toLocaleString()} - $${Math.round(data.job.pred_max).toLocaleString()}`;
+                      predVal.style.color = "var(--neon-pink)";
+                      
+                      // Calculate difference
+                      const actualAvg = (data.job.salary_min + data.job.salary_max) / 2;
+                      const predAvg = (data.job.pred_min + data.job.pred_max) / 2;
+                      const diff = predAvg - actualAvg;
+                      const diffPercent = (diff / actualAvg) * 100;
+                      
+                      const sign = diff > 0 ? "+" : "";
+                      const color = diff > 0 ? "var(--neon-green)" : "var(--neon-red)";
+                      
+                      predError.innerText = `Diff: ${sign}${Math.round(diff).toLocaleString()} (${sign}${diffPercent.toFixed(1)}%)`;
+                      predError.style.color = color;
+                  } else {
+                      predVal.innerText = "N/A";
+                      predError.innerText = "";
+                  }
+              }
+
+              // Render Tree
+              renderTree(data.tree);
+
+          } catch (err) {
+              console.error("Failed to load job details:", err);
+          }
       }
 
       function renderTree(treeData) {
         const option = {
           backgroundColor: "transparent",
-          tooltip: {
-            trigger: "item",
-            triggerOn: "mousemove",
-          },
+          tooltip: { trigger: "item", triggerOn: "mousemove" },
           series: [
             {
               type: "tree",
               data: [treeData],
-              top: "10%",
-              left: "15%",
-              bottom: "10%",
-              right: "20%",
+              top: "10%", left: "15%", bottom: "10%", right: "20%",
               symbolSize: 15,
-              label: {
-                position: "left",
-                verticalAlign: "middle",
-                align: "right",
-                fontSize: 14,
-                color: "#fff",
-              },
-              leaves: {
-                label: {
-                  position: "right",
-                  verticalAlign: "middle",
-                  align: "left",
-                },
-              },
-              emphasis: {
-                focus: "descendant",
-              },
+              label: { position: "left", verticalAlign: "middle", align: "right", fontSize: 14, color: "#fff" },
+              leaves: { label: { position: "right", verticalAlign: "middle", align: "left" } },
+              emphasis: { focus: "descendant" },
               expandAndCollapse: true,
               animationDuration: 550,
               animationDurationUpdate: 750,
-              lineStyle: {
-                color: "#00f3ff",
-                curveness: 0.5,
-              },
-              itemStyle: {
-                color: "#bc13fe",
-                borderColor: "#00f3ff",
-              },
+              lineStyle: { color: "#00f3ff", curveness: 0.5 },
+              itemStyle: { color: "#bc13fe", borderColor: "#00f3ff" },
             },
           ],
         };
-        myChart.setOption(option);
+        treeChart.setOption(option);
       }
 
-      window.addEventListener("resize", myChart.resize);
-    </script>
+      function loadDashboard() {
+          const params = new URLSearchParams(currentFilters);
+          // Add timestamp to prevent caching
+          params.append('_t', new Date().getTime());
+          
+          fetch(`/api/analysis/stats?${params.toString()}`)
+            .then(res => res.json())
+            .then(data => {
+                console.log("Dashboard data received:", data);
+                initChart('chart-salary-dist', getSalaryDistOption(data.salary_dist));
+                initChart('chart-exp-salary', getExpSalaryOption(data.exp_stats));
+                initChart('chart-top-skills', getTopSkillsOption(data.top_skills));
+                initChart('chart-skill-salary', getSkillSalaryOption(data.skill_salary));
+                
+                if(data.count) {
+                    document.getElementById('dataCount').innerText = `Analyzing ${data.count} jobs`;
+                }
+                
+                dashboardLoaded = true;
+                setTimeout(() => Object.values(dashCharts).forEach(c => c.resize()), 50);
+            });
+      }
+
+      function initChart(id, option) {
+        if (!dashCharts[id]) {
+          dashCharts[id] = echarts.init(document.getElementById(id), "dark");
+        }
+        // Use notMerge: true to force complete redraw when data changes
+        dashCharts[id].setOption(option, true);
+      }
+
+      // --- Chart Options ---
+      function getSalaryDistOption(data) {
+        return {
+          backgroundColor: "transparent",
+          tooltip: { trigger: "axis" },
+          xAxis: {
+            type: "category",
+            data: data.bins,
+            axisLabel: { rotate: 45 },
+          },
+          yAxis: { type: "value" },
+          series: [
+            { data: data.counts, type: "bar", itemStyle: { color: "#00f3ff" } },
+          ],
+        };
+      }
+
+      function getExpSalaryOption(data) {
+        return {
+          backgroundColor: "transparent",
+          tooltip: { trigger: "axis" },
+          xAxis: {
+            type: "category",
+            data: data.map((d) => d.name),
+            axisLabel: { rotate: 45 },
+          },
+          yAxis: { type: "value" },
+          series: [
+            {
+              data: data.map((d) => d.value),
+              type: "line",
+              smooth: true,
+              itemStyle: { color: "#bc13fe" },
+            },
+          ],
+        };
+      }
+
+      function getTopSkillsOption(data) {
+        return {
+          backgroundColor: "transparent",
+          tooltip: { trigger: "axis" },
+          xAxis: { type: "value" },
+          yAxis: { type: "category", data: data.map((d) => d.name).reverse() },
+          series: [
+            {
+              data: data.map((d) => d.value).reverse(),
+              type: "bar",
+              itemStyle: { color: "#0aff0a" },
+            },
+          ],
+        };
+      }
+
+      function getSkillSalaryOption(data) {
+        return {
+          backgroundColor: "transparent",
+          tooltip: { trigger: "axis" },
+          xAxis: {
+            type: "category",
+            data: data.map((d) => d.name),
+            axisLabel: { rotate: 45 },
+          },
+          yAxis: { type: "value" },
+          series: [
+            {
+              data: data.map((d) => d.value),
+              type: "bar",
+              itemStyle: { color: "#ff003c" },
+            },
+          ],
+        };
+      }
+
+      
+      window.addEventListener("resize", () => {
+        treeChart.resize();
+        Object.values(dashCharts).forEach((c) => c.resize());
+      });
+    </script>    
   </body>
 </html>
