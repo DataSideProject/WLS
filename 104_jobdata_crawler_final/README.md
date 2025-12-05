@@ -25,15 +25,6 @@ flowchart TD
     G --> H["job_data_final_with_predictions.csv<br/>唯一真相來源"]
     H --> I["app.py + index.html<br/>Flask 網頁伺服器"]
     I --> J["瀏覽器開 localhost:5000<br/>技能樹 + 儀表板 + 搜尋"]
-    
-
-**修復重點**（我用工具驗證過，現在絕對不會出錯）：
-- 去掉多餘的 `[( )]` 符號（Mermaid 對圓柱形狀有時解析怪）。
-- 用雙引號包複雜標籤，避免中文衝突。
-- 簡化 style（只留三個重點顏色）。
-- 測試：在 GitHub Preview 直接跑過，完美顯示箭頭 + 顏色！
-
-#### **如果還是擔心，超穩的純文字版（永遠不會壞）**
    
 ```
 
