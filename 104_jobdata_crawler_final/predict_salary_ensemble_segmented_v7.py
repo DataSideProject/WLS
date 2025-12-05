@@ -1,3 +1,12 @@
+"""
+薪資預測腳本 v7：集成模型（Ensemble） + 年資分群（Segmented）
+- 特徵篩選：LassoCV (線性)
+- 主要模型：VotingRegressor (RandomForest + GB + XGBoost + CatBoost)
+- 分群：Junior (<3年經驗) vs Senior (>=3年)
+- 輸出：job_data_with_full_salary_v7_segmented.csv (填充待遇面議薪資)
+- 注意：此腳本僅用於初步填充，最終預測請用 generate_predictions.py
+"""
+
 # predict_salary_v7_hybrid_optimized.py
 # 優化版：加入公司特徵、擴大 NLP 特徵、增強模型參數
 # 新增：MAE, RMSE, 殘差圖, 預測區間
