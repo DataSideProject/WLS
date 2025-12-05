@@ -15,6 +15,7 @@
 
 import pandas as pd
 import numpy as np
+import os
 import re
 from sklearn.model_selection import KFold
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
@@ -89,7 +90,7 @@ def parse_management(mgmt):
 log_print("載入資料...")
 
 # GCP MariaDB 設定
-HOST = '34.81.186.201'
+HOST = '35.185.175.249'
 USER = 'datauser'
 PASSWORD = '123456'
 DATABASE = 'rawdata'
@@ -440,7 +441,8 @@ sns.histplot(all_residuals_max, kde=True, color='green')
 plt.title(f'Overall Residuals (Max)\nMAE: {avg_mae_max:.0f}')
 
 plt.tight_layout()
-plt.savefig('model_diagnostics_segmented.png')
+script_dir = os.path.dirname(os.path.abspath(__file__))
+plt.savefig(os.path.join(script_dir, 'model_diagnostics_segmented.png'))
 
 # 彙整特徵重要性 (並還原 NLP 關鍵字)
 avg_imp = pd.concat(feature_imps).groupby(level=0).mean().sort_values(ascending=False).head(20)
@@ -482,10 +484,12 @@ report_content = f"""
 透過分群訓練與 jieba 分詞，我們現在能更清楚看到哪些具體技能或描述影響薪資。
 """
 
-with open('salary_prediction_report.txt', 'w', encoding='utf-8') as f:
+report_path = os.path.join(script_dir, 'salary_prediction_report.txt')
+with open(report_path, 'w', encoding='utf-8') as f:
     f.write(report_content)
 
 df['salary_avg'] = df[['salary_min', 'salary_max']].mean(axis=1)
-df.to_csv('job_data_with_full_salary_v7_segmented.csv', index=False)
+output_csv_path = os.path.join(script_dir, 'job_data_with_full_salary_v7_segmented.csv')
+df.to_csv(output_csv_path, index=False)
 log_print("預測完成！結果已存為 job_data_with_full_salary_v7_segmented.csv")
 log_print("報告已生成：salary_prediction_report.txt")

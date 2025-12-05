@@ -33,7 +33,7 @@ def parse_arguments():
     parser.add_argument("--query_params", default="jobcat=2007001022,2007001012,2007001020,2007001026,2007001018")
     parser.add_argument("--pagination", default="page={page}")
     parser.add_argument("--start_page", type=int, default=1)
-    parser.add_argument("--end_page", type=int, default=107)
+    parser.add_argument("--end_page", type=int, default=150)
     parser.add_argument("--output_csv", default="job_data.csv")
     parser.add_argument("--headless", action="store_true", default=False)
     return parser.parse_args()
