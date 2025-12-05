@@ -225,11 +225,13 @@
       .dashboard-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr 1fr;
+        grid-auto-rows: min-content; /* Allow rows to size to content */
         gap: 20px;
         padding: 20px;
-        height: 100%;
+        /* height: 100%; Removed to allow scrolling */
         box-sizing: border-box;
+        max-width: 1600px;
+        margin: 0 auto;
       }
 
       .chart-card {
@@ -252,7 +254,16 @@
       .chart-body {
         flex: 1;
         width: 100%;
-        min-height: 0; /* Important for flex child height */
+        min-height: 350px; /* Give charts a default height */
+      }
+
+      .map-card {
+        grid-column: 1 / -1; /* Span full width */
+        min-height: 500px;   /* Taller for map */
+      }
+      
+      .map-card .chart-body {
+        min-height: 450px;
       }
 
       /* Prediction Info Panel */
@@ -428,6 +439,61 @@
         background: var(--neon-blue);
       }
 
+      /* Metrics & Map Styles */
+      .metrics-row {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 15px;
+          margin-bottom: 25px;
+      }
+      .metric-card {
+          background: rgba(30,30,30,0.6);
+          border: 1px solid #333;
+          padding: 15px;
+          border-radius: 8px;
+          text-align: center;
+          box-shadow: 0 0 10px rgba(0,0,0,0.5);
+          transition: transform 0.2s;
+          /* Flex Alignment */
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          min-height: 120px; /* Fixed height for consistency */
+      }
+      .metric-card:hover {
+          transform: translateY(-2px);
+          border-color: var(--neon-blue);
+      }
+      .metric-value {
+          font-size: 1.8em;
+          font-weight: bold;
+          color: var(--neon-blue);
+          margin-bottom: 5px;
+          text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+          line-height: 1.2; /* Better spacing for wrapped text */
+          word-break: break-word; /* Prevent overflow */
+      }
+      .metric-label {
+          font-size: 0.9em;
+          color: #aaa;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+      }
+      .chart-card.map-card {
+          grid-column: span 2;
+          height: 500px;
+      }
+      @media (max-width: 768px) {
+          .metrics-row {
+              grid-template-columns: 1fr 1fr;
+          }
+          .chart-card.map-card {
+              grid-column: span 1;
+              height: 550px; /* Increased height for better mobile map view */
+          }
+      }
+
       /* Mobile Responsiveness */
       @media (max-width: 768px) {
         .container {
@@ -506,28 +572,39 @@
             overflow-y: auto;
         }
         
-        /* Dashboard Mobile Specifics */
+        /* Dashboard Mobile Specifics - Stack Layout */
         .sidebar.dashboard-mode {
+            position: relative; /* Not fixed */
+            width: 100%;
             height: auto;
-            max-height: 40vh;
+            max-height: none; /* Let it grow if needed, or collapse */
             flex: 0 0 auto;
+            z-index: 50;
+            border-bottom: 2px solid var(--neon-blue);
+            background: #050505;
         }
         
         .main-content.dashboard-mode {
-            position: relative;
-            display: flex;
+            position: relative; /* Stack below sidebar */
+            top: 0;
+            left: 0;
+            width: 100%;
             height: auto;
-            flex: 1;
-            overflow-y: auto;
-            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: visible; /* Let container handle scroll */
+            z-index: 10;
         }
         
         .container.dashboard-mode {
-            overflow-y: auto;
+            overflow-y: auto; /* Main scroll on container */
+            height: 100vh;
+            display: block; /* Allow normal flow */
         }
         
-        #backBtn {
-            display: inline-block !important;
+        /* Make filters collapsible on mobile if strictly needed, but stack is safer for now */
+        .dashboard-mode #dashboardPanel {
+            padding-bottom: 10px;
         }
       }
     </style>
@@ -615,25 +692,36 @@
             
             <div class="filter-group">
                 <span class="filter-label">Job Category</span>
-                <button class="filter-btn active" onclick="setFilter('category', 'All', this)">All</button>
-                <button class="filter-btn" onclick="setFilter('category', 'Data Engineer', this)">Data Eng</button>
-                <button class="filter-btn" onclick="setFilter('category', 'AI Engineer', this)">AI Eng</button>
-                <button class="filter-btn" onclick="setFilter('category', 'Software Engineer', this)">Soft Eng</button>
-                <button class="filter-btn" onclick="setFilter('category', 'Analyst', this)">Analyst</button>
-                <button class="filter-btn" onclick="setFilter('category', 'Manager', this)">Manager</button>
+                <select id="dashCategory" class="filter-select" onchange="loadDashboard()">
+                    <option value="All">All Categories</option>
+                </select>
             </div>
 
             <div class="filter-group">
                 <span class="filter-label">Location</span>
-                <button class="filter-btn active" onclick="setFilter('city', 'All', this)">All</button>
-                <button class="filter-btn" onclick="setFilter('city', '台北市', this)">Taipei</button>
-                <button class="filter-btn" onclick="setFilter('city', '新北市', this)">New Taipei</button>
-                <button class="filter-btn" onclick="setFilter('city', '新竹', this)">Hsinchu</button>
-                <button class="filter-btn" onclick="setFilter('city', '台中', this)">Taichung</button>
+                <select id="dashLocation" class="filter-select" onchange="loadDashboard()">
+                    <option value="All">All Locations</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-checkbox-group">
+                    <input type="checkbox" id="dashManager" class="filter-checkbox" onchange="loadDashboard()">
+                    <label for="dashManager" class="filter-checkbox-label">Management Positions Only</label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label">Remote Work</span>
+                <select id="dashRemote" class="filter-select" onchange="loadDashboard()">
+                    <option value="All">All Options</option>
+                    <option value="部分遠端">Partial Remote</option>
+                    <option value="完全遠端">Full Remote</option>
+                </select>
             </div>
             
             <div id="dataCount" style="text-align: center; color: var(--neon-green); font-size: 0.9em; margin-top: 20px;">
-                Loading...
+                Analyzing 0 jobs
             </div>
         </div>
       </div>
@@ -661,7 +749,32 @@
 
         <!-- Dashboard View -->
         <div id="dashboardView" class="view-container">
+            <!-- Key Metrics -->
+            <div class="metrics-row" style="padding: 20px 20px 0 20px;">
+                <div class="metric-card">
+                    <div class="metric-value" id="metric-jobs">0</div>
+                    <div class="metric-label">Total Jobs</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metric-salary">0</div>
+                    <div class="metric-label">Avg Salary</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metric-skill">-</div>
+                    <div class="metric-label">Top Skill</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metric-location">-</div>
+                    <div class="metric-label">Active City</div>
+                </div>
+            </div>
+            
             <div class="dashboard-grid">
+                <!-- Map -->
+                <div class="chart-card map-card">
+                    <div class="chart-title">Job Distribution Map</div>
+                    <div id="chart-map" class="chart-body"></div>
+                </div>
                 <div class="chart-card">
                     <div class="chart-title">Salary Distribution</div>
                     <div id="chart-salary-dist" class="chart-body"></div>
@@ -686,7 +799,7 @@
     <script>
       let allJobs = [];
       let dashboardLoaded = false;
-      let currentFilters = { category: 'All', city: 'All' };
+      // currentFilters removed, reading from DOM directly
       
       // ECharts instances
       let treeChart = echarts.init(document.getElementById("chart-container"), "dark");
@@ -713,20 +826,46 @@
               const res = await fetch('/api/filters/options');
               const options = await res.json();
               
-              // Populate location dropdown
+              // Populate location dropdown (Search)
               const locationSelect = document.getElementById('filterLocation');
-              locationSelect.innerHTML = '<option value="All">All Locations</option>';
-              options.locations.forEach(loc => {
-                  const option = document.createElement('option');
-                  option.value = loc;
-                  option.textContent = loc;
-                  locationSelect.appendChild(option);
-              });
+              if (locationSelect) {
+                  locationSelect.innerHTML = '<option value="All">All Locations</option>';
+                  options.locations.forEach(loc => {
+                      const option = document.createElement('option');
+                      option.value = loc;
+                      option.textContent = loc;
+                      locationSelect.appendChild(option);
+                  });
+              }
+
+              // Populate Dashboard Location
+              const dashLocation = document.getElementById('dashLocation');
+              if (dashLocation) {
+                  dashLocation.innerHTML = '<option value="All">All Locations</option>';
+                  options.locations.forEach(loc => {
+                      const option = document.createElement('option');
+                      option.value = loc;
+                      option.textContent = loc;
+                      dashLocation.appendChild(option);
+                  });
+              }
+              
+              // Populate Dashboard Categories
+              const dashCategory = document.getElementById('dashCategory');
+              if (dashCategory && options.categories) {
+                  dashCategory.innerHTML = '<option value="All">All Categories</option>';
+                  options.categories.forEach(cat => {
+                      const option = document.createElement('option');
+                      option.value = cat;
+                      option.textContent = cat;
+                      dashCategory.appendChild(option);
+                  });
+              }
               
               // Update salary range label
               if (options.salary_range) {
                   const rangeLabel = document.querySelector('.range-label');
-                  rangeLabel.textContent = `Range: ${(options.salary_range.min/1000).toFixed(0)}K - ${(options.salary_range.max/1000).toFixed(0)}K`;
+                  if(rangeLabel) rangeLabel.textContent = `Range: ${(options.salary_range.min/1000).toFixed(0)}K - ${(options.salary_range.max/1000).toFixed(0)}K`;
               }
           } catch (err) {
               console.error('Failed to load filter options:', err);
@@ -886,15 +1025,7 @@
           }
       }
       
-      function setFilter(type, value, btn) {
-          // Update active state
-          const group = btn.parentElement;
-          group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          
-          currentFilters[type] = value;
-          loadDashboard();
-      }
+      /* setFilter removed, using onchange events directly */
 
       function renderJobs(jobs) {
           const list = document.getElementById('jobList');
@@ -1042,7 +1173,17 @@
       }
 
       function loadDashboard() {
-          const params = new URLSearchParams(currentFilters);
+          const category = document.getElementById('dashCategory').value;
+          const city = document.getElementById('dashLocation').value;
+          const isManager = document.getElementById('dashManager').checked;
+          const remote = document.getElementById('dashRemote').value;
+          
+          const params = new URLSearchParams();
+          if (category && category !== 'All') params.append('category', category);
+          if (city && city !== 'All') params.append('city', city);
+          if (isManager) params.append('is_manager', '1');
+          if (remote && remote !== 'All') params.append('remote', remote);
+          
           // Add timestamp to prevent caching
           params.append('_t', new Date().getTime());
           
@@ -1050,18 +1191,119 @@
             .then(res => res.json())
             .then(data => {
                 console.log("Dashboard data received:", data);
+                
+                // Update Metrics
+                if(data.key_metrics) {
+                    animateValue("metric-jobs", 0, data.count, 1000);
+                    animateValue("metric-jobs", 0, data.count, 1000);
+                    // Update Salary Range (Avg Min - Avg Max)
+                    const salaryElem = document.getElementById("metric-salary");
+                    if(data.key_metrics.avg_min_salary && data.key_metrics.avg_max_salary) {
+                        salaryElem.innerHTML = `$${data.key_metrics.avg_min_salary.toLocaleString()} - $${data.key_metrics.avg_max_salary.toLocaleString()}`;
+                         // Adjust font size if range is too long
+                        if(salaryElem.innerHTML.length > 15) salaryElem.style.fontSize = "1.4em";
+                        else salaryElem.style.fontSize = "1.8em";
+                    } else {
+                        salaryElem.innerHTML = "N/A";
+                    }
+                    // Previous animation code removed for range simplicity
+                    // animateValue("metric-salary", 0, data.key_metrics.avg_salary, 1000, "$");
+                    document.getElementById("metric-skill").innerText = data.key_metrics.top_skill;
+                    document.getElementById("metric-location").innerText = data.key_metrics.active_location;
+                }
+                
+                // Init Charts
+                initChart('chart-map', getMapOption(data.map_data));
                 initChart('chart-salary-dist', getSalaryDistOption(data.salary_dist));
                 initChart('chart-exp-salary', getExpSalaryOption(data.exp_stats));
                 initChart('chart-top-skills', getTopSkillsOption(data.top_skills));
                 initChart('chart-skill-salary', getSkillSalaryOption(data.skill_salary));
                 
-                if(data.count) {
-                    document.getElementById('dataCount').innerText = `Analyzing ${data.count} jobs`;
-                }
-                
                 dashboardLoaded = true;
                 setTimeout(() => Object.values(dashCharts).forEach(c => c.resize()), 50);
             });
+      }
+      
+      // Load Taiwan GeoJSON
+      // Load Taiwan GeoJSON
+      // Using a valid source with Name Properties
+      fetch('https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/taiwan.geojson')
+        .then(res => res.json())
+        .then(geoJson => {
+            // Normalize Feature Names to match our Data (Traditional Chinese)
+            geoJson.features.forEach(f => {
+                if(f.properties.name_traditional_chinese) {
+                   f.properties.name = f.properties.name_traditional_chinese; 
+                }
+                // Fix specific outdated names
+                if(f.properties.name === '桃園縣') f.properties.name = '桃園市'; // Upgrade County to City
+                if(f.properties.name === '台北縣') f.properties.name = '新北市'; // Just in case
+            });
+            
+            echarts.registerMap('Taiwan', geoJson);
+            
+            // If dashboard data was already loaded, try to render map now
+            if (typeof dashboardLoaded !== 'undefined' && dashboardLoaded) {
+                console.log("Map loaded after dashboard, reloading data...");
+                loadDashboard();
+            }
+        })
+        .catch(err => console.error("Failed to load map:", err));
+
+      function animateValue(id, start, end, duration, prefix="") {
+          if (start === end) return;
+          const range = end - start;
+          let current = start;
+          const increment = end > start ? Math.ceil(range / (duration / 20)) : Math.floor(range / (duration / 20));
+          const stepTime = 20;
+          const obj = document.getElementById(id);
+          const timer = setInterval(function() {
+              current += increment;
+              if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                  current = end;
+                  clearInterval(timer);
+              }
+              obj.innerHTML = prefix + current.toLocaleString();
+          }, stepTime);
+      }
+
+      function getMapOption(data) {
+          return {
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'item', formatter: '{b}: {c} Jobs' },
+            visualMap: {
+                min: 0,
+                max: 1000, // Adjust based on data
+                text: ['High', 'Low'],
+                realtime: false,
+                calculable: true,
+                inRange: {
+                    color: ['#1e1e1e', '#00f3ff', '#bc13fe']
+                },
+                textStyle: { color: '#fff' }
+            },
+            series: [
+                {
+                    name: 'Jobs',
+                    type: 'map',
+                    map: 'Taiwan',
+                    roam: false, /* Fixed Map Size (No Zoom/Pan) */
+                    zoom: 1.1, /* Slightly larger default zoom */
+                    top: '10%', /* Padding to prevent cut-off */
+                    bottom: '10%',
+                    label: { show: false },
+                    itemStyle: {
+                        areaColor: '#323c48',
+                        borderColor: '#111'
+                    },
+                    emphasis: {
+                        itemStyle: { areaColor: '#2a333d' },
+                        label: { show: true, color: '#fff' }
+                    },
+                    data: data
+                }
+            ]
+          };
       }
 
       function initChart(id, option) {

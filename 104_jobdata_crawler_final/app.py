@@ -256,8 +256,12 @@ def get_filter_options():
     # Count management positions
     manager_count = int(df['is_manager'].sum())
     
+    # Get job categories from columns
+    job_categories = [col.replace('cat_', '') for col in df.columns if col.startswith('cat_')]
+    
     return jsonify({
         'locations': locations,
+        'categories': job_categories,
         'salary_range': salary_range,
         'remote_options': remote_options,
         'manager_count': manager_count
@@ -276,6 +280,15 @@ def get_analysis_stats():
         filters['category'] = category
     if city and city != 'All':
         filters['city'] = city
+    
+    # New filters for dashboard
+    is_manager = request.args.get('is_manager')
+    if is_manager == 'true' or is_manager == '1':
+        filters['is_manager'] = True
+        
+    remote = request.args.get('remote')
+    if remote and remote != 'All':
+        filters['remote'] = remote
         
     stats = analysis_utils.get_dashboard_stats(df, filters)
     return jsonify(stats)
