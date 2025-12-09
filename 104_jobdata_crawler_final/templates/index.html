@@ -3,18 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Job Skill Tree - Cyberpunk Edition</title>
+    <title>Job Skill Tree & Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
       :root {
-        --bg-color: #0a0a12;
-        --panel-bg: rgba(20, 20, 30, 0.8);
-        --neon-blue: #00f3ff;
-        --neon-pink: #bc13fe;
-        --neon-green: #0aff0a;
-        --neon-red: #ff003c;
-        --text-color: #e0e0e0;
-        --card-bg: rgba(255, 255, 255, 0.05);
+        --bg-color: #111111;
+        --panel-bg: #1a1a1a;
+        --card-bg: #1a1a1a;
+        --border-color: #333333;
+        --accent-yellow: #F2C94C;
+        --accent-blue: #2F80ED;
+        --accent-red: #EB5757;
+        --accent-green: #27AE60;
+        --text-color: #ffffff;
+        --text-secondary: #888888;
+        --border-radius: 16px;
+        --gap-size: 24px;
       }
 
       body {
@@ -22,14 +26,8 @@
         padding: 0;
         background-color: var(--bg-color);
         color: var(--text-color);
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
         overflow: hidden;
-        background-image: linear-gradient(
-            rgba(0, 243, 255, 0.03) 1px,
-            transparent 1px
-          ),
-          linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
-        background-size: 30px 30px;
       }
 
       .container {
@@ -39,37 +37,40 @@
 
       /* Sidebar */
       .sidebar {
-        width: 350px;
-        background: var(--panel-bg);
-        backdrop-filter: blur(10px);
-        border-right: 1px solid var(--neon-blue);
+        width: 320px;
+        background: var(--bg-color);
+        border-right: 1px solid var(--border-color);
         display: flex;
         flex-direction: column;
-        box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
         z-index: 10;
         height: 100vh;
       }
 
       .nav-tabs {
         display: flex;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid var(--border-color);
         flex-shrink: 0;
+        padding: 10px;
+        gap: 10px;
       }
 
       .nav-tab {
         flex: 1;
-        padding: 15px;
+        padding: 12px;
         text-align: center;
         cursor: pointer;
-        color: #aaa;
-        transition: all 0.3s;
-        background: rgba(0, 0, 0, 0.2);
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        background: transparent;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9em;
       }
 
       .nav-tab.active {
-        color: var(--neon-blue);
-        background: rgba(0, 243, 255, 0.1);
-        border-bottom: 2px solid var(--neon-blue);
+        color: #000;
+        background: var(--accent-yellow);
+        border-bottom: none;
       }
 
       /* Search Panel */
@@ -83,20 +84,25 @@
 
       .search-box {
         padding: 20px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid var(--border-color);
         flex-shrink: 0;
       }
 
       .search-input {
         width: 100%;
-        padding: 10px;
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid var(--neon-blue);
-        color: var(--neon-blue);
-        border-radius: 5px;
+        padding: 12px 16px;
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        border-radius: 12px;
         outline: none;
         font-size: 16px;
         box-sizing: border-box;
+        transition: border-color 0.2s;
+      }
+
+      .search-input:focus {
+        border-color: var(--accent-blue);
       }
 
       .job-list {
@@ -128,53 +134,60 @@
         transition: all 0.2s;
       }
       .filter-btn:hover {
-        border-color: var(--neon-blue);
+        border-color: var(--accent-blue);
         color: #fff;
       }
       .filter-btn.active {
-        background: rgba(0, 243, 255, 0.2);
-        border-color: var(--neon-blue);
-        color: var(--neon-blue);
+        background: rgba(47, 128, 237, 0.2);
+        border-color: var(--accent-blue);
+        color: var(--accent-blue);
       }
 
       .job-card {
-        background: var(--card-bg);
-        margin-bottom: 10px;
-        padding: 15px;
-        border-radius: 8px;
-        border-left: 3px solid transparent;
+        background: var(--panel-bg);
+        margin-bottom: 12px;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
       }
 
       .job-card:hover,
       .job-card.active {
-        background: rgba(0, 243, 255, 0.1);
-        border-left: 3px solid var(--neon-blue);
-        box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        background: #252525;
+        border-color: var(--accent-yellow);
+        box-shadow: none;
       }
 
       .job-title {
-        font-weight: bold;
-        color: var(--neon-blue);
-        margin-bottom: 5px;
+        font-weight: 700;
+        font-size: 1.1em;
+        color: var(--text-color);
+        margin-bottom: 8px;
+        line-height: 1.3;
       }
 
       .job-company {
         font-size: 0.9em;
-        color: #aaa;
+        color: var(--text-secondary);
       }
 
       .job-salary {
-        font-size: 0.85em;
-        color: var(--neon-green);
-        margin-top: 5px;
+        font-size: 0.9em;
+        color: var(--accent-green);
+        margin-top: 12px;
+        font-weight: 500;
+        background: rgba(39, 174, 96, 0.1);
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
       }
 
       .pred-salary {
         font-size: 0.85em;
-        color: var(--neon-pink);
-        margin-top: 2px;
+        color: var(--text-secondary);
+        margin-top: 4px;
       }
 
       /* Main Content */
@@ -187,9 +200,9 @@
       }
 
       .header {
-        padding: 20px;
-        background: var(--panel-bg);
-        border-bottom: 1px solid var(--neon-pink);
+        padding: 32px 40px;
+        background: transparent;
+        border-bottom: none;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -197,10 +210,11 @@
 
       .header h1 {
         margin: 0;
-        font-size: 24px;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        text-shadow: 0 0 10px var(--neon-pink);
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        color: var(--text-color);
+        text-shadow: none;
       }
 
       /* Views */
@@ -224,31 +238,31 @@
       /* Dashboard Grid */
       .dashboard-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-auto-rows: min-content; /* Allow rows to size to content */
-        gap: 20px;
-        padding: 20px;
-        /* height: 100%; Removed to allow scrolling */
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--gap-size);
+        padding: 0 40px 40px 40px;
         box-sizing: border-box;
         max-width: 1600px;
         margin: 0 auto;
       }
 
       .chart-card {
-        background: rgba(20, 20, 30, 0.6);
-        border: 1px solid rgba(0, 243, 255, 0.3);
-        border-radius: 10px;
-        padding: 15px;
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 24px;
         display: flex;
         flex-direction: column;
+        transition: transform 0.2s;
       }
 
       .chart-title {
-        color: var(--neon-blue);
-        margin-bottom: 10px;
-        font-size: 1.1em;
-        border-bottom: 1px solid rgba(0, 243, 255, 0.2);
-        padding-bottom: 5px;
+        color: var(--text-color);
+        margin-bottom: 20px;
+        font-size: 1.25em;
+        font-weight: 700;
+        border-bottom: none;
+        padding-bottom: 0;
       }
 
       .chart-body {
@@ -258,33 +272,30 @@
       }
 
       .map-card {
-        grid-column: 1 / -1; /* Span full width */
-        min-height: 500px;   /* Taller for map */
-      }
-      
-      .map-card .chart-body {
-        min-height: 450px;
+        grid-column: span 2;
+        min-height: 500px;
+        background: var(--panel-bg);
       }
 
-      /* Prediction Info Panel */
       .prediction-info {
-        background: rgba(0, 0, 0, 0.5);
-        padding: 10px;
-        border-radius: 5px;
-        margin-top: 10px;
-        border: 1px solid var(--neon-pink);
-        font-size: 0.9em;
+        background: var(--panel-bg);
+        padding: 16px;
+        border-radius: 8px;
+        margin-top: 12px;
+        border: 1px solid var(--border-color);
+        font-size: 0.95em;
       }
       
       .error-tag {
         display: inline-block;
-        padding: 2px 6px;
+        padding: 4px 8px;
         border-radius: 4px;
-        font-weight: bold;
+        font-weight: 700;
         margin-left: 10px;
+        font-size: 0.8em;
       }
-      .error-good { background: rgba(10, 255, 10, 0.2); color: #0aff0a; }
-      .error-bad { background: rgba(255, 0, 60, 0.2); color: #ff003c; }
+      .error-good { background: var(--accent-green); color: white; }
+      .error-bad { background: var(--accent-red); color: white; }
 
       /* Job Link Styling */
       #jobLink {
@@ -294,10 +305,9 @@
         border: 1px solid transparent;
       }
       #jobLink:hover {
-        border-color: var(--neon-blue);
-        background: rgba(0, 243, 255, 0.1);
-        box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
-        text-shadow: 0 0 5px var(--neon-blue);
+        border-color: var(--accent-blue);
+        background: rgba(47, 128, 237, 0.1);
+        text-shadow: none;
       }
 
       /* Filter Panel */
@@ -313,27 +323,29 @@
       }
 
       .filter-label {
-        display: block;
         font-size: 0.85em;
-        color: var(--neon-blue);
-        margin-bottom: 5px;
-        font-weight: bold;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
 
       .filter-select, .filter-input {
         width: 100%;
-        padding: 8px;
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid #444;
+        padding: 10px 12px;
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
         color: var(--text-color);
-        border-radius: 4px;
+        border-radius: 8px;
         font-size: 0.9em;
         outline: none;
-        transition: border-color 0.3s;
+        transition: border-color 0.2s;
       }
 
       .filter-select:focus, .filter-input:focus {
-        border-color: var(--neon-blue);
+        border-color: var(--accent-blue);
+        background: #252525;
       }
 
       .filter-checkbox-group {
@@ -372,19 +384,20 @@
 
       .clear-filters-btn {
         width: 100%;
-        padding: 8px;
-        background: rgba(255, 0, 60, 0.2);
-        border: 1px solid var(--neon-red);
-        color: var(--neon-red);
-        border-radius: 4px;
+        padding: 12px;
+        background: transparent;
+        border: 1px solid var(--accent-red);
+        color: var(--accent-red);
+        border-radius: 8px;
         cursor: pointer;
         font-size: 0.9em;
-        transition: all 0.3s;
+        font-weight: 600;
+        transition: all 0.2s;
       }
 
       .clear-filters-btn:hover {
-        background: rgba(255, 0, 60, 0.4);
-        box-shadow: 0 0 10px rgba(255, 0, 60, 0.3);
+        background: var(--accent-red);
+        color: white;
       }
 
       /* Pagination */
@@ -398,19 +411,21 @@
       }
 
       .pagination-btn {
-        padding: 6px 12px;
-        background: rgba(0, 243, 255, 0.1);
-        border: 1px solid var(--neon-blue);
-        color: var(--neon-blue);
-        border-radius: 4px;
+        padding: 8px 16px;
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        border-radius: 8px;
         cursor: pointer;
-        font-size: 0.85em;
-        transition: all 0.3s;
+        font-size: 0.9em;
+        font-weight: 600;
+        transition: all 0.2s;
       }
 
       .pagination-btn:hover:not(:disabled) {
-        background: rgba(0, 243, 255, 0.3);
-        box-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+        border-color: var(--accent-blue);
+        color: var(--accent-blue);
+        background: rgba(47, 128, 237, 0.1);
       }
 
       .pagination-btn:disabled {
@@ -436,49 +451,56 @@
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: var(--neon-blue);
+        background: var(--accent-blue);
       }
 
       /* Metrics & Map Styles */
       .metrics-row {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 15px;
-          margin-bottom: 25px;
+          gap: var(--gap-size);
+          margin-bottom: 24px;
       }
       .metric-card {
-          background: rgba(30,30,30,0.6);
-          border: 1px solid #333;
-          padding: 15px;
-          border-radius: 8px;
-          text-align: center;
-          box-shadow: 0 0 10px rgba(0,0,0,0.5);
+          background: var(--accent-yellow);
+          color: #111;
+          border: none;
+          padding: 24px;
+          border-radius: var(--border-radius);
+          text-align: left;
+          box-shadow: none;
           transition: transform 0.2s;
           /* Flex Alignment */
           display: flex;
           flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          min-height: 120px; /* Fixed height for consistency */
+          justify-content: space-between;
+          align-items: flex-start;
+          min-height: 140px; 
       }
+      /* Variation for metric cards */
+      .metric-card:nth-child(2) { background: var(--accent-blue); color: white; }
+      .metric-card:nth-child(3) { background: var(--accent-red); color: white; }
+      .metric-card:nth-child(4) { background: var(--accent-green); color: white; }
+
       .metric-card:hover {
-          transform: translateY(-2px);
-          border-color: var(--neon-blue);
+          transform: translateY(-4px);
       }
       .metric-value {
-          font-size: 1.8em;
-          font-weight: bold;
-          color: var(--neon-blue);
-          margin-bottom: 5px;
-          text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
-          line-height: 1.2; /* Better spacing for wrapped text */
-          word-break: break-word; /* Prevent overflow */
+          font-size: 2.5em;
+          font-weight: 800;
+          color: inherit;
+          margin-bottom: 0px;
+          text-shadow: none;
+          line-height: 1; 
+          word-break: break-word; 
       }
       .metric-label {
-          font-size: 0.9em;
-          color: #aaa;
+          font-size: 0.85em;
+          color: inherit;
+          opacity: 0.8;
           text-transform: uppercase;
           letter-spacing: 1px;
+          font-weight: 600;
       }
       .chart-card.map-card {
           grid-column: span 2;
@@ -506,7 +528,7 @@
           width: 100%;
           height: 100%; /* Full height for list view */
           border-right: none;
-          border-bottom: 1px solid var(--neon-blue);
+          border-bottom: 1px solid var(--accent-blue);
           display: flex;
           flex-direction: column;
           z-index: 10;
@@ -580,7 +602,7 @@
             max-height: none; /* Let it grow if needed, or collapse */
             flex: 0 0 auto;
             z-index: 50;
-            border-bottom: 2px solid var(--neon-blue);
+            border-bottom: 2px solid var(--accent-blue);
             background: #050505;
         }
         
@@ -684,9 +706,9 @@
             </div>
         </div>
         
-        <div id="dashboardPanel" style="display:none; padding: 20px;">
-            <div style="text-align: center; color: #aaa; margin-bottom: 20px;">
-                <p>Market Analysis</p>
+        <div id="dashboardPanel" style="display:none; padding: 20px; flex: 1; overflow-y: auto;">
+            <div style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
+                <p style="font-weight: 600; margin-bottom: 5px;">Market Analysis</p>
                 <p style="font-size: 0.8em">Filter Data</p>
             </div>
             
@@ -720,7 +742,7 @@
                 </select>
             </div>
             
-            <div id="dataCount" style="text-align: center; color: var(--neon-green); font-size: 0.9em; margin-top: 20px;">
+            <div id="dataCount" style="text-align: center; color: var(--accent-green); font-size: 0.9em; margin-top: 20px;">
                 Analyzing 0 jobs
             </div>
         </div>
@@ -731,15 +753,15 @@
         <div id="jobView" class="view-container active">
             <div class="header">
             <div style="flex:1">
-                <button id="backBtn" onclick="showMobileList()" style="display:none; background:none; border:none; color:var(--neon-blue); font-size:1.2em; cursor:pointer; margin-bottom: 10px;">← Back to Jobs</button>
+                <button id="backBtn" onclick="showMobileList()" style="display:none; background:none; border:none; color:var(--accent-blue); font-size:1.2em; cursor:pointer; margin-bottom: 10px;">← Back to Jobs</button>
                 <h1 id="currentJobTitle">Select a Job</h1>
                 <div id="currentCompany" style="color: #aaa"></div>
-                <a id="jobLink" href="#" target="_blank" style="display:none; color: var(--neon-blue); text-decoration: none; font-size: 0.9em; margin-top: 5px; display: inline-block;">
+                <a id="jobLink" href="#" target="_blank" style="display:none; color: var(--accent-blue); text-decoration: none; font-size: 0.9em; margin-top: 5px; display: inline-block;">
                     🔗 View on 104 Job Bank →
                 </a>
             </div>
             <div id="predictionPanel" style="display:none; text-align: right;">
-                <div style="color: var(--neon-pink); font-size: 0.9em;">AI Predicted Salary</div>
+                <div style="color: var(--text-secondary); font-size: 0.9em;">AI Predicted Salary</div>
                 <div id="predSalaryVal" style="font-size: 1.2em; font-weight: bold;"></div>
                 <div id="predErrorVal" style="font-size: 0.8em;"></div>
             </div>
@@ -1110,7 +1132,7 @@
                   // Negotiable: Show V7 Prediction
                   if (data.job.salary_min && data.job.salary_max) {
                       predVal.innerText = `$${data.job.salary_min.toLocaleString()} - $${data.job.salary_max.toLocaleString()}`;
-                      predVal.style.color = "var(--neon-blue)"; // Use blue to indicate estimation
+                      predVal.style.color = "var(--accent-blue)"; // Use blue to indicate estimation
                       predError.innerText = "(Estimated for Negotiable Salary)";
                       predError.style.color = "#aaa";
                   } else {
@@ -1121,7 +1143,7 @@
                   // Actual Salary: Show Generated Prediction
                   if (data.job.pred_min && data.job.pred_max) {
                       predVal.innerText = `$${Math.round(data.job.pred_min).toLocaleString()} - $${Math.round(data.job.pred_max).toLocaleString()}`;
-                      predVal.style.color = "var(--neon-pink)";
+                      predVal.style.color = "var(--accent-yellow)";
                       
                       // Calculate difference
                       const actualAvg = (data.job.salary_min + data.job.salary_max) / 2;
@@ -1130,7 +1152,7 @@
                       const diffPercent = (diff / actualAvg) * 100;
                       
                       const sign = diff > 0 ? "+" : "";
-                      const color = diff > 0 ? "var(--neon-green)" : "var(--neon-red)";
+                      const color = diff > 0 ? "var(--accent-green)" : "var(--accent-red)";
                       
                       predError.innerText = `Diff: ${sign}${Math.round(diff).toLocaleString()} (${sign}${diffPercent.toFixed(1)}%)`;
                       predError.style.color = color;
@@ -1157,15 +1179,15 @@
               type: "tree",
               data: [treeData],
               top: "10%", left: "15%", bottom: "10%", right: "20%",
-              symbolSize: 15,
-              label: { position: "left", verticalAlign: "middle", align: "right", fontSize: 14, color: "#fff" },
+              symbolSize: 16,
+              label: { position: "left", verticalAlign: "middle", align: "right", fontSize: 14, color: "#fff", fontWeight: 'bold' },
               leaves: { label: { position: "right", verticalAlign: "middle", align: "left" } },
               emphasis: { focus: "descendant" },
               expandAndCollapse: true,
               animationDuration: 550,
               animationDurationUpdate: 750,
-              lineStyle: { color: "#00f3ff", curveness: 0.5 },
-              itemStyle: { color: "#bc13fe", borderColor: "#00f3ff" },
+              lineStyle: { color: "#888", curveness: 0.5, width: 2 },
+              itemStyle: { color: "#F2C94C", borderColor: "#F2C94C" },
             },
           ],
         };
@@ -1235,9 +1257,13 @@
                 if(f.properties.name_traditional_chinese) {
                    f.properties.name = f.properties.name_traditional_chinese; 
                 }
-                // Fix specific outdated names
-                if(f.properties.name === '桃園縣') f.properties.name = '桃園市'; // Upgrade County to City
-                if(f.properties.name === '台北縣') f.properties.name = '新北市'; // Just in case
+                // Fix specific outdated names & Normalize characters (臺 -> 台)
+                if(f.properties.name) {
+                    f.properties.name = f.properties.name.replace(/臺/g, '台');
+                }
+                
+                if(f.properties.name === '桃園縣') f.properties.name = '桃園市'; 
+                if(f.properties.name === '台北縣') f.properties.name = '新北市'; 
             });
             
             echarts.registerMap('Taiwan', geoJson);
@@ -1267,18 +1293,18 @@
           }, stepTime);
       }
 
-      function getMapOption(data) {
+       function getMapOption(data) {
           return {
             backgroundColor: 'transparent',
             tooltip: { trigger: 'item', formatter: '{b}: {c} Jobs' },
             visualMap: {
                 min: 0,
-                max: 1000, // Adjust based on data
+                max: 1000, 
                 text: ['High', 'Low'],
                 realtime: false,
                 calculable: true,
                 inRange: {
-                    color: ['#1e1e1e', '#00f3ff', '#bc13fe']
+                    color: ['#333', '#2F80ED', '#F2C94C']
                 },
                 textStyle: { color: '#fff' }
             },
@@ -1287,17 +1313,18 @@
                     name: 'Jobs',
                     type: 'map',
                     map: 'Taiwan',
-                    roam: false, /* Fixed Map Size (No Zoom/Pan) */
-                    zoom: 1.1, /* Slightly larger default zoom */
-                    top: '10%', /* Padding to prevent cut-off */
+                    roam: false,
+                    zoom: 1.1,
+                    top: '10%',
                     bottom: '10%',
                     label: { show: false },
                     itemStyle: {
-                        areaColor: '#323c48',
-                        borderColor: '#111'
+                        areaColor: '#333',
+                        borderColor: '#555',
+                        borderWidth: 1
                     },
                     emphasis: {
-                        itemStyle: { areaColor: '#2a333d' },
+                        itemStyle: { areaColor: '#EB5757' },
                         label: { show: true, color: '#fff' }
                     },
                     data: data
@@ -1309,12 +1336,44 @@
       function initChart(id, option) {
         if (!dashCharts[id]) {
           dashCharts[id] = echarts.init(document.getElementById(id), "dark");
+          
+          // Add click listener for map
+          if (id === 'chart-map') {
+              dashCharts[id].on('click', function (params) {
+                  if (params.componentType === 'series') {
+                      const cityName = params.name;
+                      const dashLocation = document.getElementById('dashLocation');
+                      
+                      // Check if precise option exists
+                      let exists = false;
+                      for (let i = 0; i < dashLocation.options.length; i++) {
+                          if (dashLocation.options[i].value === cityName) {
+                              exists = true;
+                              break;
+                          }
+                      }
+                      
+                      if (!exists) {
+                          // Create temporary option for broad filtering (e.g. "台北市" matches "台北市大安區")
+                          const option = document.createElement('option');
+                          option.value = cityName;
+                          option.textContent = cityName + " (Whole City)";
+                          dashLocation.appendChild(option);
+                          // Sort if we wanted to be fancy, but appending is fine for now
+                      }
+                      
+                      dashLocation.value = cityName;
+                      console.log("Map clicked: Filtering by", cityName);
+                      loadDashboard();
+                  }
+              });
+          }
         }
         // Use notMerge: true to force complete redraw when data changes
         dashCharts[id].setOption(option, true);
       }
 
-      // --- Chart Options ---
+       // --- Chart Options ---
       function getSalaryDistOption(data) {
         return {
           backgroundColor: "transparent",
@@ -1324,9 +1383,9 @@
             data: data.bins,
             axisLabel: { rotate: 45 },
           },
-          yAxis: { type: "value" },
+          yAxis: { type: "value", splitLine: { lineStyle: { color: '#333' } } },
           series: [
-            { data: data.counts, type: "bar", itemStyle: { color: "#00f3ff" } },
+            { data: data.counts, type: "bar", itemStyle: { color: "#2F80ED", borderRadius: [4, 4, 0, 0] } },
           ],
         };
       }
@@ -1340,13 +1399,15 @@
             data: data.map((d) => d.name),
             axisLabel: { rotate: 45 },
           },
-          yAxis: { type: "value" },
+          yAxis: { type: "value", splitLine: { lineStyle: { color: '#333' } } },
           series: [
             {
               data: data.map((d) => d.value),
               type: "line",
               smooth: true,
-              itemStyle: { color: "#bc13fe" },
+              symbolSize: 8,
+              itemStyle: { color: "#F2C94C" },
+              lineStyle: { width: 3 }
             },
           ],
         };
@@ -1356,13 +1417,13 @@
         return {
           backgroundColor: "transparent",
           tooltip: { trigger: "axis" },
-          xAxis: { type: "value" },
+          xAxis: { type: "value", splitLine: { lineStyle: { color: '#333' } } },
           yAxis: { type: "category", data: data.map((d) => d.name).reverse() },
           series: [
             {
               data: data.map((d) => d.value).reverse(),
               type: "bar",
-              itemStyle: { color: "#0aff0a" },
+              itemStyle: { color: "#27AE60", borderRadius: [0, 4, 4, 0] },
             },
           ],
         };
@@ -1377,12 +1438,12 @@
             data: data.map((d) => d.name),
             axisLabel: { rotate: 45 },
           },
-          yAxis: { type: "value" },
+          yAxis: { type: "value", splitLine: { lineStyle: { color: '#333' } } },
           series: [
             {
               data: data.map((d) => d.value),
               type: "bar",
-              itemStyle: { color: "#ff003c" },
+              itemStyle: { color: "#EB5757", borderRadius: [4, 4, 0, 0] },
             },
           ],
         };

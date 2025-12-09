@@ -240,8 +240,8 @@ def get_filter_options():
     if df is None:
         return jsonify({})
     
-    # Get unique locations (top 20 most common)
-    locations = df['location'].value_counts().head(20).index.tolist()
+    # Get unique locations (all)
+    locations = sorted(df['location'].dropna().unique().tolist())
     
     # Get salary range
     salary_range = {
