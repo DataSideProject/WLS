@@ -1,106 +1,80 @@
 
-# 就業市場薪資預測報告 (增強版)
-**生成時間**：2025-12-01 18:24
+# 就業市場薪資預測報告 (分群優化版 + NLP 可解釋性)
+**生成時間**：2025-12-05 22:38
+**優化策略**：資料淨化 + 年資分群 + jieba 分詞
 
-## 模型表現 (Model Performance)
-模型經過公司特徵、NLP 擴增與參數優化，並加入 MAE/RMSE 指標評估。
+## 整體表現 (Weighted Average)
+- **Salary Min MAE**: 7145 元
+- **Salary Max MAE**: 14966 元
 
-### 階段一（上限預測 - 已知下限求上限）
-- **R² (解釋力)**: 0.7536 (模型解釋了 75.4% 的變異)
-- **MAPE (平均誤差率)**: 15.11%
-- **MAE (平均誤差金額)**: 11245 元
-- **RMSE (均方根誤差)**: 17727 元
+## 分群詳細表現
+### Junior (年資 < 3年)
+- **Min Salary**: R²=0.2760, MAE=6276
+- **Max Salary**: R²=0.3094, MAE=13988
 
-### 階段二（面議預測 - 全盲預測）
-對於完全沒有薪資資訊的「面議」職缺：
-
-#### Salary Min (下限)
-- **R²**: 0.4443
-- **MAPE**: 15.74%
-- **MAE**: 7949 元
-- **RMSE**: 13738 元
-- **95% 信心預測區間**: 預測值 ± 26968 元
-
-#### Salary Max (上限)
-- **R²**: 0.4955
-- **MAPE**: 21.38%
-- **MAE**: 15777 元
-- **RMSE**: 25562 元
-- **95% 信心預測區間**: 預測值 ± 49959 元
-
-> [!TIP]
-> **如何解讀預測區間？**
-> 如果模型預測某個面議職缺的起薪是 40,000 元，我們有 95% 的信心，實際起薪會落在 13032 ~ 66968 元之間。
+### Senior (年資 >= 3年)
+- **Min Salary**: R²=0.4267, MAE=11673
+- **Max Salary**: R²=0.4574, MAE=20059
 
 ## 資料概況
-- 總職缺：4679
-- 真實薪資：1533
-- 面議填補：3273
+- 淨化後總職缺：5172
+- 訓練集 (有薪資)：1068
+- 預測集 (面議)：3636
 
 ## 特徵重要性分析（Top 20）
-desc_n                  0.066300
-exp_years_scaled        0.060745
-skill_python_in_台北市     0.059802
-skill_linux_in_台北市      0.053644
-cat_數據分析師／資料分析師         0.034735
-cat_軟體工程師               0.033875
-skill_python_in_新竹縣     0.031827
-cat_演算法工程師              0.031346
-desc_feat15             0.029597
-industry_電腦及其週邊設備製造業    0.027917
-industry_電腦軟體服務業        0.025414
-desc_e_30               0.025093
-skill_java_in_台北市       0.024275
-skill_c++_in_台北市        0.023087
-skill_mysql_in_台北市      0.020178
-edu_level               0.018812
-skill_c++_in_台中市        0.017894
-skill_--_in_台北市         0.016772
-skill_python            0.016303
-cat_系統工程師               0.015801
+(括號內為原始 NLP 關鍵字)
+cat_通訊軟體工程師             0.137852
+skill_java_in_台北市       0.120526
+skill_linux_in_台北市      0.088934
+industry_電腦軟體服務業        0.084471
+cat_演算法工程師              0.082376
+industry_電腦及其週邊設備製造業    0.078181
+skill_mysql_in_台中市      0.053199
+cat_軟體工程師               0.051529
+skill_pytorch           0.051406
+cat_資料科學家               0.047365
+skill_python_in_台北市     0.043159
+desc_feat11 ( )         0.041038
+cat_數據分析師／資料分析師         0.040333
+industry_其他電子零組件相關業     0.038440
+skill_c++_in_台中市        0.036509
+cat_系統工程師               0.034076
+cat_AI工程師               0.034012
+skill_word              0.033550
+skill_python            0.032504
+skill_excel             0.031725
 
 ## 執行日誌
 載入資料...
-連線至資料庫: 34.81.186.201...
-成功從資料庫讀取資料：9190 筆
+連線至資料庫: 35.185.175.249...
+成功從資料庫讀取資料：11194 筆
 解析薪資欄位...
-已移除重複資料: 4511 筆 (剩餘 4679 筆)
+已移除重複資料: 5995 筆 (剩餘 5199 筆)
+執行資料淨化 (剔除極端值)...
+薪資範圍過濾: Min(28590~120185), Max(32000~201846)
+已剔除極端值: 27 筆
+淨化後總筆數: 5172
 進行特徵工程...
-處理 job_description TF-IDF (Top 100)...
-處理 other_conditions TF-IDF (Top 100)...
+處理 job_description TF-IDF (Top 100, jieba)...
+處理 other_conditions TF-IDF (Top 100, jieba)...
 
-=== 階段一：預測 salary_max ===
-階段一 (log+CV): R²=0.7536, MAPE=15.11%, MAE=11245, RMSE=17727
+=== 開始分群訓練 (Junior vs Senior) ===
 
-=== 階段二：面議預測 ===
-階段二訓練資料集大小 (Ground Truth): 986 筆
-面議預測 salary_min (log+CV): R²=0.4443, MAPE=15.74%, MAE=7949, RMSE=13738
-面議預測 salary_max (log+CV): R²=0.4955, MAPE=21.38%, MAE=15777, RMSE=25562
-殘差分析圖已儲存：model_diagnostics.png
+--- 預測目標: salary_min ---
+正在訓練 Junior 模型 (Train: 896, Pred: 2460)...
+  [Junior_salary_min] 特徵篩選: 593 -> 27
+  [Junior_salary_min] R²=0.2760, MAE=6276, RMSE=9952
+正在訓練 Senior 模型 (Train: 172, Pred: 1176)...
+  [Senior_salary_min] 特徵篩選: 593 -> 45
+  [Senior_salary_min] R²=0.4267, MAE=11673, RMSE=16246
 
-特徵重要性（Top 20，平均 min 和 max）：
-desc_n                  0.066300
-exp_years_scaled        0.060745
-skill_python_in_台北市     0.059802
-skill_linux_in_台北市      0.053644
-cat_數據分析師／資料分析師         0.034735
-cat_軟體工程師               0.033875
-skill_python_in_新竹縣     0.031827
-cat_演算法工程師              0.031346
-desc_feat15             0.029597
-industry_電腦及其週邊設備製造業    0.027917
-industry_電腦軟體服務業        0.025414
-desc_e_30               0.025093
-skill_java_in_台北市       0.024275
-skill_c++_in_台北市        0.023087
-skill_mysql_in_台北市      0.020178
-edu_level               0.018812
-skill_c++_in_台中市        0.017894
-skill_--_in_台北市         0.016772
-skill_python            0.016303
-cat_系統工程師               0.015801
-dtype: float32
-預測完成！結果已存為 job_data_with_full_salary_v6.csv
+--- 預測目標: salary_max ---
+正在訓練 Junior 模型 (Train: 896, Pred: 2460)...
+  [Junior_salary_max] 特徵篩選: 593 -> 30
+  [Junior_salary_max] R²=0.3094, MAE=13988, RMSE=20664
+正在訓練 Senior 模型 (Train: 172, Pred: 1176)...
+  [Senior_salary_max] 特徵篩選: 593 -> 20
+  [Senior_salary_max] R²=0.4574, MAE=20059, RMSE=27483
 
 ## 結論
-模型成功填補 3273 筆面議薪資。殘差分析圖 (model_diagnostics.png) 顯示誤差分佈情形。
+透過分群訓練與 jieba 分詞，我們現在能更清楚看到哪些具體技能或描述影響薪資。
