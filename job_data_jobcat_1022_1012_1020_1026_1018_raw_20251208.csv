@@ -1,0 +1,551 @@
+﻿job_id,job_title,company,industry,location,experience,education,salary,tags,update_date,job_description,job_categories,management_responsibility,work_shift,remote_work,BT_EXP,languages,tools,work_skills,other_conditions,update_date_clean,unique_key
+7ig23,WW【AI應用工程師 (GCP AI應用導入)】,零壹科技股份有限公司_Zero One Tech,電腦系統整合服務業,台北市內湖區,1年以上,專科,待遇面議,"上市上櫃, 距捷運西湖站約340公尺, 年終獎金, 節日獎金/禮品, 津貼/補助",12/08,"職位目標:
+致力於利用GCP的No-Code/Low-Code AI服務，協助客戶快速導入AI解決方案，提升工作效率與創新能力。
+
+工作內容:
+● GCP AI解決方案導入與客製化：
+1.運用GCP的No-Code/Low-Code AI服務（如Vertex AI Model Garden、Vision API、Natural Language API、Conversation、Google Agent Builder、Gemini for Google Cloud、Google Workspace AI協作功能等），協助客戶快速導入AI解決方案。
+2.根據客戶需求，熟練運用GCP No-Code/Low-Code AI服務進行AI應用部署與客製化，以滿足不同場景的應用需求。
+3.善用Gemini for Google Cloud，Google Workspace AI協作功能，並協助客戶導入相關技術，提高客戶工作效率與創新能力。
+
+● 預訓練模型部署與應用：
+運用Vertex AI Model Garden部署與調整預訓練模型，實現影像與文字分析等功能。
+
+● 對話式AI應用建構：
+建構對話式AI應用（Google Agent Builder、Vertex AI Conversation），為客戶提供智能客服、智能助手等解決方案。
+
+● GCP平台管理與維運：
+1.善用gcloud指令工具、Google Cloud Console等GCP平台工具，進行雲端資源管理與問題排除，確保系統穩定運行。
+2.熟悉Linux Server系統操作與管理。
+
+● 客戶溝通與需求分析：
+1.具備良好的溝通與需求分析能力，能夠有效完成客戶導入工作，提供專業的技術支援與諮詢。
+2.具備良好溝通、團隊合作與學習能力。
+
+● 生成式AI應用開發：
+熟悉生成式AI應用，LLM，RAG，AI Agent等技術。
+
+其他職責：
+● 參與AI導入專案的規劃、設計與推廣。
+● 撰寫技術文件與報告，分享技術經驗與知識。
+● 持續學習與掌握最新的GCP AI技術與應用。","產品售後技術服務, 業務支援工程師, AI工程師",不需負擔管理責任,日班，8:30-9:30彈性上班,未知,無需出差外派,英文,--,不拘,"【技能專長】
+● GCP No-Code/Low-Code AI工具：
+1.Vertex AI Model Garden、Vision API、Natural Language API、Conversation
+2.Google Agent Builder、Gemini for Google Cloud、Google Workspace AI協作功能
+
+● GCP平台工具：
+gcloud指令工具、Google Cloud Console
+
+● 協作與整合工具：
+Google Workspace、API連接工具
+
+【工作技能】
+● 熟悉Gemini for Google Cloud，Google Workspace AI協作功能，並協助客戶導入。
+● 熟練運用GCP No-Code/Low-Code AI服務進行AI應用部署與客製化。
+● 運用Vertex AI Model Garden部署與調整預訓練模型，實現影像與文字分析。
+● 建構對話式AI應用（Google Agent Builder、Vertex AI Conversation）。
+● 善用GCP平台工具進行雲端資源管理與問題排除。
+● 具備良好的溝通與需求分析能力，能夠有效完成客戶導入工作。
+● 熟悉生成式AI應用，LLM，RAG，AI Agent。
+
+【其他條件】
+● 具備GWS（Google Workspace）認證尤佳。
+● 熟悉Linux Server系統操作與管理。
+● 具備良好溝通、團隊合作與學習能力。
+● 面試時請準備相關AI專案經驗與維運問題案例說明。",2025-12-08,7ig23|2025-12-08
+8vb2p,機器人操控-軟體工程師,伊士博國際商業股份有限公司,半導體製造業,新竹市,2年以上,大學,"月薪75,000~98,000元","年終獎金, 節日獎金/禮品, 員工旅遊",12/08,"我們正在招募具備機器人操控與 AI Manipulation 背景的工程師，加入新技術開發團隊
+此職位將以新技術探索、POC 驗證與新功能開發為主要任務
+您將負責協作機器人相關的控制與模擬，並實作可處理複雜行為的操控與抓握功能，依位置估測、路徑規劃與機械、硬體及韌體單位協作，完成系統測試和專案模擬驗證
+產品目標為自動化控制系統與協作機器人解決方案，應用於半導體測試、智慧製造等領域，提供一個高效、穩定的機器人平台
+
+您將協助我們➷：
+1. 進行機械手臂功能模組化開發與整合，確保軟體具備重複使用性與擴展性
+2. 熟練應用 FANUC 控制系統進行程式設計、示教、離線模擬與現場 Debug，並能整合現場周邊設備
+3. 具備 ROS/ROS2 生態系操作經驗，能在 POC 階段快速整合並進行新技術驗證
+4. 協助制定軟體開發標準與最佳實踐，確保程式碼品質、效能與可維護性
+5. 與機構設計、機械視覺、Co-Robot 學習應用工程團隊合作，規劃並執行實體環境測試與系統驗證
+
+✅必備技能：
+• FANUC、UR 協作機器人控制經驗 (示教操作、通訊介面整合)
+• 精通Python、C++ 等程式語言，具備物件導向程式開發能力 
+• 基於ROS/ROS2的機器人軟體架構設計與開發
+• 具備POC 驗證經驗，能將技術快速轉化為應用解決方案
+• 對機器人與數位孿生技術有高度熱情，願意持續學習與探索
+
+⏭︎ 加分條件：
+• 熟悉 FANUC ROBOGUIDE Robot Simulator，能進行手臂程式編寫與動作模擬
+• 具備Isaac Sim、Gazebo、MuJoCo、Webots 等模擬建模經驗
+• 理解機器人運動控制、逆運動學 (IK)
+• 熟悉CI/CD、自動化測試流程
+• 具備 Qt、OpenCV 等相關經驗，可應用於人機介面設計、數位孿生視覺化或手臂協作影像處理","AI工程師, 軟體工程師, 機器學習工程師",不需負擔管理責任,日班,未知,需出差外派，一年累積時間約三個月以下,英文,"Python, C++, Qt, OpenCV, Robot","機器學習, AI, 軟體程式設計, 軟體工程系統開發",1.  本職務需出差外派(工作地點：日本)，一年累積時間約三個月以下，額外提供津貼補助,2025-12-08,8vb2p|2025-12-08
+8nsl4,機器學習工程師,瑞昱半導體股份有限公司,半導體製造業,新竹市,經歷不拘,碩士,待遇面議,"上市上櫃, 年終獎金, 節日獎金/禮品, 津貼/補助, 分紅配股",12/08,"職務說明：
+1. 負責協助公司內部產品開發流程的智慧化與自動化
+2. 提升 Digital Design Verification (DV) 的驗證效率與品質
+3. 工作常與不同部門協調和討論需求，重視團隊溝通與合作，互相支援提醒
+
+職務內容：
+1. 將機器學習與人工智慧導入現有的工作流程，並與自動化系統整合
+2. 與前端、後端工程師及數位設計驗證 (DV) 工程師合作，開發客製化的 data-driven 應用程式
+3. 建構 Data 與 ML Pipeline
+4. 開發與維護 ML Model、AI 上線後的性能監測與再訓練
+5. 開發與維護 數據清洗、數據串接、數據監控、數據品質管理、Dashboard
+6. 設計實驗以評估與分析導入 AI 後帶來的效益
+
+職缺需求：
+1. 精通 Python 3
+2. 具備 Machine Learning 觀念、任一 ML / DL Framework
+3. 具備 LLM 觀念與應用開發經驗
+4. 具自行閱讀 AI / ML 論文的能力
+5. 具資料科學相關背景，熟悉資料分析、資料視覺化、資料清理、資料處理
+6. 具 Time Series Analysis and Forecasting、NLP、DRL、GNN 經驗者尤佳
+7. 具 LangChain、LlamaIndex、vLLM、LLaMA Factory 等 LLM Inference 框架與 LLM Fine-tuning 使用經驗者尤佳
+8. 具 RAG、Vector Database 開發經驗者尤佳
+9. 具 AI Agentic Workflow 開發經驗者尤佳
+10. 具 MLOps、MLflow 經驗者尤佳
+11. 具 SystemVerilog、SVA、UVM、Design Verification 經驗者尤佳
+12. 具問題發現能力、問題分析能力、問題組織能力、問題解決能力、問題追蹤能力、溝通能力
+13. Data Science、Data Engineering、Computer Science、Information Engineering、Electrical and Electronic Engineering、Physics 等相關科系畢業者佳
+
+
+Position Overview:
+1. Support the intelligentization and automation of the internal product development processes
+2. Enhance the efficiency and quality of Digital Design Verification (DV)
+3. Collaborate across departments to address requirements, with emphasis on team communication, cooperation, and mutual support
+
+Key Responsibilities:
+1. Implement machine learning and artificial intelligence solutions into existing workflows and integrate with automated systems
+2. Collaborate with frontend, backend, and digital design verification (DV) engineers to develop customized data-driven applications
+3. Construct Data and ML pipelines
+4. Develop and maintain ML models, including post-deployment performance monitoring and retraining
+5. Develop and maintain systems for data cleaning, integration, monitoring, quality management, and dashboards
+6. Design experiments to evaluate and analyze the benefits of AI implementation
+
+Qualifications:
+1. Expert proficiency in Python 3
+2. Strong understanding of Machine Learning concepts and experience with at least one ML/DL framework
+3. Knowledge of Large Language Models (LLMs) and experience in LLM application development
+4. Ability to independently read and comprehend AI/ML research papers
+5. Data science background with expertise in data analysis, visualization, cleaning, and processing
+6. Strong problem identification, analysis, organization, solving, and tracking abilities, plus excellent communication skills
+
+Preferred Qualifications:
+1. Experience with Time Series Analysis and Forecasting, Natural Language Processing (NLP), Deep Reinforcement Learning (DRL), or Graph Neural Networks (GNN)
+2. Experience with LLM inference frameworks such as LangChain, LlamaIndex, vLLM, and LLM fine-tuning framework such as LLaMA Factory.
+3. Experience with Retrieval-Augmented Generation (RAG) and Vector Database development
+4. Experience developing AI Agentic Workflows
+5. Experience with MLOps and MLflow
+6. Experience with SystemVerilog, SVA, UVM, or Digital Design Verification (DV)
+    
+Academic Background:
+Data Science, Data Engineering, Computer Science, Information Engineering, Electrical and Electronic Engineering, or Physics-related fields.","演算法工程師, 軟體工程師",不需負擔管理責任,日班,未知,無需出差外派,不拘,"Python, MLOPs, LLM",機器學習,無,2025-12-08,8nsl4|2025-12-08
+8vt5j,iOS APP工程師(台北),全景軟體股份有限公司,電腦軟體服務業,台北市中正區,1年以上,大學,待遇面議,"距捷運西門站約310公尺, 年終獎金, 津貼/補助, 分紅配股, 彈性上下班",12/08,"1. 負責開發與維護iOS APP，並完成上架流程。
+2. 負責撰寫與修訂技術文件、APP操作手冊...等，相關文件。","軟體工程師, 演算法工程師, 通訊軟體工程師",不需負擔管理責任,日班，09:00~18:00,未知,需出差，一年累積時間約一個月以下,英文,"Objective-C, SWIFT",軟體程式設計,"1. 程式設計技能：熟悉Swift，如對Objective-C有經驗者佳。
+2. 熟悉使用Xcode開發與Git管理程式版控。
+3. 有獨立開發iOS APP的經驗佳。
+4. 有WebServices/RESTful API整合經驗者佳。
+5. 對UI/UX有概念與熱誠者佳。",2025-12-08,8vt5j|2025-12-08
+7pimd,一鷺炭火燒鳥-行政部-系統資訊主任(正職社員),一鷺國際餐飲有限公司,餐館業,台北市中山區,經歷不拘,專科,"月薪50,000~53,000元","距捷運行天宮站約370公尺, 年終獎金, 節日獎金/禮品, 津貼/補助, 分紅配股",12/08,"【工作內容】
+1.軟體系統之管理操作及維護(ERP、POS、監視器、網路系統等)
+2.系統優化效率改善
+3.店鋪電腦相關故障設定及維護
+4.維修管理(店鋪基本維修處理、維修廠商聯絡事宜)
+5.行政管理(Excel報表製作、相關數據資料整理)
+6.其他主管交辦事項
+
+【工作技能】
+1.具備基本食材知識，有從事餐飲業系統人員相關經驗1年以上為佳
+2.協助財務會計相關數字報表，EXCEL報表製作能力為佳
+3.邏輯清晰且細心，數字敏感度強，有使用ERP、POS等經驗為佳
+4.具備基本AI相關知識為佳
+
+▎上班工作時間：
+每天固定08：30～17：30(會因工作需求調整)
+
+▎滿滿的社員工作福利內容：
+●享勞健保+公司額外團保●年度免費健康檢查●每日供員工餐●員工用餐七折
+●優於勞基法年假●不定時聚餐 ●PT開酒獎金●PT時數加級獎金
+●全勤獎金●社員技能獎金●業績達成獎金●員工介紹獎金
+●颱風出勤津貼 ●國定假日雙倍薪●三節獎金●語言獎金
+●年終獎金●婚喪/生育禮金●國內外員工旅遊●各式內外訓課程等…
+
+餐飲的靈魂，在於『溫度』
+所謂的溫度，不僅僅表示著上菜給客人桌上餐點的溫度，
+其中，更代表了我們對每位願意上門用餐的客人那份用心程度！
+其中，當時開業時，
+我們取名為「一鷺」這兩個字時，就是考慮到其諧音為「一路」，
+其在中文字面的意義中不只代表了我們的夥伴們，
+都是具有相同理念及信念的一群人。
+更重要的是我們希望每位來到店裡用餐的客人，
+都能把一鷺當作是自己的家，一個溫暖的家！
+『好久沒回家吃飯了』
+這就是一鷺所期待的，我們期待著每位客人在這裡吃到不只是美味的串燒，
+更希望大家都能感受到我們那份執著的熱情及感動！
+ONE FOR ALL，ALL FOR ONE。
+員工為了公司，公司為了員工，目標是盡每個人最大的貢獻，
+公司能夠對員工的貢獻有所回饋，而員工亦要能達成公司所賦予的期待。
+現在起，我們一起開始努力地朝向我們的目標前進吧，
+我們一定要做出台灣串燒界的第一品牌！
+Everything will be change , if you start to change something，
+為了將台灣餐飲再向上提升，我們一起加油吧！！
+
+Everything will be change, if you start to change something！","系統工程師, 資料庫管理人員, 總務",不需負擔管理責任,日班，08:30-17:30,未知,無需出差外派,英文,"Windows 10, Excel, PowerPoint, Word, 鼎基 ERP, 文中系統, Power BI","文書處理軟體操作, 企業資源規劃管理(ERP), 系統架構規劃與維護, 軟硬體設備預算與採買規劃, 系統導入, 報表開發, 資訊設備操作檢修","相關&技能要求
+(1)有餐飲類相關經驗1年以上為佳
+(2)EXCEL報表製作能力為佳
+(3)有使用ERP、POS經驗為佳",2025-12-08,7pimd|2025-12-08
+8mppl,雲端AI軟體工程師,智易科技股份有限公司,其他電信及通訊相關業,新竹市,2年以上,大學,待遇面議,"年終獎金, 節日獎金/禮品, 津貼/補助, 分紅配股, 不扣薪病/事假",12/08,"【工作内容】
+1. 統計與深度學習算法應用
+2. 開發並微調文本數據領域的 AI 模型
+3. LLM 算法開發、模型框架設計與驗證
+4. 雲端系統部署及管理 (如：AWS)
+【工作技能】
+1. AI 相關技術應用及開發
+2. 大數據資料管理與分析
+3. 閱讀並理解專案相關的技術論文
+4. RESTful API 設計與開發
+5. 程式開發能力（Python, R, Node.js, etc.）","軟體工程師, 電信／通訊系統工程師, 通訊軟體工程師",不需負擔管理責任,日班,未知,無需出差外派,英文,--,不拘,"1. LLM 模型開發與微調相關經驗
+2. 1 年以上深度學習、時序預測、文本類處理或其他機器學習相關領域的經驗
+3. 雲端系統部署及管理實務經驗",2025-12-08,8mppl|2025-12-08
+8t0j6,MSSQL資料庫管理師(DBA),尊博科技股份有限公司,電腦軟體服務業,台中市西屯區,3年以上,學歷不拘,待遇面議,"年終獎金, 節日獎金/禮品, 津貼/補助, 優於勞基法特休, 家庭日",12/08,"負責 Microsoft SQL Server 資料庫與相關 NoSQL 系統的規劃、建置與維護，確保系統穩定、高可用與資料安全。包含日常監控、異常處理、效能優化，以及開發自動化管理工具，並與開發團隊合作提升資料存取效能。
+工作內容
+1. 規劃、建置與維護 MSSQL 資料庫（含高可用架構：Always On、Replication、Log Shipping 等）。
+2. 執行資料庫日常管理：異常排除、問題分析、故障排查與資料備援。
+3. 進行效能監控與優化，協助開發人員調校 T-SQL 查詢效能與資料庫結構。
+4. 撰寫並維護資料庫自動化管理與維運相關程式（Python、PowerShell、T-SQL Script 等）。
+5. 規劃、建置與維護 NoSQL 資料庫（如 Redis、MongoDB、ClickHouse 等）。","資料庫管理人員, 軟體工程師",不需負擔管理責任,日班，09:30~18:30,未知,無需出差外派,英文,"Database Administrator, Database Management, MS SQL","軟體程式設計, 資料庫系統管理維護, 資料庫程式設計, 資料庫軟體應用","1. 具備大流量即時交易處理資料的經驗。
+2. 有雲端資料庫處理經驗（Azure SQL Database、AWS RDS for SQL Server 等）者佳。
+3. 有 NoSQL 資料庫經驗（Redis、MongoDB、ClickHouse 等）者佳。
+4. 應徵時附上自薦信（Cover Letter）尤佳。",2025-12-08,8t0j6|2025-12-08
+8b8be,【管理部】Ragic系統建構維護IT專員,虹光國際有限公司,首飾及貴金屬批發業,台中市南屯區,經歷不拘,專科,"月薪28,590~45,000元","年終獎金, 節日獎金/禮品, 員工旅遊, 免費下午茶, 員工優惠",12/08,"【系統維護專員】
+虹光國際有限公司，創立於2000年。從執行長以B2C白手起家，路邊攤到成立零售門市，再進軍B2B市場設立工廠、做批發，一路到ODM&OEM創立團隊，也因虹光擁有從零售端到批發/接單生產的經驗，這讓團隊內部擁有珠寶專業能量，甚至能給予客戶更加實際、到位的一條龍服務，使虹光在產業上擁有一席之地。
+
+虹光致力於貴金屬／銀飾開發、設計與生產，為了解決客戶銷售痛點，開發市場差異化之商品，無論高級珠寶與流行飾品虹光皆能協助客戶品牌開發完成，並同時擁有自家開發設計商品，供應客戶批發。我們在國內市場擁有70%的市占率，從經銷商到連鎖品牌都是我們服務的範疇。
+
+虹光於2020年開始開通外銷市場。雖然外銷版圖僅短短2年半，但當時的我們從阿里巴巴國際站開始，並在短短9個月內開始獲利，甚至一年內達到3星商家。更在2022年榮獲台灣十大網商，並登上今周刊雜誌。
+
+在未來的三年裡，我們將加以佈局創造更多渠道機會，並同時加以努力讓客戶因為虹光的存在而使品牌開發＆交易更加輕鬆、更有價值，快速擴張B2B市場營收與供應能力。階段目標達成後，將佈局更多渠道甚至角逐B2C市場，擴建電商團隊，成為南台灣第一家百人全球電商企業團隊，幫助團隊夥伴圓夢。
+
+我們擁有思維年輕新穎的老闆、有夢想具使命感的主管
+歡迎有夢想且熱情的你，一起加入我們共創未來、共創團隊！
+
+【崗位職責】
+1、內部系統維運事項，Regic系統建構維護。
+2、系統廠商管理事項
+3、資訊維運事項
+4、內部系統相關設定
+5、專案管理相關事項
+7、公司系統軟體作業
+8、資料庫的管理及維護
+9、文件與報表彙整與分析
+10、部門專案需求溝通
+
+【我們要找的你】
+1、無經驗可，但！你必須：有夢想、樂於挑戰，有上進心、耐心，善於學習，自我要求高; 積極、樂觀、自律、抗壓能力強
+2、有系統建立、維護經歷者為優先
+
+
+【我們能給你】
+→保障月薪 $27,470元以上＋業務分紅獎金＆年終保障（視績效表現）
+
+
+【企業未來高發展性】
+→虹光已應映產業與社會變遷未來趨勢，擬定企業未來短、中、長期目標，高層目標共識明確並正落實朝目標前進中。
+→企業主思維開放、跳耀式前衛的思維 與 清晰的目標，擁有集團組織與人才培育計劃。
+→企業組織扁平化、職位層級清晰透明、條件內容明確，經考核並符合資格，經過面試培訓晉升主管，成就豐富多元的職涯發展。","其他資訊專業人員, 資料庫管理人員, 系統工程師",不需負擔管理責任,日班，09:00-18:00,未知,無需出差外派,中文,"SAP, Google Trend, Google Analytics, Word, PowerPoint, Excel, iOS","軟硬體設備預算與採買規劃, 網路設備設定安裝, 網路系統危機管理, 網路安全架構分析與設計, 規劃與管理網路入侵檢測系統（NIDS）, 規劃與管理入侵防護系統（IPS）, 安裝與維護網路安全系統, 伺服器網站管理維護, 系統架構規劃與維護, 企業資源規劃管理(ERP), 資料庫軟體應用, 資料庫程式設計, 資料庫系統管理維護, 軟硬體設備成本控制, 系統維護操作, 資訊設備環境設定, 資訊設備操作檢修, 電腦設備裝配, 資料備份與復原, 作業系統基本操作",無,2025-12-08,8b8be|2025-12-08
+8kxt2,[集團] 流程優化與數據分析專員 (新竹),AVIS艾維士租車_安維斯汽車租賃股份有限公司,運輸工具設備租賃業,新竹縣竹北市,3年以上,大學,待遇面議,"節日獎金/禮品, 津貼/補助, 彈性上下班, 家庭日, 免費下午茶",12/08,"流程優化：負責與各事業單位訪談現有流程，辨識流程優化及數位化的機會。目標提高流程效率至少20%。
+文件撰寫：撰寫現有流程文件，採BPMN 2.0規格，並準備培訓材料。
+數據分析：推動數據分析工具的使用，協助數據清理及分析建模，清晰展現數據樣貌，減少數據處理時間50%。
+專案推動：負責團隊協作，推動流程數位化及優化專案，積極尋找創新技術和工具來優化流程。
+自動化：須具程式設計經驗，協助串接可數位化的程式，減少人工作業與繁瑣作業，透過AI Agent輔助自動化作業。
+跨部門合作：跨部門合作，提供數據支援以協助各事業單位制訂業務策略，確保數據隱私和安全規範。
+持續改進：定期評估和改進已優化的流程，確保其持續有效。
+其他主管交辦事項。","數據分析師／資料分析師, 資料科學家, 資料庫管理人員",不需負擔管理責任,日班,未知,無需出差外派,不拘,"Python, Excel, Visio, Tableau, Power BI",不拘,"程式設計：具備程式設計觀念，對學習透過AI Agent輔助自動化作業或是使用No Code或是Low Code工具有高度興趣。
+數據分析工具：熟練使用數據分析工具，例如：Excel, Power BI, Tableau, Qlik等。
+細心與創意：細心且能發想與提問，具備強大的問題解決能力。
+ISO文件管理：熟悉ISO文件管理制度。
+團隊合作：具備團隊合作精神，能夠跨部門合作、完成共同任務及目標。
+溝通能力：具備良好的溝通能力，並能統籌收集到的數據以清晰方式呈現給相關主管參考。
+程式語言：會使用Python或其它程式語言進行程式開發及數據分析
+教育背景：具備相關領域（如信息管理、商業分析、計算機科學等）的學士學位或以上學歷。
+流程圖工具：熟悉使用流程圖工具如Visio,Lucidchart,Diagrams.net等。
+專案管理：具備專案管理經驗或認證（如PMP）者優先。
+語言能力：具備流利的英語或其他語言能力者優先。
+時間管理：具備良好的時間管理能力，能在多任務環境下工作。",2025-12-08,8kxt2|2025-12-08
+8w51u,RD - Software Development Engineer(ECO),Siemens EDA_愛爾蘭商西門子電子設計自動化股份有限公司台灣分公司,其它軟體及網路相關業,台北市大安區,3年以上,大學,待遇面議,"外商公司, 節日獎金/禮品, 津貼/補助, 優於勞基法特休, 不扣薪病/事假",12/08,"Aprisa: https://eda.sw.siemens.com/en-US/ic/aprisa/
+
+The story
+There is an outstanding opportunity to get in at the ground floor of an expansion of EDA support, and R&D with the establishment of the Siemens EDA Aprisa R&D team in Taipei. This site’s outstanding cultural environment with encouraging colleagues, group-based work environments, and deep community involvement offers an outstanding opportunity to join one of the best teams in the country. This year, the site is scheduled to expand further, and continue to grow the EDA product line they build and support.
+
+The job
+Siemens EDA is looking for a junior Software Developer to join Aprisa family. You will be a meaningful member on the team, leading by sophisticated engineers and work on exciting projects. You will report to a software development manager who will be utterly dedicated to your success and the success of Aprisa family. The job requires you prioritise the schedule of projects. You will meet development and training expectations by working with the team.
+
+Who you are
+You own challenges, finding solutions even when it might mean leaving your lane; you can easily find examples of this when asked. You are flexible & eager to learn new things. Experience in software 
+development that match the making impact role you’re about to seek is a huge plus.
+
+What you have done
+With Bachelor or Master’s degree in EE, CE, or CS with above 5-year validated experiences on large-scale enterprise software projects is extraordinary but not required. Although, of course, that if you know how to develop new algorithms, handle external tool integration and optimization in large-scale software projects, is much appreciated. You have a good 
+understanding of topics around C/C++ software development and debugging techniques.
+
+Requirements:
+Degree: MS/PhD in EE or CS
+Strong in computer algorithms
+Strong C++ background.
+Familiar with ASIC design flow
+Additional qualifications (nice to have):
+Knowledge of static timing analysis, Timing ECO, delay calculation and signal Integrity
+Knowledge of SPICE simulation and library characterization
+Knowledge of numerical analysis
+Experience with P&R flow and design closure
+Familiar with multi-threaded or multi-process programming
+Knowledge of Lex, Yacc, shell scripts, Tcl, Perl, and Python",演算法工程師,不需負擔管理責任,日班,未知,需出差，一年累積時間約一個月以下,英文,"C, C++, TCL, ASIC, EDA","軟體工程系統開發, 軟體程式設計, 結構化程式設計, 演算法設計","Working at Siemens Software 
+
+Why us? 
+
+
+Working at Siemens Software means flexibility - Choosing between working at home and the office at other times is the norm here. We offer great benefits and rewards, as you'd expect from a world leader in industrial software.",2025-12-08,8w51u|2025-12-08
+8vn8j,【RD】AI整合應用工程師 | AI Integration Engineer | 專注於AI應用整合開發，打造智能數位解決方案,沐馳數位股份有限公司,電腦系統整合服務業,台北市中山區,2年以上,大學,待遇面議,"距捷運松江南京站約500公尺, 年終獎金, 節日獎金/禮品, 部門聚餐",12/08,"我們是一家專注於 中小企業數位化、智能化與AI導入 的專業軟體團隊。我們以「AI 驅動營運優化」為核心策略，結合 ERP、n8n 自動化整合、Line生態串接、雲端微服務架構，打造可快速落地的AI應用解決方案。
+
+我們的任務是協助垂直產業客戶（如零售、印刷、長照、製造等）快速導入AI工具，並透過數據與自動化提升企業營運效率與決策品質。
+
+我們正在尋找一位熱愛技術挑戰且熟練於AI整合應用的工程師加入我們的團隊。
+你將有機會參與開發並建立創新的數位解決方案，並與跨功能團隊緊密合作。
+
+歡迎有以下特質的你加入...
+
+在開發工作上，具有熱情和不斷精進的渴望
+遇到問題時，能獨立查找問題與判斷解決方案的可行性
+在團隊工作上，具有開放思考和樂於分享的態度
+當遇到不熟悉的挑戰時，能透過與夥伴的交流產生新的火花
+
+-
+工作內容
+
+你將參與AI導入與自動化專案的整合開發，並與核心架構師與策略長共同設計企業級AI解決方案。主要職責包含：
+
+1.開發與整合 AI模組（LLM / Agent / Workflow） 進入現有平台
+2.利用 n8n / Node-RED / Make / Vibe Coding 進行自動化流程設計與API整合
+3.開發與維運 Node.js 或 PHP (Laravel) 雲端系統
+4.設計與實作 API Gateway、Webhook、OAuth 串接機制
+5.協助建構 AI Marketplace 微服務平台（Docker / K8s）
+6.導入 AI 模型應用（如 Chatbot、任務助理、自動報表、AI分析建議）
+7.串接各類 AI 服務（OpenAI / Gemini / Claude / HuggingFace / Vibe Coding 等）
+
+-
+工作技能
+
+1. 熟悉 Node.js 或 PHP (Laravel) 架構
+2. 熟悉 RESTful API / JSON / Webhook 整合
+3. 具備 AI/ML API 使用經驗（如 OpenAI API, LangChain, HuggingFace 等）
+4. 了解 n8n / Make / Zapier 等自動化工具操作
+5. 具雲端開發與部署經驗（AWS / GCP / Render / Vercel / 自建伺服環境）
+
+-
+加分條件
+
+1. 熟悉 Docker / K8s / CI/CD
+2. 具備 LLM Agent 或自動化工作流開發經驗
+3. 了解 Vue / React 前端整合
+4. 具備 Line Bot、Chatbot、WebSocket、MQTT 開發經驗
+5. 有 AI SaaS 或 Marketplace 類產品實作經驗
+
+-
+我們提供
+
+1. 直接參與公司核心 AI 平台專案開發
+2. 與團隊共同設計 AI 架構與技術落地
+3. 明確的職涯發展路徑（AI工程師 → 系統架構師 → 技術總監）
+
+-
+我們期待你不只是寫程式，而是能與團隊一起思考：
+
+「AI 如何讓企業營運更聰明、更有價值？」
+
+如果你熱愛新技術、擅長整合多種工具、並渴望將AI真正導入市場應用，
+歡迎加入沐馳數位，一起打造在地最具落地力的AI解決方案團隊。","軟體工程師, AI工程師, 數據分析師／資料分析師",不需負擔管理責任,日班，9:30-18:30,未知,無需出差外派,不拘,"PHP, Node.js, MySQL, Python, Linux, NLP, Git, LLM, Sass, Prompt","伺服器網站管理維護, 資料庫程式設計, 軟體程式設計, 軟體工程系統開發, 系統架構規劃, AI, 生成式AI, 提示工程, 語言模型, 人工智慧, 深度學習, 機器學習","1.具備相關專業學歷，例如計算機科學、數學、統計學等；
+2.熟悉Python等程式語言，具備Git Workflow、Docker等相關技術經驗；
+3.熟悉機器學習、深度學習相關技術，如Pytorch、Tensorflow等；
+4.有豐富的AI開發經驗，對影像合成、自然語言處理等有較深的瞭解；
+5.熟悉Google Cloud Platform或其他雲平臺，以及MySQL等關聯式資料庫；
+6.具備良好的英文閱讀及撰寫能力，並能夠適應團隊合作的工作環境。
+7. iPAS AI應用規劃師能力鑑定(初級/中級)、或是AI相關證照為佳",2025-12-08,8vn8j|2025-12-08
+8qfg0,資訊部-軟體工程師(台北總公司),和椿科技股份有限公司,自動控制相關業,台北市內湖區,3年以上,大學,待遇面議,"上市上櫃, 距捷運港墘站約280公尺, 年終獎金, 節日獎金/禮品, 津貼/補助",12/08,"1. 負責完成系統專案和主系統的作業，並且應用系統分析方法，以提供使用者與商業問題有關的諮商服務
+2. 規劃和設計各項應用系統所需之電腦軟體程式，並完成系統文件及程式紀錄建檔作業
+3. ERP 程式開發、維護及問題解決
+4. 資料庫維運","資料庫管理人員, 軟體工程師, MIS程式設計師",不需負擔管理責任,日班，08:30~17:30,未知,無需出差外派,不拘,Linux,系統整合分析,"1.具有ERP流程概念
+2.系統資料分析
+3.SQL 開發維護
+4.Crystal report 開發
+5.專案規劃
+6.ORALCE 資料庫管理
+7.Linux server 管理
+8.熟ERP流程",2025-12-08,8qfg0|2025-12-08
+7fcwk,Software Engineer – Fitness,咸軏智能科技股份有限公司,電子通訊／電腦週邊批發業,台北市內湖區,經歷不拘,大學,"年薪500,000~2,000,000元","距捷運港墘站約300公尺, 年終獎金, 津貼/補助, 分紅配股, 優於勞基法特休",12/08,"Software Engineer
+Responsibilities:
+*Research fundamental problems and implement fitness solutions for wearable and human interface devices using motion sensors (e.g., accelerometers, gyroscopes, magnetometers) and biosensors (e.g., PPG, ECG). 
+*Collects data and statistics from multiple sources and generates statistical analysis (e.g., EPOC, Aerobic/Anaerobic training effect). 
+*Build and deploy end-to-end data pipelines to power ML models, algorithms, bucket testing at scale.
+
+
+Senior Software Engineer
+Same as Software Engineer, but also...
+Responsibilities:
+*Prototype customer-desired functions for wearable devices, translate sensor data into richer and more effective workout information in live and on-demand classes.
+*Incorporate feedback on proposed architectural solutions, and make final modification decisions.
+*Interaction with cross-functional team members, including hardware, FAE, QA and PM.
+*Participate in product and application definition activities including feature analysis and system tradeoffs","軟體工程師, 演算法工程師",管理人數未定,日班,未知,需出差，一年累積時間約一個月以下,不拘,"Android, C, C++, Java",軟體程式設計,"Software Engineer
+Minimum qualifications:
+*BS degree in Computer Science, Engineering, Physics, Mathematics or equivalent practical experience.
+*Solid algorithms and math fundamentals, such as signal processing, statics, adaptive filters, physiology or sports science.
+*Experience with scripting languages (e.g Python) and software development languages (e.g C, C++).
+*Must demonstrate competence with researching fundamental problems and implementing appropriate algorithmic solutions.
+Preferred qualifications:
+*Ability to use a wide variety of open-source technologies.
+*Trainee positions in various fields.
+*Knowledge of MCU structure, familiar with ARM Cortex-M series.
+*Previous work or internship experience in consumer products development.
+*Experience with motion capture systems.
+
+Senior Software Engineer
+Minimum qualifications:
+*6 years of work experience in software development, or 3 years of experience in software development with an advanced degree.
+*Experience with the implementation of sensor data processing and industrial coding for portable or wearable devices.
+*Experience with PPG, HRV, and IMU related signal processing and analysis.
+*Proficient in developing algorithms in either C/C++.
+*Understands software design, memory management and instruction usages.
+*Previous experience working in a team environment.
+Preferred qualifications:
+*Experience in sensor fusion with multiple sensor modalities.
+*Experience in cloud services (e.g., AWS, Azure) and database technologies (MySQL, PostgreSQL, and MongoDB).
+*Excellent communication and collaboration skills.
+*Experience with motion capture systems.",2025-12-08,7fcwk|2025-12-08
+6xmvb,Data Analysis Engineer,瑞昱半導體股份有限公司,半導體製造業,新竹市,經歷不拘,碩士,待遇面議,"上市上櫃, 年終獎金, 節日獎金/禮品, 津貼/補助, 分紅配股",12/08,"Responsibilities:
+1. Data analysis and data processing.
+2. Design and develop LLM applications such as chatbots, virtual assistants, and content generation tools.
+3. Build and optimize RAG pipelines.
+4. Fine tune LLMs and implement prompt engineering
+5. Collaborate with teams to integrate AI models into daily work flow or business model.
+6. Stay up to date with cutting-edge advancements in generative AI and actively contribute to solution innovation.
+
+Requirements：
+1. Strong expertise in LLMs and RAG
+2. Experienced in model training, system integration, and developing AI applications 
+3. Proficiency in Python, Statistics and key ML/AI development tools (e.g. PyTorch, TensorFlow)
+4. Experienced in developing or deploying AI products or solutions
+5. Experience with MLOps practices(model deployment, CI/CD) is plus","其他資訊專業人員, 系統工程師, MIS程式設計師",不需負擔管理責任,日班,未知,無需出差外派,英文,"Python, MS SQL, Excel",不拘,無,2025-12-08,6xmvb|2025-12-08
+798gy,1MC1-人工智慧暨機器人創新中心 系統研發工程師(APP開發人員),中國醫藥大學附設醫院,醫院,台中市北區,經歷不拘,碩士,待遇面議,"年終獎金, 節日獎金/禮品, 津貼/補助, 子女教育獎助學金, 家庭日",12/08,"1. 熟悉iOS或Android架構，具備APP開發經驗。
+2. 具有串接API資訊轉化為可視化數據APP開發經驗。
+3. 負責APP維運管理與改版上架流程。
+4. 具APP結合網站WebView或Native App之雙平台開發經驗。
+5. 具裝置附屬設備界接APP經驗，如：麥克風、藍芽
+6. 維護APP產品優化與新技術研究。
+7. 對於學習新技術具有熱情，具備良好的溝通及團隊合作能力
+8. 其他主管交辦事項。","軟體工程師, Internet程式設計師",不需負擔管理責任,日班,未知,無需出差外派,不拘,--,不拘,"1.科系：生科、醫學、資訊、工程、護理、管理、放射相關科系。
+2.面試時請帶可demo作品。
+3.穩定度高、抗壓性強且自主學習能力高，具溝通協調能力。
+4.具工作熱枕且喜歡挑戰新技術。
+5.具iOS或Android APP上架經驗。
+6.具React Native或Cordova開發經驗尤佳
+7.具網頁前端經驗尤佳。",2025-12-08,798gy|2025-12-08
+8rht6,電池管理系統(BMS)工程師-E26,鴻華先進科技股份有限公司,汽車及其零件製造業,新北市新店區,3年以上,大學,待遇面議,"年終獎金, 節日獎金/禮品, 津貼/補助, 團體保險",12/08,"1. 功能開發與嵌入式程式撰寫
+   1.1 撰寫並整合電池狀態估算演算法（SOC、SOH、SOP）
+   1.2 開發電芯平衡、充放電保護、過熱/過壓檢測邏輯
+2. 診斷與安全機制實作
+   2.1 建立故障診斷系統（Diagnostic Trouble Codes, DTC）
+   2.2 設計冗餘邏輯、異常處理機制與安全策略
+3. CAN 通訊協定與介面設計
+   3.1 與車輛 ECU 或上位機對接 CAN 訊息
+   3.2 撰寫 DBC 檔案、進行通訊模擬與實測驗證
+4. 演算法驗證與參數標定
+   4.1 撰寫單元測試、整合測試腳本
+   4.2 使用 HIL（Hardware-in-the-Loop）系統驗證控制邏輯穩定性
+5. 跨部門開發與測試支援
+   5.1與硬體、結構設計、熱控團隊協作整體功能驗證
+   5.2 協助試車或實驗室進行系統除錯與數據回收","電源工程師, 軟體工程師, 演算法工程師",不需負擔管理責任,日班,未知,需出差，一年累積時間未定,不拘,Catia,不拘,無,2025-12-08,8rht6|2025-12-08
+633nv,ERP資訊工程師,大億金茂股份有限公司,汽車及其零件製造業,台南市南區,經歷不拘,專科,"月薪35,000元以上","上市上櫃, 年終獎金, 節日獎金/禮品, 津貼/補助, 員工旅遊",12/08,"1.熟悉.NET C# 程式開發
+2.使用過ERP系統(鼎新尤佳)
+3.主管交辦事項","資料庫管理人員, 軟體工程師",不需負擔管理責任,日班,未知,需出差，一年累積時間未定,不拘,--,資料庫系統管理維護,無,2025-12-08,633nv|2025-12-08
+8uqxe,後端工程師 (Node.js)｜AI 新創,偉峰達科技股份有限公司,數位內容產業,台北市內湖區,2年以上,學歷不拘,"月薪45,000~55,000元",距捷運港墘站約310公尺,12/08,"【公司簡介】
+
+我們是一家致力於將 AI 轉化為實用產品的新創公司，
+正在開發能真正改善日常生活的智慧應用服務。
+
+我們相信，穩定與創新可以並行。
+在這裡，你不只是寫程式，而是參與一個從 0 到 1 打造國際級產品的過程。
+
+你將負責後端架構的開發與維護，並持續優化系統效能與雲端部署流程，
+確保產品穩定與可擴展性。
+我們鼓勵並提供資源（如 ChatGPT/Gemini 企業版），讓您在開發流程中導入 AI 輔助，提升效率。
+
+【工作內容】
+
+開發與維護後台客戶管理系統與 API 服務。
+
+串接 App 端資料與伺服器邏輯，確保穩定高效能。
+
+設計與優化資料庫結構與查詢效率。
+
+部署應用於 AWS/ GCP 等雲端平台。
+
+撰寫清晰的開發文件與 API 規格。
+
+【必要條件】
+
+熟悉 Node.js（Express / NestJS）或等效後端語言。
+
+熟悉 RESTful API 設計與 SQL 資料庫操作。
+
+熟悉 Git 版本控制與協作流程。
+
+基本雲端部署經驗（AWS / GCP / Firebase / Supabase）。
+
+有責任感、願意學習並主動解決問題。
+
+【加分條件】
+
+具備 CI/CD 或自動化測試 (如 Jest) 經驗。
+
+曾參與上架或維護實際商業 App。
+
+對 AI 技術與產品化應用有興趣。","後端工程師, 前端工程師, 全端工程師",不需負擔管理責任,日班，(9:00~18:00),未知,無需出差外派,不拘,--,不拘,無,2025-12-08,8uqxe|2025-12-08
+8aqi4,資訊管理工程師,亞拓科技股份有限公司,消費性電子產品製造業,台中市豐原區,2年以上,專科,"月薪36,000~42,000元","年終獎金, 節日獎金/禮品, 津貼/補助, 停車位, 員工優惠",12/08,"Windows/Linux主機、網頁、內部網路、電腦維護管理工程師
+
+1.網路、伺服器、資訊設備、機房設備之規畫、建置、維護與故障排除。 
+2.虛擬主機架構、伺服器系統、AD、電子郵件等系統規畫、建置、維護與故障排除。 
+3.防火牆、網路監控、資料備份、災難演練及安全控管等作業。 
+4.部門電腦系統安裝建置及軟、硬體問題排除，資訊資產盤點與維護管理。 
+5.PC檢修與配合管理部對各部門電腦定期查驗。","網頁設計師, 資料庫管理人員, 系統工程師",管理人數未定,日班,未知,無需出差外派,不拘,"Linux, Windows Mobile, Windows 10, TCP/IP, PC—lint","資料備份與復原, 電腦設備裝配, 資訊設備操作檢修, 資訊設備環境設定, 安裝與維護網路安全系統, 規劃與管理防火牆, 網路應用軟體操作, 網頁軟體操作, 網頁語法撰寫","(1)軟體使用Photoshop、Dreamweaver、Flash ，需具備HTML與CSS修改能力。
+(2)熟悉MYSQL、MS SQL等應用。
+(3) 熟悉WINDOW作業系統。
+(4) 略懂Linux作業系統。
+(5) 有Discuz討論區或SQL資料庫管理經驗者尤佳。
+(6) 有專案實作經驗者尤佳。
+(7)防火牆規劃與管理",2025-12-08,8aqi4|2025-12-08
+8uurx,Insights & Analytics Manager,犀動智能科技股份有限公司,電腦軟體服務業,台北市內湖區,3年以上,大學,待遇面議,"年終獎金, 津貼/補助, 分紅配股, 優於勞基法特休, 員工旅遊",12/08,"Job Summary 
+
+At Aiello, we are on a mission to become the AI leader in the hospitality industry, redefining how hotels understand and engage with their guests through intelligent, data-driven experiences. 
+
+As the Insights & Analytics Manager, you will be the owner of Aiello’s data insight capability — shaping how the company transforms data into strategic intelligence that drives decisions, innovation, and growth. You will lead the full insight process — from defining the right methodologies and ensuring reliable data flow (including ETL oversight), to uncovering patterns that reveal how both our hotel partners and their guests interact with Aiello’s AI solutions. 
+
+Your role goes beyond reporting numbers — you’ll turn complex data into clear, actionable insights that influence product direction, marketing strategies, and executive decisions. By connecting hotel operations with guest behavior through data, you’ll help Aiello continuously refine its products, deliver measurable ROI, and strengthen our leadership in the hospitality AI space. 
+
+
+Key Responsibilities 
+
+1. Lead the end-to-end data insight process, defining methodologies, overseeing ETL pipelines, and ensuring data quality and reliability. 
+2. Design and maintain standardized dashboards and report templates, enabling consistent and efficient insight reporting across teams. 
+3. Perform in-depth data analysis and ad-hoc research to generate actionable insights that drive product optimization and marketing effectiveness. 
+4. Measure the business impact of key initiatives and track performance metrics to ensure insights translate into tangible results. 
+5. Collaborate cross-functionally with product, marketing, and operations teams to collect, interpret, and visualize data for better business decisions. 
+6. Leverage product usage and customer data to demonstrate ROI, highlight success stories, and uncover new business opportunities. 
+7. Translate complex analyses into clear narratives, presenting key findings and strategic recommendations through reports and presentations.","商業分析師, 數據分析師／資料分析師, 市場調查／市場分析",不需負擔管理責任,日班,未知,無需出差外派,英文,"ETL, Tableau, SaaS, Power BI","數據分析, 競品分析, 消費者行為, 市場調查資料分析與報告撰寫, 市場趨勢分析","Qualifications  
+
+1. Highly proactive, self-driven, and outcome-oriented, with strong ownership of both process and result. 
+2. 3-5+ years of experience in data analysis, business intelligence, or data strategy, preferably within SaaS or digital product environments. 
+3. Proven ability to translate complex data into actionable insights that shape product direction, marketing strategy, and business growth. 
+4. Strong analytical and problem-solving skills, with hands-on experience in SQL, data visualization tools (e.g. Power BI, Tableau, or Superset), and a solid understanding of data flow and ETL processes. 
+5. Demonstrated success in building or owning data insight frameworks — from dashboard design to insight reporting — that scale across teams and products. 
+6. Excellent storytelling and communication skills, able to turn analysis into clear narratives for both technical and business stakeholders. 
+7. Experience collaborating with cross-functional teams (product, marketing, engineering, and customer success) to align insights with company goals. 
+8. Thrive in a startup environment where teamwork, agility, and open communication are key — you’re comfortable sharing information transparently and collaborating to solve problems together. 
+9. Passionate about AI and hospitality, curious about both operations (B2B) and guest experiences (B2C) to uncover new opportunities through data. 
+10. Excellent communication skills in English.",2025-12-08,8uurx|2025-12-08
