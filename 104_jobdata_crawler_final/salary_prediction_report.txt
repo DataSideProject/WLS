@@ -1,59 +1,59 @@
 
 # 就業市場薪資預測報告 (分群優化版 + NLP 可解釋性)
-**生成時間**：2025-12-05 23:10
+**生成時間**：2025-12-09 18:22
 **優化策略**：資料淨化 + 年資分群 + jieba 分詞
 
 ## 整體表現 (Weighted Average)
-- **Salary Min MAE**: 7145 元
-- **Salary Max MAE**: 14966 元
+- **Salary Min MAE**: 7154 元
+- **Salary Max MAE**: 14665 元
 
 ## 分群詳細表現
 ### Junior (年資 < 3年)
-- **Min Salary**: R²=0.2760, MAE=6276
-- **Max Salary**: R²=0.3094, MAE=13988
+- **Min Salary**: R²=0.2794, MAE=6204
+- **Max Salary**: R²=0.3250, MAE=13766
 
 ### Senior (年資 >= 3年)
-- **Min Salary**: R²=0.4267, MAE=11673
-- **Max Salary**: R²=0.4574, MAE=20059
+- **Min Salary**: R²=0.3507, MAE=12353
+- **Max Salary**: R²=0.4505, MAE=19589
 
 ## 資料概況
-- 淨化後總職缺：5172
-- 訓練集 (有薪資)：1068
-- 預測集 (面議)：3636
+- 淨化後總職缺：5436
+- 訓練集 (有薪資)：1120
+- 預測集 (面議)：3825
 
 ## 特徵重要性分析（Top 20）
 (括號內為原始 NLP 關鍵字)
-cat_通訊軟體工程師             0.137852
-skill_java_in_台北市       0.120526
-skill_linux_in_台北市      0.088934
-industry_電腦軟體服務業        0.084471
-cat_演算法工程師              0.082376
-industry_電腦及其週邊設備製造業    0.078181
-skill_mysql_in_台中市      0.053199
-cat_軟體工程師               0.051529
-skill_pytorch           0.051406
-cat_資料科學家               0.047365
-skill_python_in_台北市     0.043159
-desc_feat11 ( )         0.041038
-cat_數據分析師／資料分析師         0.040333
-industry_其他電子零組件相關業     0.038440
-skill_c++_in_台中市        0.036509
-cat_系統工程師               0.034076
-cat_AI工程師               0.034012
-skill_word              0.033550
-skill_python            0.032504
-skill_excel             0.031725
+skill_java_in_台北市       0.087168
+skill_linux_in_台北市      0.079052
+industry_電腦軟體服務業        0.077488
+skill_mysql_in_台中市      0.074958
+cat_資料科學家               0.063780
+cat_演算法工程師              0.063314
+industry_電腦及其週邊設備製造業    0.062552
+cond_feat11 (   )       0.061648
+cat_全端工程師               0.060949
+is_manager              0.059289
+skill_c++_in_台中市        0.048861
+desc_feat11 ( )         0.041867
+cat_數據分析師／資料分析師         0.039028
+cat_軟體工程師               0.038953
+skill_python_in_台北市     0.035583
+skill_python            0.033949
+cat_系統工程師               0.032361
+skill_pytorch           0.032092
+company_緯創資通股份有限公司      0.031070
+skill_python_in_新竹縣     0.031031
 
 ## 執行日誌
 載入資料...
 連線至資料庫: 35.185.175.249...
-成功從資料庫讀取資料：11194 筆
+成功從資料庫讀取資料：13884 筆
 解析薪資欄位...
-已移除重複資料: 5995 筆 (剩餘 5199 筆)
+已移除重複資料: 8420 筆 (剩餘 5464 筆)
 執行資料淨化 (剔除極端值)...
-薪資範圍過濾: Min(28590~120185), Max(32000~201846)
-已剔除極端值: 27 筆
-淨化後總筆數: 5172
+薪資範圍過濾: Min(28590~117830), Max(32000~200000)
+已剔除極端值: 28 筆
+淨化後總筆數: 5436
 進行特徵工程...
 處理 job_description TF-IDF (Top 100, jieba)...
 處理 other_conditions TF-IDF (Top 100, jieba)...
@@ -61,20 +61,20 @@ skill_excel             0.031725
 === 開始分群訓練 (Junior vs Senior) ===
 
 --- 預測目標: salary_min ---
-正在訓練 Junior 模型 (Train: 896, Pred: 2460)...
-  [Junior_salary_min] 特徵篩選: 593 -> 27
-  [Junior_salary_min] R²=0.2760, MAE=6276, RMSE=9952
-正在訓練 Senior 模型 (Train: 172, Pred: 1176)...
-  [Senior_salary_min] 特徵篩選: 593 -> 45
-  [Senior_salary_min] R²=0.4267, MAE=11673, RMSE=16246
+正在訓練 Junior 模型 (Train: 947, Pred: 2587)...
+  [Junior_salary_min] 特徵篩選: 593 -> 35
+  [Junior_salary_min] R²=0.2794, MAE=6204, RMSE=9961
+正在訓練 Senior 模型 (Train: 173, Pred: 1238)...
+  [Senior_salary_min] 特徵篩選: 593 -> 41
+  [Senior_salary_min] R²=0.3507, MAE=12353, RMSE=16861
 
 --- 預測目標: salary_max ---
-正在訓練 Junior 模型 (Train: 896, Pred: 2460)...
-  [Junior_salary_max] 特徵篩選: 593 -> 30
-  [Junior_salary_max] R²=0.3094, MAE=13988, RMSE=20664
-正在訓練 Senior 模型 (Train: 172, Pred: 1176)...
-  [Senior_salary_max] 特徵篩選: 593 -> 20
-  [Senior_salary_max] R²=0.4574, MAE=20059, RMSE=27483
+正在訓練 Junior 模型 (Train: 947, Pred: 2587)...
+  [Junior_salary_max] 特徵篩選: 593 -> 31
+  [Junior_salary_max] R²=0.3250, MAE=13766, RMSE=20347
+正在訓練 Senior 模型 (Train: 173, Pred: 1238)...
+  [Senior_salary_max] 特徵篩選: 593 -> 21
+  [Senior_salary_max] R²=0.4505, MAE=19589, RMSE=26898
 
 ## 結論
 透過分群訓練與 jieba 分詞，我們現在能更清楚看到哪些具體技能或描述影響薪資。
