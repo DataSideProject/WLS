@@ -38,9 +38,9 @@ flowchart TD
 | `predict_salary_ensemble_segmented_v7.py`  | 從資料庫讀最新資料 → Ensemble + 分群預測（產生報告） |
 | `generate_predictions.py`                  | 最終預測腳本（無資料洩漏）→ 產生 Flask 用的 CSV |
 | `app.py`                                   | Flask 主程式，啟動網頁                        |
-| `skill_taxonomy.json`                      | 技能樹分類（已升級賽博風）                    |
+| `skill_taxonomy.json`                      | 技能樹分類                   |
 | `analysis_utils.py`                        | 儀表板統計函數                               |
-| `templates/index.html`                     | 賽博龷克風前端                                |
+| `templates/index.html`                     | 前端                                |
 | `job_data_final_with_predictions.csv`      | Flask 載入的唯一資料來源                      |
 
 ## 快速啟動（5 步驟，10 分鐘內跑起來）
