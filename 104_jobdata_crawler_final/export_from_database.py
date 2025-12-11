@@ -4,11 +4,17 @@ from sqlalchemy import create_engine, inspect
 import re
 
 # ==================== 1. 設定 ====================
-# 請修改成你的 GCP MariaDB 資訊
-HOST = '35.185.175.249'          # 你的 GCP 外部 IP
-USER = 'datauser'
-PASSWORD = '123456'
-DATABASE = 'rawdata'
+try:
+    from db_config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+except ImportError:
+    print("錯誤：找不到 db_config.py，請確認已建立設定檔。")
+    exit(1)
+
+# 使用設定檔中的資訊
+HOST = DB_HOST
+USER = DB_USER
+PASSWORD = DB_PASSWORD
+DATABASE = DB_NAME
 
 # 連線
 # 注意：若遇到 "pandas only supports SQLAlchemy..." 警告，請確保已安裝 SQLAlchemy 和 pymysql

@@ -90,10 +90,17 @@ def parse_management(mgmt):
 log_print("載入資料...")
 
 # GCP MariaDB 設定
-HOST = '35.185.175.249'
-USER = 'datauser'
-PASSWORD = '123456'
-DATABASE = 'rawdata'
+# GCP MariaDB 設定
+try:
+    from db_config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+except ImportError:
+    log_print("錯誤：找不到 db_config.py")
+    raise
+
+HOST = DB_HOST
+USER = DB_USER
+PASSWORD = DB_PASSWORD
+DATABASE = DB_NAME
 
 try:
     engine = create_engine(f'mysql+mysqlconnector://{USER}:{PASSWORD}@{HOST}:3306/{DATABASE}')

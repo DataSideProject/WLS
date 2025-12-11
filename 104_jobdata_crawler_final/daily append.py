@@ -9,10 +9,16 @@ import time
 
 # ==================== 1. 設定 ====================
 # 請修改成你的 GCP MariaDB 資訊
-HOST = '35.185.175.249'          # 你的 GCP 外部 IP
-USER = 'datauser'
-PASSWORD = '123456'
-DATABASE = 'rawdata'
+try:
+    from db_config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+except ImportError:
+    print("錯誤：找不到 db_config.py")
+    exit(1)
+
+HOST = DB_HOST
+USER = DB_USER
+PASSWORD = DB_PASSWORD
+DATABASE = DB_NAME
 TABLE = '104rawdata'
 
 # 連線

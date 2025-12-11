@@ -1,3 +1,5 @@
 104rawdata_export.csv
 job_details_export.csv
 all_jobs_master_export.csv
+db_config.py
+__pycache__/
