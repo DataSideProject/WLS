@@ -3,3 +3,12 @@ job_details_export.csv
 all_jobs_master_export.csv
 db_config.py
 __pycache__/
+
+# Large Data & Artifacts
+*.csv
+catboost_info/
+logs/
+*.log
+existing_keys.txt
+checkpoint.json
+model_diagnostics*.png
