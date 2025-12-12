@@ -13,10 +13,10 @@
         --panel-bg: #1a1a1a;
         --card-bg: #1a1a1a;
         --border-color: #333333;
-        --accent-yellow: #F2C94C;
-        --accent-blue: #2F80ED;
-        --accent-red: #EB5757;
-        --accent-green: #27AE60;
+        --accent-yellow: #f2c94c;
+        --accent-blue: #2f80ed;
+        --accent-red: #eb5757;
+        --accent-green: #27ae60;
         --text-color: #ffffff;
         --text-secondary: #888888;
         --border-radius: 16px;
@@ -28,24 +28,89 @@
         padding: 0;
         background-color: var(--bg-color);
         color: var(--text-color);
-        font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+        font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
         overflow: hidden;
       }
 
+      /* 3-Column Layout for Desktop */
       .container {
-        display: flex;
+        display: grid;
+        grid-template-columns: 320px 380px 1fr; /* Filters/Tabs | List | Main */
+        grid-template-rows: 100vh;
+        width: 100vw;
         height: 100vh;
+        overflow: hidden;
       }
 
       /* Sidebar */
-      .sidebar {
-        width: 320px;
-        background: var(--bg-color);
+      /* Column 1: Filters */
+      .sidebar-filters {
+        background: var(--panel-bg);
         border-right: 1px solid var(--border-color);
         display: flex;
         flex-direction: column;
-        z-index: 10;
-        height: 100vh;
+        padding: 20px;
+        overflow-y: auto;
+        z-index: 2;
+      }
+
+      /* Column 2: Job List */
+      .sidebar-list {
+        background: var(--panel-bg);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        z-index: 2;
+        overflow: hidden; /* Inner scroll */
+      }
+      
+      /* Column 3: Main Content */
+      .main-content {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        background: #050505;
+        z-index: 1;
+        flex: 1; 
+      }
+      
+      /* Dynamic Layout: 2-Column for Dashboard */
+      .container.dashboard-active {
+          grid-template-columns: 320px 1fr; /* Remove middle column */
+      }
+      .container.dashboard-active .sidebar-list {
+          display: none; /* Hide list completely */
+      }
+
+      /* Fix for Skill Tree Container */
+      #chart-container {
+        flex: 1;
+        width: 100%;
+        min-height: 500px; /* Ensure visible height */
+        position: relative;
+      }
+
+      /* ... skipping unchanged lines ... */
+
+      .job-card {
+        background: var(--panel-bg);
+        margin-bottom: 12px;
+        padding: 16px; /* Reduced from 20px */
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      /* ... skipping unchanged lines ... */
+
+      /* Filter Panel */
+      .filter-panel {
+        padding: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        max-height: 350px; /* Reduced from 400px to give list more space */
+        overflow-y: auto;
       }
 
       .nav-tabs {
@@ -125,7 +190,7 @@
         display: block;
       }
       .filter-btn {
-        background: rgba(255,255,255,0.1);
+        background: rgba(255, 255, 255, 0.1);
         border: 1px solid #444;
         color: #aaa;
         padding: 5px 10px;
@@ -147,8 +212,8 @@
 
       .job-card {
         background: var(--panel-bg);
-        margin-bottom: 12px;
-        padding: 20px;
+        margin-bottom: 8px; /* Compact margin */
+        padding: 12px; /* Compact padding */
         border-radius: 12px;
         border: 1px solid var(--border-color);
         cursor: pointer;
@@ -162,23 +227,33 @@
         box-shadow: none;
       }
 
+
+
+      /* Filter Panel */
+      .filter-panel {
+        padding: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        max-height: 250px; /* Reduced to show ~5 cards */
+        overflow-y: auto;
+      }
+
       .job-title {
         font-weight: 700;
-        font-size: 1.1em;
+        font-size: 1.05em; /* Slightly smaller */
         color: var(--text-color);
-        margin-bottom: 8px;
+        margin-bottom: 4px; /* Reduced from 8px */
         line-height: 1.3;
       }
 
       .job-company {
-        font-size: 0.9em;
+        font-size: 0.85em; /* Slightly smaller */
         color: var(--text-secondary);
       }
 
       .job-salary {
         font-size: 0.9em;
         color: var(--accent-green);
-        margin-top: 12px;
+        margin-top: 8px; /* Reduced from 12px */
         font-weight: 500;
         background: rgba(39, 174, 96, 0.1);
         display: inline-block;
@@ -281,13 +356,13 @@
         background: var(--panel-bg);
         position: relative;
       }
-      
+
       .map-toggle-btn {
         position: absolute;
         top: 20px;
         right: 20px;
         z-index: 100;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0, 0, 0, 0.5);
         border: 1px solid #555;
         color: white;
         padding: 5px 10px;
@@ -301,7 +376,7 @@
         top: 20px;
         right: 200px; /* Positioned to the left of the toggle button */
         z-index: 100;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0, 0, 0, 0.5);
         border: 1px solid #555;
         color: white;
         padding: 5px 10px;
@@ -309,18 +384,19 @@
         cursor: pointer;
         font-size: 0.8em;
       }
-      
-      .map-reset-btn:hover, .map-toggle-btn:hover {
-          background: rgba(255,255,255,0.1);
-          border-color: #888;
+
+      .map-reset-btn:hover,
+      .map-toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #888;
       }
-      
+
       .word-cloud-card {
         grid-column: span 2;
       }
-      
+
       .span-2 {
-          grid-column: span 2;
+        grid-column: span 2;
       }
 
       .prediction-info {
@@ -331,7 +407,7 @@
         border: 1px solid var(--border-color);
         font-size: 0.95em;
       }
-      
+
       .error-tag {
         display: inline-block;
         padding: 4px 8px;
@@ -340,8 +416,14 @@
         margin-left: 10px;
         font-size: 0.8em;
       }
-      .error-good { background: var(--accent-green); color: white; }
-      .error-bad { background: var(--accent-red); color: white; }
+      .error-good {
+        background: var(--accent-green);
+        color: white;
+      }
+      .error-bad {
+        background: var(--accent-red);
+        color: white;
+      }
 
       /* Job Link Styling */
       #jobLink {
@@ -377,7 +459,8 @@
         letter-spacing: 0.5px;
       }
 
-      .filter-select, .filter-input {
+      .filter-select,
+      .filter-input {
         width: 100%;
         padding: 10px 12px;
         background: var(--panel-bg);
@@ -389,7 +472,8 @@
         transition: border-color 0.2s;
       }
 
-      .filter-select:focus, .filter-input:focus {
+      .filter-select:focus,
+      .filter-input:focus {
         border-color: var(--accent-blue);
         background: #252525;
       }
@@ -484,7 +568,6 @@
         color: #aaa;
       }
 
-
       /* Scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
@@ -502,398 +585,507 @@
 
       /* Metrics & Map Styles */
       .metrics-row {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: var(--gap-size);
-          margin-bottom: 24px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--gap-size);
+        margin-bottom: 24px;
       }
       .metric-card {
-          background: var(--accent-yellow);
-          color: #111;
-          border: none;
-          padding: 24px;
-          border-radius: var(--border-radius);
-          text-align: left;
-          box-shadow: none;
-          transition: transform 0.2s;
-          /* Flex Alignment */
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          align-items: flex-start;
-          min-height: 140px; 
+        background: var(--accent-yellow);
+        color: #111;
+        border: none;
+        padding: 24px;
+        border-radius: var(--border-radius);
+        text-align: left;
+        box-shadow: none;
+        transition: transform 0.2s;
+        /* Flex Alignment */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-start;
+        min-height: 140px;
       }
       /* Variation for metric cards */
-      .metric-card:nth-child(2) { background: var(--accent-blue); color: white; }
-      .metric-card:nth-child(3) { background: var(--accent-red); color: white; }
-      .metric-card:nth-child(4) { background: var(--accent-green); color: white; }
+      .metric-card:nth-child(2) {
+        background: var(--accent-blue);
+        color: white;
+      }
+      .metric-card:nth-child(3) {
+        background: var(--accent-red);
+        color: white;
+      }
+      .metric-card:nth-child(4) {
+        background: var(--accent-green);
+        color: white;
+      }
 
       .metric-card:hover {
-          transform: translateY(-4px);
+        transform: translateY(-4px);
       }
       .metric-value {
-          font-size: 2.5em;
-          font-weight: 800;
-          color: inherit;
-          margin-bottom: 0px;
-          text-shadow: none;
-          line-height: 1; 
-          word-break: break-word; 
+        font-size: 2.5em;
+        font-weight: 800;
+        color: inherit;
+        margin-bottom: 0px;
+        text-shadow: none;
+        line-height: 1;
+        word-break: break-word;
       }
       .metric-label {
-          font-size: 0.85em;
-          color: inherit;
-          opacity: 0.8;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          font-weight: 600;
+        font-size: 0.85em;
+        color: inherit;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
       }
       .chart-card.map-card {
-          grid-column: span 2;
-          height: 885px; /* Adjusted height per user request */
-          min-height: 0;
+        grid-column: span 2;
+        height: 885px; /* Adjusted height per user request */
+        min-height: 0;
       }
       @media (max-width: 768px) {
-          .metrics-row {
-              grid-template-columns: 1fr 1fr;
-          }
-          .chart-card.map-card {
-              grid-column: span 1;
-              height: 550px; /* Increased height for better mobile map view */
-          }
+        .metrics-row {
+          grid-template-columns: 1fr 1fr;
+        }
+        .chart-card.map-card {
+          grid-column: span 1;
+          height: 550px; /* Increased height for better mobile map view */
+        }
       }
 
       /* Mobile Responsiveness */
       @media (max-width: 768px) {
-        .container {
-          flex-direction: column;
-          height: 100vh;
-          overflow: hidden;
-        }
-
-        .sidebar {
-          width: 100%;
-          height: 100%; /* Full height for list view */
-          border-right: none;
-          border-bottom: 1px solid var(--accent-blue);
-          display: flex;
-          flex-direction: column;
-          z-index: 10;
-        }
-
-        .main-content {
-          width: 100%;
-          height: 100%;
-          position: fixed;
-          top: 0;
-          left: 0;
-          background: #050505;
-          z-index: 20;
-          display: none; /* Hidden by default on mobile */
-          flex-direction: column;
-        }
-        
-        .main-content.active-mobile {
-            display: flex;
-        }
-
-        .dashboard-grid {
-          grid-template-columns: 1fr;
-          grid-template-rows: auto;
-          overflow-y: auto;
-          padding-bottom: 80px; /* Space for bottom nav if needed */
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-        
-        .chart-card {
-            min-height: 350px; /* Fix chart collapse */
-            height: auto;
-        }
-        
-        .chart-body {
-            height: 300px !important; /* Force height for ECharts */
-        }
-
-        .filter-panel {
-          max-height: 150px;
-          overflow-y: auto;
-        }
-
-        .header {
-          padding: 10px;
-        }
-
-        .header h1 {
-          font-size: 18px;
-        }
-        
-        #searchPanel {
-            height: 100%;
+        /* Reset Container to Stack */
+        .container, 
+        .container.dashboard-active {
             display: flex;
             flex-direction: column;
+            grid-template-columns: none;
+            grid-template-rows: auto;
+            height: 100vh;
+            overflow: hidden;
         }
         
-        .job-list {
-            flex: 1;
-            height: auto;
-            overflow-y: auto;
+        /* Dashboard Mode needs scroll on container */
+        .container.dashboard-active {
+            overflow-y: auto !important;
+            display: block; /* Switch back to block to allow scroll */
         }
-        
-        /* Dashboard Mobile Specifics - Stack Layout */
-        .sidebar.dashboard-mode {
-            position: relative; /* Not fixed */
+
+        /* 1. Filters (Top Layer) */
+        .sidebar-filters {
             width: 100%;
             height: auto;
-            max-height: none; /* Let it grow if needed, or collapse */
-            flex: 0 0 auto;
-            z-index: 50;
-            border-bottom: 2px solid var(--accent-blue);
-            background: #050505;
+            max-height: 45%; 
+            border-right: none;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0; /* Always show filters at top */
+            padding: 10px;
+        }
+
+        /* 2. Job List (Middle Layer) */
+        .sidebar-list {
+            width: 100%;
+            flex: 1; /* Take remaining space */
+            border-right: none;
+            overflow-y: auto;
+            display: flex;
         }
         
-        .main-content.dashboard-mode {
-            position: relative; /* Stack below sidebar */
-            top: 0;
+        /* Hide List when Dashboard or Detail is active */
+        .container.dashboard-active .sidebar-list,
+        .main-content.active-mobile ~ .sidebar-list {
+            display: none;
+        }
+
+        /* 3. Main Content (Overlay/Stack) */
+        .main-content {
+            position: fixed;
+            top: 0; 
             left: 0;
             width: 100%;
-            height: auto;
-            display: flex;
+            height: 100%;
+            z-index: 100; 
+            display: none; 
+            background: #111; /* Ensure opaque background */
             flex-direction: column;
-            overflow: visible; /* Let container handle scroll */
-            z-index: 10;
+        }
+
+        /* Modal Mode (Job Details) */
+        .main-content.active-mobile {
+            display: flex;
+            position: fixed; /* Force Overlay */
+            z-index: 1000; /* Top of everything */
+            overflow-y: auto;
+        }
+
+        /* Dashboard Mode (Stack) */
+        .container.dashboard-active .main-content {
+            display: flex;
+            position: relative; /* Flow normally */
+            z-index: 1;
+            height: auto;
+            overflow: visible;
         }
         
-        .container.dashboard-mode {
-            overflow-y: auto; /* Main scroll on container */
-            height: 100vh;
-            display: block; /* Allow normal flow */
+        .container.dashboard-active .sidebar-filters {
+            max-height: none; 
+            flex: 0 0 auto;
+        }
+
+        .header h1 { font-size: 18px; }
+        .chart-card { min-height: 300px; }
+        
+        /* Maximize Chart on Mobile Modal */
+        .main-content.active-mobile #chart-container {
+            height: 85vh !important;
+            min-height: 85vh !important;
+        }
+
+        /* Fix Dashboard Grid on Mobile */
+        .metrics-row, 
+        .dashboard-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            grid-template-columns: 1fr !important;
+            gap: 15px;
         }
         
-        /* Make filters collapsible on mobile if strictly needed, but stack is safer for now */
-        .dashboard-mode #dashboardPanel {
-            padding-bottom: 10px;
+        .chart-card, 
+        .chart-card.span-2, 
+        .chart-card.span-3 {
+            grid-column: auto !important;
+            width: 100% !important;
         }
       }
     </style>
   </head>
   <body>
     <div class="container" id="appContainer">
-      <div class="sidebar" id="sidebar">
-        <div class="nav-tabs">
-            <div class="nav-tab active" onclick="switchTab('search')">Job Search</div>
-            <div class="nav-tab" onclick="switchTab('dashboard')">Market Dashboard</div>
-        </div>
-
-        <div id="searchPanel">
-            <!-- Search Box -->
-            <div class="search-box">
-            <input
-                type="text"
-                id="search"
-                class="search-input"
-                placeholder="Search Jobs..."
-            />
+      <!-- 3-Column Layout: Column 1 (Filters) -->
+      <div class="sidebar-filters" id="sidebarFilters">
+          <div style="padding-bottom: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px;">
+            <div class="nav-tabs" style="margin-bottom: 15px; border-bottom: none;">
+              <div class="nav-tab active" id="tabSearch" onclick="switchTab('search')">Job Search</div>
+              <div class="nav-tab" id="tabDashboard" onclick="switchTab('dashboard')">Market Dashboard</div>
             </div>
+            <h3 style="margin: 0; font-size: 1.2em; color: var(--text-color);">Filters</h3>
+          </div>
 
-            <!-- Filter Panel -->
-            <div class="filter-panel">
-                <!-- Location Filter -->
+          <!-- SEARCH MODE FILTERS -->
+          <div id="searchFiltersMode">
+              <div class="search-box" style="padding: 0 0 20px 0; border: none;">
+                <input type="text" id="search" class="search-input" placeholder="Search Jobs..." />
+              </div>
+
+              <!-- Filter Content -->
+              <div id="filterContent" style="display: block;">
+                <!-- Location -->
                 <div class="filter-section">
-                    <label class="filter-label">📍 Location</label>
-                    <select id="filterLocation" class="filter-select">
-                        <option value="All">All Locations</option>
-                    </select>
+                  <label class="filter-label">📍 Location</label>
+                  <select id="filterLocation" class="filter-select"><option value="All">All Locations</option></select>
                 </div>
-
-                <!-- Salary Range Filter -->
+                <!-- Salary -->
                 <div class="filter-section">
-                    <label class="filter-label">💰 Salary Range (TWD)</label>
-                    <div class="filter-range">
-                        <input type="number" id="filterSalaryMin" class="filter-input" placeholder="Min" style="width: 45%;">
-                        <span style="color: #666;">-</span>
-                        <input type="number" id="filterSalaryMax" class="filter-input" placeholder="Max" style="width: 45%;">
-                    </div>
-                    <div class="range-label" style="margin-top: 5px;">Range: 28K - 200K</div>
+                  <label class="filter-label">💰 Salary Range (TWD)</label>
+                  <div class="filter-range">
+                    <input type="number" id="filterSalaryMin" class="filter-input" placeholder="Min" style="width: 45%" />
+                    <span style="color: #666">-</span>
+                    <input type="number" id="filterSalaryMax" class="filter-input" placeholder="Max" style="width: 45%" />
+                  </div>
+                  <div class="range-label" style="margin-top: 5px">Range: 28K - 200K</div>
                 </div>
-
-                <!-- Management Position Filter -->
+                <!-- Manager -->
                 <div class="filter-section">
-                    <div class="filter-checkbox-group">
-                        <input type="checkbox" id="filterManager" class="filter-checkbox">
-                        <label for="filterManager" class="filter-checkbox-label">👔 Management Positions Only</label>
-                    </div>
+                  <div class="filter-checkbox-group">
+                    <input type="checkbox" id="filterManager" class="filter-checkbox" />
+                    <label for="filterManager" class="filter-checkbox-label">👔 Management Positions Only</label>
+                  </div>
                 </div>
-
-                <!-- Remote Work Filter -->
+                <!-- Remote -->
                 <div class="filter-section">
-                    <label class="filter-label">🏠 Remote Work</label>
-                    <select id="filterRemote" class="filter-select">
-                        <option value="All">All Options</option>
-                        <option value="部分遠端">Partial Remote</option>
-                        <option value="完全遠端">Full Remote</option>
-                    </select>
+                  <label class="filter-label">🏠 Remote Work</label>
+                  <select id="filterRemote" class="filter-select">
+                    <option value="All">All Options</option>
+                    <option value="部分遠端">Partial Remote</option>
+                    <option value="完全遠端">Full Remote</option>
+                  </select>
                 </div>
-
-                <!-- Clear Filters Button -->
+                <!-- Source -->
+                <div class="filter-section">
+                  <label class="filter-label">🌍 Data Source</label>
+                  <select id="filterSource" class="filter-select"><option value="All">All Sources</option></select>
+                </div>
+                <!-- Clear -->
                 <button class="clear-filters-btn" onclick="clearFilters()">🔄 Clear All Filters</button>
-            </div>
+              </div>
+          </div>
 
-            <!-- Job List -->
-            <div class="job-list" id="jobList">
-            <!-- Jobs will be loaded here -->
-            </div>
+          <!-- DASHBOARD MODE FILTERS -->
+          <div id="dashboardFiltersMode" style="display: none;">
+              <div style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
+                <p style="font-weight: 600; margin-bottom: 5px">Market Analysis</p>
+                <p style="font-size: 0.8em">Filter Data</p>
+              </div>
+              <div class="filter-group">
+                <span class="filter-label">Data Source</span>
+                <select id="dashSource" class="filter-select" onchange="loadDashboard()"><option value="All">All Sources</option></select>
+              </div>
+              <div class="filter-group">
+                <span class="filter-label">Job Category</span>
+                <select id="dashCategory" class="filter-select" onchange="loadDashboard()"><option value="All">All Categories</option></select>
+              </div>
+              <div class="filter-group">
+                <span class="filter-label">Location</span>
+                <select id="dashLocation" class="filter-select" onchange="loadDashboard()"><option value="All">All Locations</option></select>
+              </div>
+              <div class="filter-group">
+                <div class="filter-checkbox-group">
+                  <input type="checkbox" id="dashManager" class="filter-checkbox" onchange="loadDashboard()" />
+                  <label for="dashManager" class="filter-checkbox-label">Management Positions Only</label>
+                </div>
+              </div>
+              <div class="filter-group">
+                <span class="filter-label">Remote Work</span>
+                <select id="dashRemote" class="filter-select" onchange="loadDashboard()">
+                  <option value="All">All Options</option>
+                  <option value="部分遠端">Partial Remote</option>
+                  <option value="完全遠端">Full Remote</option>
+                </select>
+              </div>
+          </div>
+      </div>
 
-            <!-- Pagination -->
+      <!-- 3-Column Layout: Column 2 (List) -->
+      <div class="sidebar-list" id="sidebarList">
+        <!-- Tabs moved to Col 1 -->
+
+        <!-- SEARCH MODE LIST -->
+        <div id="searchListMode" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+            <div class="job-list" id="jobList" style="flex: 1; overflow-y: auto; padding: 10px;">
+                <!-- Jobs Loaded Here -->
+            </div>
             <div class="pagination" id="pagination">
                 <button class="pagination-btn" id="prevPage" onclick="changePage(-1)">← Prev</button>
                 <span class="pagination-info" id="pageInfo">Page 1 of 1</span>
                 <button class="pagination-btn" id="nextPage" onclick="changePage(1)">Next →</button>
             </div>
         </div>
-        
-        <div id="dashboardPanel" style="display:none; padding: 20px; flex: 1; overflow-y: auto;">
-            <div style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
-                <p style="font-weight: 600; margin-bottom: 5px;">Market Analysis</p>
-                <p style="font-size: 0.8em">Filter Data</p>
-            </div>
-            
-            <div class="filter-group">
-                <span class="filter-label">Job Category</span>
-                <select id="dashCategory" class="filter-select" onchange="loadDashboard()">
-                    <option value="All">All Categories</option>
-                </select>
-            </div>
 
-            <div class="filter-group">
-                <span class="filter-label">Location</span>
-                <select id="dashLocation" class="filter-select" onchange="loadDashboard()">
-                    <option value="All">All Locations</option>
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <div class="filter-checkbox-group">
-                    <input type="checkbox" id="dashManager" class="filter-checkbox" onchange="loadDashboard()">
-                    <label for="dashManager" class="filter-checkbox-label">Management Positions Only</label>
-                </div>
-            </div>
-
-            <div class="filter-group">
-                <span class="filter-label">Remote Work</span>
-                <select id="dashRemote" class="filter-select" onchange="loadDashboard()">
-                    <option value="All">All Options</option>
-                    <option value="部分遠端">Partial Remote</option>
-                    <option value="完全遠端">Full Remote</option>
-                </select>
-            </div>
-            
-            <div id="dataCount" style="text-align: center; color: var(--accent-green); font-size: 0.9em; margin-top: 20px;">
-                Analyzing 0 jobs
-            </div>
+        <!-- DASHBOARD MODE LIST (Info) -->
+        <div id="dashboardListMode" style="display: none; padding: 20px; text-align: center;">
+             <div id="dataCount" style="color: var(--accent-green); font-size: 0.9em; margin-top: 20px;">Analyzing 0 jobs</div>
         </div>
       </div>
+
+      <script>
+        // Override switchTab to handle new layout structure
+        function switchTab(mode) {
+             const tabSearch = document.getElementById('tabSearch');
+             const tabDash = document.getElementById('tabDashboard');
+             const sFilters = document.getElementById('searchFiltersMode');
+             const dFilters = document.getElementById('dashboardFiltersMode');
+             const sList = document.getElementById('searchListMode');
+             const dList = document.getElementById('dashboardListMode');
+             const jobView = document.getElementById('jobView');
+             const dashView = document.getElementById('dashboardView');
+             const container = document.querySelector('.container');
+             const sidebarFilters = document.querySelector('.sidebar-filters');
+             const mainContent = document.getElementById('mainContent');
+
+             // Ensure elements exist before accessing
+             if(!tabSearch || !tabDash) return;
+
+             if (mode === 'search') {
+                 tabSearch.classList.add('active'); tabDash.classList.remove('active');
+                 if(sFilters) sFilters.style.display = 'block'; 
+                 if(dFilters) dFilters.style.display = 'none';
+                 if(sList) sList.style.display = 'flex'; 
+                 if(dList) dList.style.display = 'none';
+                 if(jobView) jobView.classList.add('active');
+                 if(dashView) dashView.classList.remove('active');
+                 
+                 // Restore 3-Column
+                 if(container) container.classList.remove('dashboard-active');
+
+                 // Mobile Reset
+                 if(container) container.classList.remove('dashboard-mode');
+                 if(sidebarFilters) sidebarFilters.classList.remove('dashboard-mode');
+                 if(mainContent) mainContent.classList.remove('dashboard-mode');
+                 
+                 setTimeout(() => { if(typeof treeChart !== 'undefined') treeChart.resize(); }, 100);
+
+             } else {
+                 tabSearch.classList.remove('active'); tabDash.classList.add('active');
+                 if(sFilters) sFilters.style.display = 'none'; 
+                 if(dFilters) dFilters.style.display = 'block';
+                 if(sList) sList.style.display = 'none'; 
+                 if(dList) dList.style.display = 'block';
+                 if(jobView) jobView.classList.remove('active');
+                 if(dashView) dashView.classList.add('active');
+                 
+                 // Enable 2-Column (Hide List)
+                 if(container) container.classList.add('dashboard-active');
+
+                 // Mobile Dashboard Mode
+                 if(container) container.classList.add('dashboard-mode');
+                 if(sidebarFilters) sidebarFilters.classList.add('dashboard-mode');
+                 if(mainContent) mainContent.classList.add('dashboard-mode');
+
+                 if (typeof loadDashboard === 'function') {
+                    // Slight delay to allow CSS grid transition
+                    setTimeout(() => {
+                        loadDashboard();
+                        Object.values(dashCharts).forEach(c => c.resize());
+                    }, 50);
+                 }
+             }
+        }
+      </script>
+
 
       <div class="main-content" id="mainContent">
         <!-- Job View -->
         <div id="jobView" class="view-container active">
-            <div class="header">
-            <div style="flex:1">
-                <button id="backBtn" onclick="showMobileList()" style="display:none; background:none; border:none; color:var(--accent-blue); font-size:1.2em; cursor:pointer; margin-bottom: 10px;">← Back to Jobs</button>
-                <h1 id="currentJobTitle">Select a Job</h1>
-                <div id="currentCompany" style="color: #aaa"></div>
-                <a id="jobLink" href="#" target="_blank" style="display:none; color: var(--accent-blue); text-decoration: none; font-size: 0.9em; margin-top: 5px; display: inline-block;">
-                    🔗 View on 104 Job Bank →
-                </a>
+          <div class="header">
+            <div style="flex: 1">
+              <button
+                id="backBtn"
+                onclick="showMobileList()"
+                style="
+                  display: none;
+                  background: none;
+                  border: none;
+                  color: var(--accent-blue);
+                  font-size: 1.2em;
+                  cursor: pointer;
+                  margin-bottom: 10px;
+                "
+              >
+                ← Back to Jobs
+              </button>
+              <h1 id="currentJobTitle">Select a Job</h1>
+              <div id="currentCompany" style="color: #aaa"></div>
+              <a
+                id="jobLink"
+                href="#"
+                target="_blank"
+                style="
+                  display: none;
+                  color: var(--accent-blue);
+                  text-decoration: none;
+                  font-size: 0.9em;
+                  margin-top: 5px;
+                  display: inline-block;
+                "
+              >
+                🔗 View on 104 Job Bank →
+              </a>
             </div>
-            <div id="predictionPanel" style="display:none; text-align: right;">
-                <div style="color: var(--text-secondary); font-size: 0.9em;">AI Predicted Salary</div>
-                <div id="predSalaryVal" style="font-size: 1.2em; font-weight: bold;"></div>
-                <div id="predErrorVal" style="font-size: 0.8em;"></div>
+            <div id="predictionPanel" style="display: none; text-align: right">
+              <div style="color: var(--text-secondary); font-size: 0.9em">
+                AI Predicted Salary
+              </div>
+              <div
+                id="predSalaryVal"
+                style="font-size: 1.2em; font-weight: bold"
+              ></div>
+              <div id="predErrorVal" style="font-size: 0.8em"></div>
             </div>
-            </div>
-            <div id="chart-container"></div>
+          </div>
+          <div id="chart-container"></div>
         </div>
 
         <!-- Dashboard View -->
         <div id="dashboardView" class="view-container">
-            <!-- Key Metrics -->
-            <div class="metrics-row" style="padding: 20px 20px 0 20px;">
-                <div class="metric-card">
-                    <div class="metric-value" id="metric-jobs">0</div>
-                    <div class="metric-label">Total Jobs</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="metric-salary">0</div>
-                    <div class="metric-label">Avg Salary</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="metric-skill">-</div>
-                    <div class="metric-label">Top Skill</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="metric-location">-</div>
-                    <div class="metric-label">Active City</div>
-                </div>
+          <!-- Key Metrics -->
+          <div class="metrics-row" style="padding: 20px 20px 0 20px">
+            <div class="metric-card">
+              <div class="metric-value" id="metric-jobs">0</div>
+              <div class="metric-label">Total Jobs</div>
             </div>
-            
-            <!-- Dashboard Grid -->
-            <div class="dashboard-grid">
-                <!-- Row 1: Map (2x2) & Key Charts -->
-                <div class="chart-card map-card">
-                    <div class="chart-title">Job Distribution Map</div>
-                    <button class="map-reset-btn" onclick="resetMapView()">Reset View</button>
-                    <button class="map-toggle-btn" onclick="toggleMapMetric()">Switch to Salary Heatmap</button>
-                    <div id="chart-map" class="chart-body" style="height: 100%;"></div>
-                </div>
-                
-                <div class="chart-card">
-                    <div class="chart-title">Education Requirement</div>
-                    <div id="chart-edu" class="chart-body"></div>
-                </div>
-                
-                <div class="chart-card">
-                    <div class="chart-title">Remote Work</div>
-                    <div id="chart-remote" class="chart-body"></div>
-                </div>
-                
-                <div class="chart-card">
-                    <div class="chart-title">Salary Distribution</div>
-                    <div id="chart-salary-dist" class="chart-body"></div>
-                </div>
-                
-                <div class="chart-card">
-                    <div class="chart-title">Experience vs Salary</div>
-                    <div id="chart-exp-salary" class="chart-body"></div>
-                </div>
-
-                <!-- Row 2 -->
-                <div class="chart-card word-cloud-card">
-                    <div class="chart-title">Hot Keywords (Word Cloud)</div>
-                    <div id="chart-wordcloud" class="chart-body"></div>
-                </div>
-
-                <div class="chart-card word-cloud-card">
-                    <div class="chart-title">Highest Paying Industries</div>
-                    <div id="chart-industry" class="chart-body"></div>
-                </div>
-
-                <div class="chart-card span-2">
-                    <div class="chart-title">Top Skills Demand</div>
-                    <div id="chart-top-skills" class="chart-body"></div>
-                </div>
-                
-                <div class="chart-card span-2">
-                    <div class="chart-title">Salary Distribution by Job Category</div>
-                    <div id="chart-boxplot" class="chart-body"></div>
-                </div>
-
-                <div class="chart-card span-2">
-                    <div class="chart-title">Skill Co-occurrence Network</div>
-                    <div id="chart-network" class="chart-body"></div>
-                </div>
+            <div class="metric-card">
+              <div class="metric-value" id="metric-salary">0</div>
+              <div class="metric-label">Avg Salary</div>
             </div>
+            <div class="metric-card">
+              <div class="metric-value" id="metric-skill">-</div>
+              <div class="metric-label">Top Skill</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value" id="metric-location">-</div>
+              <div class="metric-label">Active City</div>
+            </div>
+          </div>
+
+          <!-- Dashboard Grid -->
+          <div class="dashboard-grid">
+            <!-- Row 1: Map (2x2) & Key Charts -->
+            <div class="chart-card map-card">
+              <div class="chart-title">Job Distribution Map</div>
+              <button class="map-reset-btn" onclick="resetMapView()">
+                Reset View
+              </button>
+              <button class="map-toggle-btn" onclick="toggleMapMetric()">
+                Switch to Salary Heatmap
+              </button>
+              <div id="chart-map" class="chart-body" style="height: 100%"></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-title">Education Requirement</div>
+              <div id="chart-edu" class="chart-body"></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-title">Remote Work</div>
+              <div id="chart-remote" class="chart-body"></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-title">Salary Distribution</div>
+              <div id="chart-salary-dist" class="chart-body"></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-title">Experience vs Salary</div>
+              <div id="chart-exp-salary" class="chart-body"></div>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="chart-card word-cloud-card">
+              <div class="chart-title">Hot Keywords (Word Cloud)</div>
+              <div id="chart-wordcloud" class="chart-body"></div>
+            </div>
+
+            <div class="chart-card word-cloud-card">
+              <div class="chart-title">Highest Paying Industries</div>
+              <div id="chart-industry" class="chart-body"></div>
+            </div>
+
+            <div class="chart-card span-2">
+              <div class="chart-title">Top Skills Demand</div>
+              <div id="chart-top-skills" class="chart-body"></div>
+            </div>
+
+            <div class="chart-card span-2">
+              <div class="chart-title">Salary Distribution by Job Category</div>
+              <div id="chart-boxplot" class="chart-body"></div>
+            </div>
+
+            <div class="chart-card span-2">
+              <div class="chart-title">Skill Co-occurrence Network</div>
+              <div id="chart-network" class="chart-body"></div>
+            </div>
+
+            <!-- Source Salary Analysis -->
+            <div class="chart-card span-2">
+                <div class="chart-title">Salary Analysis by Data Source</div>
+                <div id="chart-source-salary" class="chart-body"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -902,354 +1094,420 @@
       let allJobs = [];
       let dashboardLoaded = false;
       // currentFilters removed, reading from DOM directly
-      
+
       // ECharts instances
-      let treeChart = echarts.init(document.getElementById("chart-container"), "dark");
+      let treeChart = echarts.init(
+        document.getElementById("chart-container"),
+        "dark"
+      );
       let dashCharts = {};
       let dashboardData = null; // Store data for toggling
-      let mapMetric = 'count'; // 'count' or 'salary'
+      let mapMetric = "count"; // 'count' or 'salary'
       let predErrorGood = 0;
       let predErrorBad = 0;
       let currentPage = 1;
 
       // Mobile Navigation
       function showMobileList() {
-          document.getElementById('mainContent').classList.remove('active-mobile');
+        document
+          .getElementById("mainContent")
+          .classList.remove("active-mobile");
       }
-      
+
       function showMobileDetail() {
-          if (window.innerWidth <= 768) {
-              document.getElementById('mainContent').classList.add('active-mobile');
-              setTimeout(() => treeChart.resize(), 100);
-          }
+        if (window.innerWidth <= 768) {
+          document.getElementById("mainContent").classList.add("active-mobile");
+          setTimeout(() => treeChart.resize(), 100);
+        }
       }
 
       // Load filter options from API
       async function loadFilterOptions() {
-          try {
-              const res = await fetch('/api/filters/options');
-              const options = await res.json();
-              
-              // Populate location dropdown (Search)
-              const locationSelect = document.getElementById('filterLocation');
-              if (locationSelect) {
-                  locationSelect.innerHTML = '<option value="All">All Locations</option>';
-                  options.locations.forEach(loc => {
-                      const option = document.createElement('option');
-                      option.value = loc;
-                      option.textContent = loc;
-                      locationSelect.appendChild(option);
-                  });
-              }
+        try {
+          const res = await fetch("/api/filters/options");
+          const options = await res.json();
 
-              // Populate Dashboard Location
-              const dashLocation = document.getElementById('dashLocation');
-              if (dashLocation) {
-                  dashLocation.innerHTML = '<option value="All">All Locations</option>';
-                  options.locations.forEach(loc => {
-                      const option = document.createElement('option');
-                      option.value = loc;
-                      option.textContent = loc;
-                      dashLocation.appendChild(option);
-                  });
-              }
-              
-              // Populate Dashboard Categories
-              const dashCategory = document.getElementById('dashCategory');
-              if (dashCategory && options.categories) {
-                  dashCategory.innerHTML = '<option value="All">All Categories</option>';
-                  options.categories.forEach(cat => {
-                      const option = document.createElement('option');
-                      option.value = cat;
-                      option.textContent = cat;
-                      dashCategory.appendChild(option);
-                  });
-              }
-              
-              // Update salary range label
-              if (options.salary_range) {
-                  const rangeLabel = document.querySelector('.range-label');
-                  if(rangeLabel) rangeLabel.textContent = `Range: ${(options.salary_range.min/1000).toFixed(0)}K - ${(options.salary_range.max/1000).toFixed(0)}K`;
-              }
-          } catch (err) {
-              console.error('Failed to load filter options:', err);
+          // Populate location dropdown (Search)
+          const locationSelect = document.getElementById("filterLocation");
+          if (locationSelect) {
+            locationSelect.innerHTML =
+              '<option value="All">All Locations</option>';
+            options.locations.forEach((loc) => {
+              const option = document.createElement("option");
+              option.value = loc;
+              option.textContent = loc;
+              locationSelect.appendChild(option);
+            });
           }
+
+          // Populate Dashboard Location
+          const dashLocation = document.getElementById("dashLocation");
+          if (dashLocation) {
+            dashLocation.innerHTML =
+              '<option value="All">All Locations</option>';
+            options.locations.forEach((loc) => {
+              const option = document.createElement("option");
+              option.value = loc;
+              option.textContent = loc;
+              dashLocation.appendChild(option);
+            });
+          }
+
+          // Populate Dashboard Categories
+          const dashCategory = document.getElementById("dashCategory");
+          if (dashCategory && options.categories) {
+            dashCategory.innerHTML =
+              '<option value="All">All Categories</option>';
+            options.categories.forEach((cat) => {
+              const option = document.createElement("option");
+              option.value = cat;
+              option.textContent = cat;
+              dashCategory.appendChild(option);
+            });
+          }
+
+          // Populate Source Filters (Search & Dash)
+          if (options.source_options) {
+             const filterSource = document.getElementById("filterSource");
+             const dashSource = document.getElementById("dashSource");
+             
+             if(filterSource) filterSource.innerHTML = '<option value="All">All Sources</option>';
+             if(dashSource) dashSource.innerHTML = '<option value="All">All Sources</option>';
+             
+             options.source_options.forEach(src => {
+                 if(src === 'All') return; 
+                 const opt1 = document.createElement("option");
+                 opt1.value = src;
+                 opt1.textContent = src;
+                 
+                 const opt2 = opt1.cloneNode(true);
+                 
+                 if(filterSource) filterSource.appendChild(opt1);
+                 if(dashSource) dashSource.appendChild(opt2);
+             });
+          }
+
+          // Update salary range label
+          if (options.salary_range) {
+            const rangeLabel = document.querySelector(".range-label");
+            if (rangeLabel)
+              rangeLabel.textContent = `Range: ${(
+                options.salary_range.min / 1000
+              ).toFixed(0)}K - ${(options.salary_range.max / 1000).toFixed(
+                0
+              )}K`;
+          }
+        } catch (err) {
+          console.error("Failed to load filter options:", err);
+        }
       }
 
       // Debounce function
       function debounce(func, wait) {
-          let timeout;
-          return function executedFunction(...args) {
-              const later = () => {
-                  clearTimeout(timeout);
-                  func(...args);
-              };
-              clearTimeout(timeout);
-              timeout = setTimeout(later, wait);
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
           };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
       }
 
       // Load jobs with filters and pagination
       async function loadJobs(page = 1) {
-          try {
-              currentPage = page;
-              
-              // Build query parameters
-              const params = new URLSearchParams();
-              params.append('page', page);
-              params.append('per_page', 50);
-              
-              // Add filters
-              const location = document.getElementById('filterLocation')?.value;
-              if (location && location !== 'All') params.append('location', location);
-              
-              const salaryMin = document.getElementById('filterSalaryMin')?.value;
-              if (salaryMin) params.append('salary_min', salaryMin);
-              
-              const salaryMax = document.getElementById('filterSalaryMax')?.value;
-              if (salaryMax) params.append('salary_max', salaryMax);
-              
-              const isManager = document.getElementById('filterManager')?.checked;
-              if (isManager) params.append('is_manager', 1);
-              
-              const remoteWork = document.getElementById('filterRemote')?.value;
-              if (remoteWork && remoteWork !== 'All') params.append('remote_work', remoteWork);
-              
-              // Add search term if exists
-              const searchTerm = document.getElementById('search')?.value;
-              if (searchTerm) {
-                  params.append('search', searchTerm);
-              }
-              
-              const res = await fetch(`/api/jobs?${params.toString()}`);
-              if (!res.ok) throw new Error('API returned error: ' + res.status);
-              
-              const data = await res.json();
-              
-              if (!data.jobs || data.jobs.length === 0) {
-                  document.getElementById('jobList').innerHTML = '<div style="color: #ff003c; padding: 20px; text-align: center;">No jobs found. Try adjusting your filters.</div>';
-                  updatePagination(0, 1, 1);
-                  return;
-              }
-              
-              renderJobs(data.jobs);
-              updatePagination(data.total_count, data.page, data.total_pages);
-              
-              console.log(`Loaded ${data.jobs.length} jobs (${data.total_count} total)`);
-          } catch (err) {
-              console.error('Failed to load jobs:', err);
-              document.getElementById('jobList').innerHTML = '<div style="color: #ff003c; padding: 20px; text-align: center;">Connection failed: ' + err.message + '. Press F12 to see console errors.</div>';
+        try {
+          currentPage = page;
+
+          // Build query parameters
+          const params = new URLSearchParams();
+          params.append("page", page);
+          params.append("per_page", 50);
+
+          // Add filters
+          const location = document.getElementById("filterLocation")?.value;
+          if (location && location !== "All")
+            params.append("location", location);
+
+          const salaryMin = document.getElementById("filterSalaryMin")?.value;
+          if (salaryMin) params.append("salary_min", salaryMin);
+
+          const salaryMax = document.getElementById("filterSalaryMax")?.value;
+          if (salaryMax) params.append("salary_max", salaryMax);
+
+          const isManager = document.getElementById("filterManager")?.checked;
+          if (isManager) params.append("is_manager", 1);
+
+          const remoteWork = document.getElementById("filterRemote")?.value;
+          if (remoteWork && remoteWork !== "All")
+            params.append("remote_work", remoteWork);
+            
+          const source = document.getElementById("filterSource")?.value;
+          if (source && source !== "All")
+            params.append("source", source);
+
+          // Add search term if exists
+          const searchTerm = document.getElementById("search")?.value;
+          if (searchTerm) {
+            params.append("search", searchTerm);
           }
+
+          const res = await fetch(`/api/jobs?${params.toString()}`);
+          if (!res.ok) throw new Error("API returned error: " + res.status);
+
+          const data = await res.json();
+
+          if (!data.jobs || data.jobs.length === 0) {
+            document.getElementById("jobList").innerHTML =
+              '<div style="color: #ff003c; padding: 20px; text-align: center;">No jobs found. Try adjusting your filters.</div>';
+            updatePagination(0, 1, 1);
+            return;
+          }
+
+          renderJobs(data.jobs);
+          updatePagination(data.total_count, data.page, data.total_pages);
+
+          console.log(
+            `Loaded ${data.jobs.length} jobs (${data.total_count} total)`
+          );
+        } catch (err) {
+          console.error("Failed to load jobs:", err);
+          document.getElementById("jobList").innerHTML =
+            '<div style="color: #ff003c; padding: 20px; text-align: center;">Connection failed: ' +
+            err.message +
+            ". Press F12 to see console errors.</div>";
+        }
       }
 
       // Update pagination controls
       function updatePagination(totalCount, page, totalPages) {
-          const pageInfo = document.getElementById('pageInfo');
-          const prevBtn = document.getElementById('prevPage');
-          const nextBtn = document.getElementById('nextPage');
-          
-          pageInfo.textContent = `Page ${page} of ${totalPages} (${totalCount} jobs)`;
-          prevBtn.disabled = page <= 1;
-          nextBtn.disabled = page >= totalPages;
+        const pageInfo = document.getElementById("pageInfo");
+        const prevBtn = document.getElementById("prevPage");
+        const nextBtn = document.getElementById("nextPage");
+
+        pageInfo.textContent = `Page ${page} of ${totalPages} (${totalCount} jobs)`;
+        prevBtn.disabled = page <= 1;
+        nextBtn.disabled = page >= totalPages;
       }
 
       // Change page
       function changePage(delta) {
-          const newPage = currentPage + delta;
-          if (newPage >= 1) {
-              loadJobs(newPage);
-          }
+        const newPage = currentPage + delta;
+        if (newPage >= 1) {
+          loadJobs(newPage);
+        }
       }
 
       // Clear all filters
       function clearFilters() {
-          document.getElementById('filterLocation').value = 'All';
-          document.getElementById('filterSalaryMin').value = '';
-          document.getElementById('filterSalaryMax').value = '';
-          document.getElementById('filterManager').checked = false;
-          document.getElementById('filterRemote').value = 'All';
-          document.getElementById('search').value = '';
-          loadJobs(1);
+        document.getElementById("filterLocation").value = "All";
+        document.getElementById("filterSalaryMin").value = "";
+        document.getElementById("filterSalaryMax").value = "";
+        document.getElementById("filterManager").checked = false;
+        document.getElementById("filterRemote").value = "All";
+        document.getElementById("filterSource").value = "All";
+        document.getElementById("search").value = "";
+        loadJobs(1);
       }
 
       // Apply filters when changed
-      document.addEventListener('DOMContentLoaded', () => {
-          loadFilterOptions();
-          loadJobs(1);
-          
-          // Add event listeners for filters
-          document.getElementById('filterLocation')?.addEventListener('change', () => loadJobs(1));
-          document.getElementById('filterSalaryMin')?.addEventListener('change', () => loadJobs(1));
-          document.getElementById('filterSalaryMax')?.addEventListener('change', () => loadJobs(1));
-          document.getElementById('filterManager')?.addEventListener('change', () => loadJobs(1));
-          document.getElementById('filterRemote')?.addEventListener('change', () => loadJobs(1));
-          
-          // Add debounce for search input
-          const searchInput = document.getElementById('search');
-          if (searchInput) {
-              searchInput.addEventListener('input', debounce(() => loadJobs(1), 500));
-          }
+      document.addEventListener("DOMContentLoaded", () => {
+        loadFilterOptions();
+        loadJobs(1);
+
+        // Add event listeners for filters
+        document
+          .getElementById("filterLocation")
+          ?.addEventListener("change", () => loadJobs(1));
+        document
+          .getElementById("filterSalaryMin")
+          ?.addEventListener("change", () => loadJobs(1));
+        document
+          .getElementById("filterSalaryMax")
+          ?.addEventListener("change", () => loadJobs(1));
+        document
+          .getElementById("filterManager")
+          ?.addEventListener("change", () => loadJobs(1));
+        document
+          .getElementById("filterRemote")
+          ?.addEventListener("change", () => loadJobs(1));
+        document
+          .getElementById("filterSource")
+          ?.addEventListener("change", () => loadJobs(1));
+
+        // Add debounce for search input
+        const searchInput = document.getElementById("search");
+        if (searchInput) {
+          searchInput.addEventListener(
+            "input",
+            debounce(() => loadJobs(1), 500)
+          );
+        }
       });
 
-      function switchTab(tab) {
-          document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-          event.target.classList.add('active');
-          
-          const appContainer = document.getElementById('appContainer');
-          const sidebar = document.getElementById('sidebar');
-          const mainContent = document.getElementById('mainContent');
 
-          if (tab === 'search') {
-              // Search Mode
-              document.getElementById('searchPanel').style.display = 'flex';
-              document.getElementById('dashboardPanel').style.display = 'none';
-              document.getElementById('jobView').classList.add('active');
-              document.getElementById('dashboardView').classList.remove('active');
-              
-              // Reset Mobile View
-              appContainer.classList.remove('dashboard-mode');
-              sidebar.classList.remove('dashboard-mode');
-              mainContent.classList.remove('dashboard-mode');
-              
-              setTimeout(() => treeChart.resize(), 100);
-          } else {
-              // Dashboard Mode
-              document.getElementById('searchPanel').style.display = 'none';
-              document.getElementById('dashboardPanel').style.display = 'block';
-              document.getElementById('jobView').classList.remove('active');
-              document.getElementById('dashboardView').classList.add('active');
-              
-              // Mobile Dashboard Mode
-              appContainer.classList.add('dashboard-mode');
-              sidebar.classList.add('dashboard-mode');
-              mainContent.classList.add('dashboard-mode');
-              
-              // Add delay to ensure DOM is visible before ECharts init
-              setTimeout(loadDashboard, 100);
-          }
-      }
-      
+
       /* setFilter removed, using onchange events directly */
 
       function renderJobs(jobs) {
-          const list = document.getElementById('jobList');
-          list.innerHTML = '';
-          
-          jobs.forEach(job => {
-              const card = document.createElement('div');
-              card.className = 'job-card';
-              card.onclick = () => loadJobDetails(job.job_id, card);
-              
-              // Determine salary display
-              let salaryDisplay = '';
-              let predDisplay = '';
-              
-              if (job.salary_note === '無薪資資訊') {
-                  // Negotiable case
-                  salaryDisplay = '<span style="color: #aaa;">待遇面議</span>';
-                  // Use V7 prediction (which is in salary_min/max)
-                  if (job.salary_min && job.salary_max) {
-                      const avg = Math.round((job.salary_min + job.salary_max) / 2);
-                      predDisplay = `AI: ~$${avg.toLocaleString()}`;
-                  }
-              } else {
-                  // Actual salary case
-                  if (job.salary_min && job.salary_max) {
-                      salaryDisplay = `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`;
-                  } else {
-                      salaryDisplay = 'Salary Negotiable';
-                  }
-                  
-                  // Use generated prediction (pred_min/max)
-                  if (job.pred_min && job.pred_max) {
-                      const avg = Math.round((job.pred_min + job.pred_max) / 2);
-                      predDisplay = `AI: ~$${avg.toLocaleString()}`;
-                  }
-              }
+        const list = document.getElementById("jobList");
+        list.innerHTML = "";
 
-              card.innerHTML = `
+        jobs.forEach((job) => {
+          const card = document.createElement("div");
+          card.className = "job-card";
+          card.onclick = () => loadJobDetails(job.job_id, card);
+
+          // Determine salary display
+          let salaryDisplay = "";
+          let predDisplay = "";
+
+          if (job.salary_note === "無薪資資訊") {
+            // Negotiable case
+            salaryDisplay = '<span style="color: #aaa;">待遇面議</span>';
+            // Use V7 prediction (which is in salary_min/max)
+            if (job.salary_min && job.salary_max) {
+              const avg = Math.round((job.salary_min + job.salary_max) / 2);
+              predDisplay = `AI: ~$${avg.toLocaleString()}`;
+            }
+          } else {
+            // Actual salary case
+            if (job.salary_min && job.salary_max) {
+              salaryDisplay = `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`;
+            } else {
+              salaryDisplay = "Salary Negotiable";
+            }
+
+            // Use generated prediction (pred_min/max)
+            if (job.pred_min && job.pred_max) {
+              const avg = Math.round((job.pred_min + job.pred_max) / 2);
+              predDisplay = `AI: ~$${avg.toLocaleString()}`;
+            }
+          }
+          
+           // Determine source label and color
+           // Safe handling for source: force string conversion to avoid .includes error on numbers
+           const sourceStr = String(job.source || '');
+           const is104 = !job.source || sourceStr.includes('104'); 
+           const sourceLabel = is104 ? '104' : 'CakeResume';
+           const sourceColor = is104 ? '#F2994A' : '#27AE60';
+
+          card.innerHTML = `
                   <div class="job-title">${job.job_title}</div>
                   <div class="job-company">${job.company}</div>
                   <div class="job-salary">${salaryDisplay}</div>
                   <div class="pred-salary">${predDisplay}</div>
+                  <div style="margin-top: 8px;">
+                    <span style="font-size: 0.75em; padding: 2px 6px; border-radius: 4px; background: ${sourceColor}; color: white;">
+                        ${sourceLabel}
+                    </span>
+                  </div>
               `;
-              list.appendChild(card);
-          });
+          list.appendChild(card);
+        });
       }
 
       async function loadJobDetails(jobId, cardElement) {
-          // Highlight active card
-          document.querySelectorAll('.job-card').forEach(c => c.classList.remove('active'));
-          if (cardElement) cardElement.classList.add('active');
-          
-          // Mobile: Show Detail View
-          showMobileDetail();
+        // Highlight active card
+        document
+          .querySelectorAll(".job-card")
+          .forEach((c) => c.classList.remove("active"));
+        if (cardElement) cardElement.classList.add("active");
 
-          try {
-              const res = await fetch(`/api/job/${jobId}`);
-              const data = await res.json();
-              
-              if (data.error) {
-                  console.error(data.error);
-                  return;
-              }
+        // Mobile: Show Detail View
+        showMobileDetail();
 
-              // Update Header
-              document.getElementById("currentJobTitle").innerText = data.job.job_title;
-              document.getElementById("currentCompany").innerText = data.job.company;
-              
-              // Update Job Link
-              const jobLink = document.getElementById("jobLink");
-              jobLink.href = `https://www.104.com.tw/job/${jobId}`;
-              jobLink.style.display = "inline-block";
+        try {
+          const res = await fetch(`/api/job/${jobId}`);
+          const data = await res.json();
 
-              // Update Prediction Panel
-              const predPanel = document.getElementById("predictionPanel");
-              const predVal = document.getElementById("predSalaryVal");
-              const predError = document.getElementById("predErrorVal");
-              
-              predPanel.style.display = "block";
-              
-              if (data.job.salary_note === '無薪資資訊') {
-                  // Negotiable: Show V7 Prediction
-                  if (data.job.salary_min && data.job.salary_max) {
-                      predVal.innerText = `$${data.job.salary_min.toLocaleString()} - $${data.job.salary_max.toLocaleString()}`;
-                      predVal.style.color = "var(--accent-blue)"; // Use blue to indicate estimation
-                      predError.innerText = "(Estimated for Negotiable Salary)";
-                      predError.style.color = "#aaa";
-                  } else {
-                      predVal.innerText = "N/A";
-                      predError.innerText = "";
-                  }
-              } else {
-                  // Actual Salary: Show Generated Prediction
-                  if (data.job.pred_min && data.job.pred_max) {
-                      predVal.innerText = `$${Math.round(data.job.pred_min).toLocaleString()} - $${Math.round(data.job.pred_max).toLocaleString()}`;
-                      predVal.style.color = "var(--accent-yellow)";
-                      
-                      // Calculate difference
-                      const actualAvg = (data.job.salary_min + data.job.salary_max) / 2;
-                      const predAvg = (data.job.pred_min + data.job.pred_max) / 2;
-                      const diff = predAvg - actualAvg;
-                      const diffPercent = (diff / actualAvg) * 100;
-                      
-                      const sign = diff > 0 ? "+" : "";
-                      const color = diff > 0 ? "var(--accent-green)" : "var(--accent-red)";
-                      
-                      predError.innerText = `Diff: ${sign}${Math.round(diff).toLocaleString()} (${sign}${diffPercent.toFixed(1)}%)`;
-                      predError.style.color = color;
-                  } else {
-                      predVal.innerText = "N/A";
-                      predError.innerText = "";
-                  }
-              }
-
-              // Render Tree
-              renderTree(data.tree);
-
-          } catch (err) {
-              console.error("Failed to load job details:", err);
+          if (data.error) {
+            console.error(data.error);
+            return;
           }
+
+          // Update Header
+          document.getElementById("currentJobTitle").innerText =
+            data.job.job_title;
+          document.getElementById("currentCompany").innerText =
+            data.job.company;
+
+          // Update Job Link
+          const jobLink = document.getElementById("jobLink");
+          let linkUrl = data.job.link || data.job.url;
+          
+          // Fallback if no link
+          if(!linkUrl) {
+             linkUrl = `https://www.104.com.tw/job/${jobId}`;
+          }
+          jobLink.href = linkUrl
+
+          // Safe check for source
+          const jobSource = String(data.job.source || '');
+          if (jobSource.toLowerCase().includes("cake")) {
+            jobLink.innerText = "🔗 View on CakeResume →";
+            jobLink.style.color = "#27AE60";
+          } else {
+            jobLink.innerText = "🔗 View on 104 Job Bank →";
+            jobLink.style.color = "#F2994A";
+          }
+
+          jobLink.style.display = "inline-block";
+
+          // Update Prediction Panel
+          const predPanel = document.getElementById("predictionPanel");
+          const predVal = document.getElementById("predSalaryVal");
+          const predError = document.getElementById("predErrorVal");
+
+          predPanel.style.display = "block";
+
+          if (data.job.salary_note === "無薪資資訊") {
+            // Negotiable: Show V7 Prediction
+            if (data.job.salary_min && data.job.salary_max) {
+              predVal.innerText = `$${data.job.salary_min.toLocaleString()} - $${data.job.salary_max.toLocaleString()}`;
+              predVal.style.color = "var(--accent-blue)"; // Use blue to indicate estimation
+              predError.innerText = "(Estimated for Negotiable Salary)";
+              predError.style.color = "#aaa";
+            } else {
+              predVal.innerText = "N/A";
+              predError.innerText = "";
+            }
+          } else {
+            // Actual Salary: Show Generated Prediction
+            if (data.job.pred_min && data.job.pred_max) {
+              predVal.innerText = `$${Math.round(
+                data.job.pred_min
+              ).toLocaleString()} - $${Math.round(
+                data.job.pred_max
+              ).toLocaleString()}`;
+              predVal.style.color = "var(--accent-yellow)";
+
+              // Calculate difference
+              const actualAvg = (data.job.salary_min + data.job.salary_max) / 2;
+              const predAvg = (data.job.pred_min + data.job.pred_max) / 2;
+              const diff = predAvg - actualAvg;
+              const diffPercent = (diff / actualAvg) * 100;
+
+              const sign = diff > 0 ? "+" : "";
+              const color =
+                diff > 0 ? "var(--accent-green)" : "var(--accent-red)";
+
+              predError.innerText = `Diff: ${sign}${Math.round(
+                diff
+              ).toLocaleString()} (${sign}${diffPercent.toFixed(1)}%)`;
+              predError.style.color = color;
+            } else {
+              predVal.innerText = "N/A";
+              predError.innerText = "";
+            }
+          }
+
+          // Render Tree
+          renderTree(data.tree);
+        } catch (err) {
+          console.error("Failed to load job details:", err);
+        }
       }
 
       function renderTree(treeData) {
@@ -1260,10 +1518,32 @@
             {
               type: "tree",
               data: [treeData],
-              top: "10%", left: "15%", bottom: "10%", right: "20%",
+              top: "25%", // Increased to fit vertical labels
+              left: "5%",
+              bottom: "10%",
+              right: "5%",
               symbolSize: 16,
-              label: { position: "left", verticalAlign: "middle", align: "right", fontSize: 14, color: "#fff", fontWeight: 'bold' },
-              leaves: { label: { position: "right", verticalAlign: "middle", align: "left" } },
+              orient: 'BT', // Bottom-to-Top
+              roam: true, // Enable Zoom & Pan
+              label: {
+                position: "right", // Side of node
+                verticalAlign: "middle",
+                align: "left",
+                fontSize: 14,
+                color: "#fff",
+                fontWeight: "bold",
+                rotate: 0 
+              },
+              leaves: {
+                label: {
+                  position: "top", 
+                  verticalAlign: "middle",
+                  align: "right",
+                  rotate: -90,
+                  fontSize: 13,
+                  distance: 10
+                },
+              },
               emphasis: { focus: "descendant" },
               expandAndCollapse: true,
               animationDuration: 550,
@@ -1277,117 +1557,143 @@
       }
 
       async function loadDashboard() {
-        if (dashboardLoaded && currentPage === 1 && !document.getElementById('dashCategory').value) return; 
-        
+        if (
+          dashboardLoaded &&
+          currentPage === 1 &&
+          !document.getElementById("dashCategory").value
+        )
+          return;
+
         try {
-            const category = document.getElementById('dashCategory').value;
-            const location = document.getElementById('dashLocation').value;
-            const isManager = document.getElementById('dashManager').checked;
-            const remote = document.getElementById('dashRemote').value;
-            
-            const params = new URLSearchParams({
-                category: category,
-                city: location,
-                is_manager: isManager,
-                remote: remote,
-                _t: new Date().getTime()
-            });
-            
-            const res = await fetch(`/api/analysis/stats?${params.toString()}`);
-            const data = await res.json();
-            
-            console.log("Dashboard data received:", data);
-            
-            dashboardData = data; // Store globally regarding Map toggle
-            
-             // Update Metrics
-            if(data.key_metrics) {
-                animateValue("metric-jobs", 0, data.count, 1000);
-                
-                // Update Salary Range (Avg Min - Avg Max)
-                const salaryElem = document.getElementById("metric-salary");
-                if(data.key_metrics.avg_min_salary && data.key_metrics.avg_max_salary) {
-                    salaryElem.innerHTML = `$${data.key_metrics.avg_min_salary.toLocaleString()} - $${data.key_metrics.avg_max_salary.toLocaleString()}`;
-                        // Adjust font size if range is too long
-                    if(salaryElem.innerHTML.length > 15) salaryElem.style.fontSize = "2.2em";
-                    else salaryElem.style.fontSize = "2.6em";
-                } else {
-                    salaryElem.innerHTML = "N/A";
-                }
-                document.getElementById("metric-skill").innerText = data.key_metrics.top_skill;
-                document.getElementById("metric-location").innerText = data.key_metrics.active_location;
+          const category = document.getElementById("dashCategory").value;
+          const location = document.getElementById("dashLocation").value;
+          const isManager = document.getElementById("dashManager").checked;
+          const remote = document.getElementById("dashRemote").value;
+          const source = document.getElementById("dashSource").value;
+
+          const params = new URLSearchParams({
+            category: category,
+            city: location,
+            is_manager: isManager,
+            remote: remote,
+            source: source,
+            _t: new Date().getTime(),
+          });
+
+          const res = await fetch(`/api/analysis/stats?${params.toString()}`);
+          const data = await res.json();
+
+          console.log("Dashboard data received:", data);
+
+          dashboardData = data; // Store globally regarding Map toggle
+
+          // Update Metrics
+          if (data.key_metrics) {
+            animateValue("metric-jobs", 0, data.count, 1000);
+
+            // Update Salary Range (Avg Min - Avg Max)
+            const salaryElem = document.getElementById("metric-salary");
+            if (
+              data.key_metrics.avg_min_salary &&
+              data.key_metrics.avg_max_salary
+            ) {
+              salaryElem.innerHTML = `$${data.key_metrics.avg_min_salary.toLocaleString()} - $${data.key_metrics.avg_max_salary.toLocaleString()}`;
+              // Adjust font size if range is too long
+              if (salaryElem.innerHTML.length > 15)
+                salaryElem.style.fontSize = "2.2em";
+              else salaryElem.style.fontSize = "2.6em";
+            } else {
+              salaryElem.innerHTML = "N/A";
             }
+            document.getElementById("metric-skill").innerText =
+              data.key_metrics.top_skill;
+            document.getElementById("metric-location").innerText =
+              data.key_metrics.active_location;
+          }
 
-            document.getElementById('dataCount').innerText = `Analyzing ${data.count} jobs`;
+          document.getElementById(
+            "dataCount"
+          ).innerText = `Analyzing ${data.count} jobs`;
 
-            // Render Charts
-            renderMap();
+          // Render Charts
+          renderMap();
 
-            initChart('chart-salary-dist', getSalaryDistOption(data.salary_dist));
-            initChart('chart-exp-salary', getExpSalaryOption(data.exp_stats));
-            initChart('chart-top-skills', getTopSkillsOption(data.top_skills));
-            // initChart('chart-skill-salary', getSkillSalaryOption(data.skill_salary)); // Element removed from HTML
-            
-            initChart('chart-edu', getEduOption(data.edu_stats));
-            initChart('chart-remote', getRemoteOption(data.remote_stats));
-            initChart('chart-industry', getIndustryOption(data.industry_stats));
-            initChart('chart-wordcloud', getWordCloudOption(data.word_cloud));
-            initChart('chart-boxplot', getBoxplotOption(data.salary_boxplot));
-            initChart('chart-network', getNetworkOption(data.skill_network));
+          initChart("chart-salary-dist", getSalaryDistOption(data.salary_dist));
+          initChart("chart-exp-salary", getExpSalaryOption(data.exp_stats));
+          initChart("chart-top-skills", getTopSkillsOption(data.top_skills));
+          // initChart('chart-skill-salary', getSkillSalaryOption(data.skill_salary)); // Element removed from HTML
 
-            dashboardLoaded = true;
-            setTimeout(() => Object.values(dashCharts).forEach(c => c.resize()), 50);
-            
+          initChart("chart-edu", getEduOption(data.edu_stats));
+          initChart("chart-remote", getRemoteOption(data.remote_stats));
+          initChart("chart-industry", getIndustryOption(data.industry_stats));
+          initChart("chart-wordcloud", getWordCloudOption(data.word_cloud));
+          initChart("chart-boxplot", getBoxplotOption(data.salary_boxplot));
+          initChart("chart-network", getNetworkOption(data.skill_network));
+          initChart("chart-source-salary", getSourceSalaryOption(data.source_salary_stats));
+
+          dashboardLoaded = true;
+          setTimeout(
+            () => Object.values(dashCharts).forEach((c) => c.resize()),
+            50
+          );
         } catch (err) {
-            console.error(err);
+          console.error(err);
         }
       }
-      
+
       // Load Taiwan GeoJSON
       // Load Taiwan GeoJSON
       // Using a valid source with Name Properties
-      fetch('https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/taiwan.geojson')
-        .then(res => res.json())
-        .then(geoJson => {
-            // Normalize Feature Names to match our Data (Traditional Chinese)
-            geoJson.features.forEach(f => {
-                if(f.properties.name_traditional_chinese) {
-                   f.properties.name = f.properties.name_traditional_chinese; 
-                }
-                // Fix specific outdated names & Normalize characters (臺 -> 台)
-                if(f.properties.name) {
-                    f.properties.name = f.properties.name.replace(/臺/g, '台');
-                }
-                
-                if(f.properties.name === '桃園縣') f.properties.name = '桃園市'; 
-                if(f.properties.name === '台北縣') f.properties.name = '新北市'; 
-            });
-            
-            echarts.registerMap('Taiwan', geoJson);
-            
-            // If dashboard data was already loaded, try to render map now
-            if (typeof dashboardLoaded !== 'undefined' && dashboardLoaded) {
-                console.log("Map loaded after dashboard, reloading data...");
-                loadDashboard();
+      fetch(
+        "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/taiwan.geojson"
+      )
+        .then((res) => res.json())
+        .then((geoJson) => {
+          // Normalize Feature Names to match our Data (Traditional Chinese)
+          geoJson.features.forEach((f) => {
+            if (f.properties.name_traditional_chinese) {
+              f.properties.name = f.properties.name_traditional_chinese;
             }
-        })
-        .catch(err => console.error("Failed to load map:", err));
+            // Fix specific outdated names & Normalize characters (臺 -> 台)
+            if (f.properties.name) {
+              f.properties.name = f.properties.name.replace(/臺/g, "台");
+            }
 
-      function animateValue(id, start, end, duration, prefix="") {
-          if (start === end) return;
-          const range = end - start;
-          let current = start;
-          const increment = end > start ? Math.ceil(range / (duration / 20)) : Math.floor(range / (duration / 20));
-          const stepTime = 20;
-          const obj = document.getElementById(id);
-          const timer = setInterval(function() {
-              current += increment;
-              if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
-                  current = end;
-                  clearInterval(timer);
-              }
-              obj.innerHTML = prefix + current.toLocaleString();
-          }, stepTime);
+            if (f.properties.name === "桃園縣") f.properties.name = "桃園市";
+            if (f.properties.name === "台北縣") f.properties.name = "新北市";
+          });
+
+          echarts.registerMap("Taiwan", geoJson);
+
+          // If dashboard data was already loaded, try to render map now
+          if (typeof dashboardLoaded !== "undefined" && dashboardLoaded) {
+            console.log("Map loaded after dashboard, reloading data...");
+            loadDashboard();
+          }
+        })
+        .catch((err) => console.error("Failed to load map:", err));
+
+      function animateValue(id, start, end, duration, prefix = "") {
+        if (start === end) return;
+        const range = end - start;
+        let current = start;
+        const increment =
+          end > start
+            ? Math.ceil(range / (duration / 20))
+            : Math.floor(range / (duration / 20));
+        const stepTime = 20;
+        const obj = document.getElementById(id);
+        const timer = setInterval(function () {
+          current += increment;
+          if (
+            (increment > 0 && current >= end) ||
+            (increment < 0 && current <= end)
+          ) {
+            current = end;
+            clearInterval(timer);
+          }
+          obj.innerHTML = prefix + current.toLocaleString();
+        }, stepTime);
       }
 
       /* Old getMapOption removed, replaced by dynamic one */
@@ -1395,44 +1701,44 @@
       function initChart(id, option) {
         if (!dashCharts[id]) {
           dashCharts[id] = echarts.init(document.getElementById(id), "dark");
-          
+
           // Add click listener for map
-          if (id === 'chart-map') {
-              dashCharts[id].on('click', function (params) {
-                  if (params.componentType === 'series') {
-                      const cityName = params.name;
-                      const dashLocation = document.getElementById('dashLocation');
-                      
-                      // Check if precise option exists
-                      let exists = false;
-                      for (let i = 0; i < dashLocation.options.length; i++) {
-                          if (dashLocation.options[i].value === cityName) {
-                              exists = true;
-                              break;
-                          }
-                      }
-                      
-                      if (!exists) {
-                          // Create temporary option for broad filtering (e.g. "台北市" matches "台北市大安區")
-                          const option = document.createElement('option');
-                          option.value = cityName;
-                          option.textContent = cityName + " (Whole City)";
-                          dashLocation.appendChild(option);
-                          // Sort if we wanted to be fancy, but appending is fine for now
-                      }
-                      
-                      dashLocation.value = cityName;
-                      console.log("Map clicked: Filtering by", cityName);
-                      loadDashboard();
+          if (id === "chart-map") {
+            dashCharts[id].on("click", function (params) {
+              if (params.componentType === "series") {
+                const cityName = params.name;
+                const dashLocation = document.getElementById("dashLocation");
+
+                // Check if precise option exists
+                let exists = false;
+                for (let i = 0; i < dashLocation.options.length; i++) {
+                  if (dashLocation.options[i].value === cityName) {
+                    exists = true;
+                    break;
                   }
-              });
+                }
+
+                if (!exists) {
+                  // Create temporary option for broad filtering (e.g. "台北市" matches "台北市大安區")
+                  const option = document.createElement("option");
+                  option.value = cityName;
+                  option.textContent = cityName + " (Whole City)";
+                  dashLocation.appendChild(option);
+                  // Sort if we wanted to be fancy, but appending is fine for now
+                }
+
+                dashLocation.value = cityName;
+                console.log("Map clicked: Filtering by", cityName);
+                loadDashboard();
+              }
+            });
           }
         }
         // Use notMerge: true to force complete redraw when data changes
         dashCharts[id].setOption(option, true);
       }
 
-       // --- Chart Options ---
+      // --- Chart Options ---
       function getSalaryDistOption(data) {
         return {
           backgroundColor: "transparent",
@@ -1442,9 +1748,14 @@
             data: data.bins,
             axisLabel: { rotate: 45 },
           },
-          yAxis: { type: "value", splitLine: { lineStyle: { color: '#333' } } },
+          grid: { bottom: "10%", containLabel: true },
+          yAxis: { type: "value", splitLine: { lineStyle: { color: "#333" } } },
           series: [
-            { data: data.counts, type: "bar", itemStyle: { color: "#2F80ED", borderRadius: [4, 4, 0, 0] } },
+            {
+              data: data.counts,
+              type: "bar",
+              itemStyle: { color: "#2F80ED", borderRadius: [4, 4, 0, 0] },
+            },
           ],
         };
       }
@@ -1458,7 +1769,8 @@
             data: data.map((d) => d.name),
             axisLabel: { rotate: 45 },
           },
-          yAxis: { type: "value", splitLine: { lineStyle: { color: '#333' } } },
+          grid: { bottom: "10%", containLabel: true },
+          yAxis: { type: "value", splitLine: { lineStyle: { color: "#333" } } },
           series: [
             {
               data: data.map((d) => d.value),
@@ -1466,7 +1778,7 @@
               smooth: true,
               symbolSize: 8,
               itemStyle: { color: "#F2C94C" },
-              lineStyle: { width: 3 }
+              lineStyle: { width: 3 },
             },
           ],
         };
@@ -1476,8 +1788,14 @@
         return {
           backgroundColor: "transparent",
           tooltip: { trigger: "axis" },
-          grid: { left: '12%', right: '5%', bottom: '5%', top: '5%', containLabel: true },
-          xAxis: { type: "value", splitLine: { lineStyle: { color: '#333' } } },
+          grid: {
+            left: "12%",
+            right: "5%",
+            bottom: "5%",
+            top: "5%",
+            containLabel: true,
+          },
+          xAxis: { type: "value", splitLine: { lineStyle: { color: "#333" } } },
           yAxis: { type: "category", data: data.map((d) => d.name).reverse() },
           series: [
             {
@@ -1498,8 +1816,8 @@
             data: data.map((d) => d.name),
             axisLabel: { rotate: 45, interval: 0 },
           },
-          grid: { bottom: '15%', left: '10%', right: '5%', containLabel: true },
-          yAxis: { type: "value", splitLine: { lineStyle: { color: '#333' } } },
+          grid: { bottom: "15%", left: "10%", right: "5%", containLabel: true },
+          yAxis: { type: "value", splitLine: { lineStyle: { color: "#333" } } },
           series: [
             {
               data: data.map((d) => d.value),
@@ -1510,324 +1828,483 @@
         };
       }
 
-      
       // --- New Chart Options & Map Logic ---
-      
-      function renderMap() {
-          if (!dashboardData) return;
-          const data = mapMetric === 'count' ? dashboardData.map_data : dashboardData.map_salary_data;
-          const title = mapMetric === 'count' ? 'Job Distribution (Count)' : 'Avg Salary by City (TWD)';
-          
-          // Dynamic Min/Max Calculation for maximum contrast
-          const values = data.map(d => d.value).filter(v => v > 0);
-          const maxVal = values.length ? Math.max(...values) : (mapMetric === 'count' ? 100 : 40000);
-          const minVal = values.length ? Math.min(...values) : 0;
-          
-          const rangeColors = mapMetric === 'count' 
-              ? ['#203f5c', '#2F80ED', '#F2C94C'] 
-              : ['#0000FF', '#00FFFF', '#00FF00', '#FFFF00', '#FF0000']; // Thermal Spectrum
-          
-          // Preserve current view if resizing/updating
-          let currentZoom = 1.6;
-          let currentCenter = [121.0, 23.6];
-          
-          const chart = dashCharts['chart-map'];
-          if (chart) {
-              const opt = chart.getOption();
-              if (opt && opt.series && opt.series[0]) {
-                  if(opt.series[0].zoom) currentZoom = opt.series[0].zoom;
-                  if(opt.series[0].center) currentCenter = opt.series[0].center;
-              }
-          }
 
-          const option = getMapOption(data, title, minVal, maxVal, rangeColors, currentZoom, currentCenter);
-          initChart('chart-map', option);
-          
-          const btn = document.querySelector('.map-toggle-btn');
-          if(btn) btn.innerText = mapMetric === 'count' ? 'Switch to Salary Heatmap' : 'Switch to Job Count';
-      }
-      
-      function resetMapView() {
-          const chart = dashCharts['chart-map'];
-          if (chart) {
-              chart.setOption({
-                  series: [{
-                      center: [121.0, 23.6],
-                      zoom: 1.6
-                  }]
-              });
+      function renderMap() {
+        if (!dashboardData) return;
+        const data =
+          mapMetric === "count"
+            ? dashboardData.map_data
+            : dashboardData.map_salary_data;
+        const title =
+          mapMetric === "count"
+            ? "Job Distribution (Count)"
+            : "Avg Salary by City (TWD)";
+
+        // Dynamic Min/Max Calculation for maximum contrast
+        const values = data.map((d) => d.value).filter((v) => v > 0);
+        const maxVal = values.length
+          ? Math.max(...values)
+          : mapMetric === "count"
+          ? 100
+          : 40000;
+        const minVal = values.length ? Math.min(...values) : 0;
+
+        const rangeColors =
+          mapMetric === "count"
+            ? ["#203f5c", "#2F80ED", "#F2C94C"]
+            : ["#0000FF", "#00FFFF", "#00FF00", "#FFFF00", "#FF0000"]; // Thermal Spectrum
+
+        // Preserve current view if resizing/updating
+        let currentZoom = 1.6;
+        let currentCenter = [121.0, 23.6];
+
+        const chart = dashCharts["chart-map"];
+        if (chart) {
+          const opt = chart.getOption();
+          if (opt && opt.series && opt.series[0]) {
+            if (opt.series[0].zoom) currentZoom = opt.series[0].zoom;
+            if (opt.series[0].center) currentCenter = opt.series[0].center;
           }
+        }
+
+        const option = getMapOption(
+          data,
+          title,
+          minVal,
+          maxVal,
+          rangeColors,
+          currentZoom,
+          currentCenter
+        );
+        initChart("chart-map", option);
+
+        const btn = document.querySelector(".map-toggle-btn");
+        if (btn)
+          btn.innerText =
+            mapMetric === "count"
+              ? "Switch to Salary Heatmap"
+              : "Switch to Job Count";
       }
-      
+
+      function resetMapView() {
+        const chart = dashCharts["chart-map"];
+        if (chart) {
+          chart.setOption({
+            series: [
+              {
+                center: [121.0, 23.6],
+                zoom: 1.6,
+              },
+            ],
+          });
+        }
+      }
+
       function toggleMapMetric() {
-          // Clear Dashboard Filters
-          document.getElementById('dashCategory').value = 'All';
-          document.getElementById('dashLocation').value = 'All';
-          document.getElementById('dashManager').checked = false;
-          document.getElementById('dashRemote').value = 'All';
-          
-          // Toggle and Reload
-          mapMetric = mapMetric === 'count' ? 'salary' : 'count';
-          
-          // We must reload data because filters changed
-          loadDashboard(); 
+        // Clear Dashboard Filters
+        document.getElementById("dashCategory").value = "All";
+        document.getElementById("dashLocation").value = "All";
+        document.getElementById("dashManager").checked = false;
+        document.getElementById("dashRemote").value = "All";
+
+        // Toggle and Reload
+        mapMetric = mapMetric === "count" ? "salary" : "count";
+
+        // We must reload data because filters changed
+        loadDashboard();
       }
 
       function getMapOption(data, title, minVal, maxVal, colors, zoom, center) {
-          return {
-            backgroundColor: 'transparent',
-            title: { text: title, left: 'center', textStyle: { color: '#888', fontSize: 14 } },
-            tooltip: { trigger: 'item', formatter: '{b}: {c}' },
-            visualMap: {
-                min: minVal,
-                max: maxVal, 
-                text: ['High', 'Low'],
-                realtime: false,
-                calculable: true,
-                inRange: { color: colors },
-                textStyle: { color: '#fff' },
-                left: 'left',
-                bottom: '10%'
+        return {
+          backgroundColor: "transparent",
+          title: {
+            text: title,
+            left: "center",
+            textStyle: { color: "#888", fontSize: 14 },
+          },
+          tooltip: { trigger: "item", formatter: "{b}: {c}" },
+          visualMap: {
+            min: minVal,
+            max: maxVal,
+            text: ["High", "Low"],
+            realtime: false,
+            calculable: true,
+            inRange: { color: colors },
+            textStyle: { color: "#fff" },
+            left: "left",
+            bottom: "10%",
+          },
+          series: [
+            {
+              name: title,
+              type: "map",
+              map: "Taiwan",
+              roam: true,
+              center: center || [121.0, 23.6],
+              zoom: zoom || 1.6,
+              top: "center",
+              left: "center",
+              label: { show: true, color: "#ccc" },
+              itemStyle: {
+                areaColor: "#333",
+                borderColor: "#555",
+                borderWidth: 1,
+              },
+              emphasis: {
+                itemStyle: { areaColor: "#EB5757" },
+                label: { show: true, color: "#fff" },
+              },
+              select: {
+                itemStyle: { areaColor: "#EB5757" },
+                label: { show: true, color: "#fff" },
+              },
+              data: data,
             },
-            series: [
-                {
-                    name: title,
-                    type: 'map',
-                    map: 'Taiwan',
-                    roam: true, 
-                    center: center || [121.0, 23.6],
-                    zoom: zoom || 1.6, 
-                    top: 'center',
-                    left: 'center',
-                    label: { show: true, color: '#ccc' },
-                    itemStyle: {
-                        areaColor: '#333',
-                        borderColor: '#555',
-                        borderWidth: 1
-                    },
-                    emphasis: {
-                        itemStyle: { areaColor: '#EB5757' },
-                        label: { show: true, color: '#fff' }
-                    },
-                    select: {
-                        itemStyle: { areaColor: '#EB5757' },
-                        label: { show: true, color: '#fff' }
-                    },
-                    data: data
-                }
-            ]
-          };
+          ],
+        };
       }
 
       function getEduOption(data) {
-          // Fallback if data is empty
-          if (!data || data.length === 0) return { title: { text: 'No Data', left: 'center', top: 'center', textStyle: { color: '#666' } } };
-          
+        // Fallback if data is empty
+        if (!data || data.length === 0)
           return {
-              backgroundColor: 'transparent',
-              tooltip: { trigger: 'item' },
-              legend: { bottom: '0%', textStyle: { color: '#fff' } },
-              series: [
-                  {
-                      name: 'Education',
-                      type: 'pie',
-                      radius: ['40%', '70%'],
-                      avoidLabelOverlap: false,
-                      itemStyle: {
-                          borderRadius: 10,
-                          borderColor: '#1a1a1a',
-                          borderWidth: 2
-                      },
-                      label: { show: false, position: 'center' },
-                      emphasis: {
-                          label: { show: true, fontSize: 20, fontWeight: 'bold', color: '#fff' }
-                      },
-                      data: data
-                  }
-              ]
+            title: {
+              text: "No Data",
+              left: "center",
+              top: "center",
+              textStyle: { color: "#666" },
+            },
           };
+
+        return {
+          backgroundColor: "transparent",
+          tooltip: { trigger: "item" },
+          legend: { bottom: "0%", textStyle: { color: "#fff" } },
+          series: [
+            {
+              name: "Education",
+              type: "pie",
+              radius: ["40%", "70%"],
+              avoidLabelOverlap: false,
+              itemStyle: {
+                borderRadius: 10,
+                borderColor: "#1a1a1a",
+                borderWidth: 2,
+              },
+              label: { show: false, position: "center" },
+              emphasis: {
+                label: {
+                  show: true,
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  color: "#fff",
+                },
+              },
+              data: data,
+            },
+          ],
+        };
       }
 
       function getRemoteOption(data) {
-           if (!data || data.length === 0) return { title: { text: 'No Data', left: 'center', top: 'center', textStyle: { color: '#666' } } };
+        if (!data || data.length === 0)
           return {
-              backgroundColor: 'transparent',
-              tooltip: { trigger: 'item' },
-              legend: { bottom: '0%', textStyle: { color: '#fff' } },
-              series: [
-                  {
-                      name: 'Remote Work',
-                      type: 'pie',
-                      radius: ['50%', '70%'],
-                      itemStyle: { borderRadius: 10, borderColor: '#1a1a1a', borderWidth: 2 },
-                      data: data,
-                      color: ['#EB5757', '#2F80ED', '#27AE60', '#F2C94C']
-                  }
-              ]
+            title: {
+              text: "No Data",
+              left: "center",
+              top: "center",
+              textStyle: { color: "#666" },
+            },
           };
+        return {
+          backgroundColor: "transparent",
+          tooltip: { trigger: "item" },
+          legend: { bottom: "0%", textStyle: { color: "#fff" } },
+          series: [
+            {
+              name: "Remote Work",
+              type: "pie",
+              radius: ["50%", "70%"],
+              itemStyle: {
+                borderRadius: 10,
+                borderColor: "#1a1a1a",
+                borderWidth: 2,
+              },
+              data: data,
+              color: ["#EB5757", "#2F80ED", "#27AE60", "#F2C94C"],
+            },
+          ],
+        };
       }
 
       function getIndustryOption(data) {
-           if (!data || data.length === 0) return { title: { text: 'No Data', left: 'center', top: 'center', textStyle: { color: '#666' } } };
+        if (!data || data.length === 0)
           return {
-              backgroundColor: 'transparent',
-              tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-              grid: { left: '5%', right: '5%', bottom: '5%', top: '5%', containLabel: true }, // Ensure labels fit
-              xAxis: { type: 'value', splitLine: { lineStyle: { color: '#333' } } },
-              yAxis: { 
-                  type: 'category', 
-                  data: data.map(d => d.name).reverse(),
-                  axisLabel: { 
-                      interval: 0,
-                      width: 160, // Limit width - slightly larger
-                      overflow: 'truncate'
-                  } 
-              },
-              series: [
-                  {
-                      name: 'Avg Salary',
-                      type: 'bar',
-                      data: data.map(d => d.value).reverse(),
-                      itemStyle: { color: '#9b59b6', borderRadius: [0, 4, 4, 0] },
-                      label: { show: true, position: 'right', color: '#fff' }
-                  }
-              ]
+            title: {
+              text: "No Data",
+              left: "center",
+              top: "center",
+              textStyle: { color: "#666" },
+            },
           };
+        return {
+          backgroundColor: "transparent",
+          tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+          grid: {
+            left: "5%",
+            right: "5%",
+            bottom: "5%",
+            top: "5%",
+            containLabel: true,
+          }, // Ensure labels fit
+          xAxis: { type: "value", splitLine: { lineStyle: { color: "#333" } } },
+          yAxis: {
+            type: "category",
+            data: data.map((d) => d.name).reverse(),
+            axisLabel: {
+              interval: 0,
+              width: 160, // Limit width - slightly larger
+              overflow: "truncate",
+            },
+          },
+          series: [
+            {
+              name: "Avg Salary",
+              type: "bar",
+              data: data.map((d) => d.value).reverse(),
+              itemStyle: { color: "#9b59b6", borderRadius: [0, 4, 4, 0] },
+              label: { show: true, position: "right", color: "#fff" },
+            },
+          ],
+        };
       }
 
       function getWordCloudOption(data) {
-           if (!data || data.length === 0) return { title: { text: 'No Data', left: 'center', top: 'center', textStyle: { color: '#666' } } };
+        if (!data || data.length === 0)
           return {
-              backgroundColor: 'transparent',
-              tooltip: { show: true },
-              series: [{
-                  type: 'wordCloud',
-                  shape: 'circle',
-                  left: 'center',
-                  top: 'center',
-                  width: '100%',
-                  height: '100%',
-                  right: null,
-                  bottom: null,
-                  sizeRange: [12, 60],
-                  rotationRange: [-90, 90],
-                  rotationStep: 45,
-                  gridSize: 8,
-                  drawOutOfBound: false,
-                  layoutAnimation: true,
-                  textStyle: {
-                      fontFamily: 'sans-serif',
-                      fontWeight: 'bold',
-                      color: function () {
-                          return 'rgb(' + [
-                              Math.round(Math.random() * 160 + 50),
-                              Math.round(Math.random() * 160 + 50),
-                              Math.round(Math.random() * 160 + 50)
-                          ].join(',') + ')';
-                      }
-                  },
-                  emphasis: {
-                      focus: 'self',
-                      textStyle: { textShadowBlur: 10, textShadowColor: '#333' }
-                  },
-                  data: data
-              }]
+            title: {
+              text: "No Data",
+              left: "center",
+              top: "center",
+              textStyle: { color: "#666" },
+            },
           };
+        return {
+          backgroundColor: "transparent",
+          tooltip: { show: true },
+          series: [
+            {
+              type: "wordCloud",
+              shape: "circle",
+              left: "center",
+              top: "center",
+              width: "100%",
+              height: "100%",
+              right: null,
+              bottom: null,
+              sizeRange: [12, 60],
+              rotationRange: [-90, 90],
+              rotationStep: 45,
+              gridSize: 8,
+              drawOutOfBound: false,
+              layoutAnimation: true,
+              textStyle: {
+                fontFamily: "sans-serif",
+                fontWeight: "bold",
+                color: function () {
+                  return (
+                    "rgb(" +
+                    [
+                      Math.round(Math.random() * 160 + 50),
+                      Math.round(Math.random() * 160 + 50),
+                      Math.round(Math.random() * 160 + 50),
+                    ].join(",") +
+                    ")"
+                  );
+                },
+              },
+              emphasis: {
+                focus: "self",
+                textStyle: { textShadowBlur: 10, textShadowColor: "#333" },
+              },
+              data: data,
+            },
+          ],
+        };
       }
 
       function getBoxplotOption(data) {
-          if (!data || !data.data || data.data.length === 0) return { title: { text: 'No Data', left: 'center', top: 'center', textStyle: { color: '#666' } } };
-          
+        if (!data || !data.data || data.data.length === 0)
           return {
-              backgroundColor: 'transparent',
-              tooltip: { trigger: 'item', axisPointer: { type: 'shadow' } },
-              grid: { left: '10%', right: '10%', bottom: '15%' },
-              xAxis: {
-                  type: 'category',
-                  data: data.categories,
-                  boundaryGap: true,
-                  nameGap: 30,
-                  splitArea: { show: false },
-                  axisLabel: {
-                      formatter: '{value}',
-                      rotate: 45, interval: 0 
-                  },
-                  splitLine: { show: false }
-              },
-              yAxis: {
-                  type: 'value',
-                  name: 'TWD',
-                  splitArea: { show: false },
-                  splitLine: { lineStyle: { color: '#333' } }
-              },
-              series: [
-                  {
-                      name: 'boxplot',
-                      type: 'boxplot',
-                      data: data.data,
-                      itemStyle: {
-                          color: '#2F80ED',
-                          borderColor: '#fff'
-                      },
-                      tooltip: { formatter: function (param) {
-                          return [
-                              'Experiment ' + param.name + ': ',
-                              'upper: ' + param.data[5],
-                              'Q3: ' + param.data[4],
-                              'median: ' + param.data[3],
-                              'Q1: ' + param.data[2],
-                              'lower: ' + param.data[1]
-                          ].join('<br/>');
-                      } }
-                  }
-              ]
+            title: {
+              text: "No Data",
+              left: "center",
+              top: "center",
+              textStyle: { color: "#666" },
+            },
           };
+
+        return {
+          backgroundColor: "transparent",
+          tooltip: { trigger: "item", axisPointer: { type: "shadow" } },
+          grid: { left: "3%", right: "4%", bottom: "3%", containLabel: true },
+          xAxis: {
+            type: "category",
+            data: data.categories,
+            boundaryGap: true,
+            nameGap: 30,
+            splitArea: { show: false },
+            axisLabel: {
+              formatter: "{value}",
+              rotate: 45,
+              interval: 0,
+            },
+            splitLine: { show: false },
+          },
+          yAxis: {
+            type: "value",
+            name: "TWD",
+            splitArea: { show: false },
+            splitLine: { lineStyle: { color: "#333" } },
+          },
+          series: [
+            {
+              name: "boxplot",
+              type: "boxplot",
+              data: data.data,
+              itemStyle: {
+                color: "#2F80ED",
+                borderColor: "#fff",
+              },
+              tooltip: {
+                formatter: function (param) {
+                  return [
+                    "Experiment " + param.name + ": ",
+                    "upper: " + param.data[5],
+                    "Q3: " + param.data[4],
+                    "median: " + param.data[3],
+                    "Q1: " + param.data[2],
+                    "lower: " + param.data[1],
+                  ].join("<br/>");
+                },
+              },
+            },
+          ],
+        };
+      }
+
+      function getSourceSalaryOption(data) {
+        if (!data || data.length === 0) return {};
+        
+        const sources = data.map(d => d.name);
+        
+        return {
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            legend: { data: ['Min Salary', 'Avg Salary', 'Max Salary'], textStyle: { color: '#ccc' }, top: 0 },
+            grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+            xAxis: { 
+                type: 'category', 
+                data: sources,
+                axisLine: { lineStyle: { color: '#555' } },
+                axisLabel: { color: '#fff' }
+            },
+            yAxis: { 
+                type: 'value', 
+                splitLine: { lineStyle: { color: '#333' } },
+                axisLabel: { formatter: '{value}' }
+            },
+            series: [
+                {
+                    name: 'Min Salary',
+                    type: 'bar',
+                    data: data.map(d => d.min),
+                    itemStyle: { color: '#27AE60', borderRadius: [4, 4, 0, 0] }
+                },
+                {
+                    name: 'Avg Salary',
+                    type: 'bar',
+                    data: data.map(d => d.avg),
+                    itemStyle: { color: '#F2994A', borderRadius: [4, 4, 0, 0] }
+                },
+                {
+                    name: 'Max Salary',
+                    type: 'bar',
+                    data: data.map(d => d.max),
+                    itemStyle: { color: '#EB5757', borderRadius: [4, 4, 0, 0] }
+                }
+            ]
+        };
       }
 
       function getNetworkOption(data) {
-          if (!data || !data.nodes || data.nodes.length === 0) return { title: { text: 'No Data', left: 'center', top: 'center', textStyle: { color: '#666' } } };
-          
+        if (!data || !data.nodes || data.nodes.length === 0)
           return {
-              backgroundColor: 'transparent',
-              tooltip: {},
-              series: [
-                  {
-                      name: 'Skill Network',
-                      type: 'graph',
-                      layout: 'force',
-                      data: data.nodes,
-                      links: data.links,
-                      roam: true,
-                      label: {
-                          show: true,
-                          position: 'right',
-                          formatter: '{b}',
-                          color: '#ccc'
-                      },
-                      force: {
-                          repulsion: 100,
-                          gravity: 0.1,
-                          edgeLength: [50, 150]
-                      },
-                      lineStyle: {
-                          color: 'source',
-                          curveness: 0.3
-                      },
-                      emphasis: {
-                          focus: 'adjacency',
-                          lineStyle: {
-                              width: 10
-                          }
-                      }
-                  }
-              ]
+            title: {
+              text: "No Data",
+              left: "center",
+              top: "center",
+              textStyle: { color: "#666" },
+            },
           };
+
+        return {
+          backgroundColor: "transparent",
+          tooltip: {},
+          series: [
+            {
+              name: "Skill Network",
+              type: "graph",
+              layout: "force",
+              data: data.nodes,
+              links: data.links,
+              roam: true,
+              label: {
+                show: true,
+                position: "right",
+                formatter: "{b}",
+                color: "#ccc",
+              },
+              force: {
+                repulsion: 100,
+                gravity: 0.1,
+                edgeLength: [50, 150],
+              },
+              lineStyle: {
+                color: "source",
+                curveness: 0.3,
+              },
+              emphasis: {
+                focus: "adjacency",
+                lineStyle: {
+                  width: 10,
+                },
+              },
+            },
+          ],
+        };
       }
-      
+
       window.addEventListener("resize", () => {
         treeChart.resize();
         Object.values(dashCharts).forEach((c) => c.resize());
       });
-    </script>    
+
+      // Mobile toggles
+      function showMobileDetail() {
+          document.querySelector('.main-content').classList.add('active-mobile');
+          document.getElementById('backBtn').style.display = 'block';
+          // Force resize to fill full screen
+          setTimeout(() => {
+              if (treeChart) treeChart.resize();
+          }, 50);
+      }
+
+      function showMobileList() {
+          document.querySelector('.main-content').classList.remove('active-mobile');
+          document.querySelectorAll('.job-card').forEach(c => c.classList.remove('active'));
+      }
+    </script>
   </body>
 </html>

@@ -2,6 +2,7 @@
 import pandas as pd
 from sqlalchemy import create_engine, inspect
 import re
+import os
 
 # ==================== 1. 設定 ====================
 try:
@@ -57,7 +58,9 @@ for table in tables:
                 # print(f"  正在清理欄位：{col}") # 減少輸出雜訊
                 df[col] = df[col].apply(clean_text)
         
-        output_filename = f'{table}_export.csv'
+        # 使用絕對路徑確保檔案存至程式所在目錄
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        output_filename = os.path.join(script_dir, f'{table}_export.csv')
         df.to_csv(output_filename, index=False, encoding='UTF-8')
         print(f"  ✅ 成功匯出：{output_filename} (共 {len(df):,} 筆)")
         

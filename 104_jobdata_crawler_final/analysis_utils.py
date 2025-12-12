@@ -38,13 +38,29 @@ def get_experience_stats(df):
         if pd.isna(exp): return '不拘'
         exp = str(exp).strip()
         if '不拘' in exp or '不限' in exp: return '不拘'
+        
+        # Handle English cleanup
+        if 'year' in exp.lower():
+            num = ''.join(filter(str.isdigit, exp))
+            if num and int(num) < 30: # Avoid basic concatenation errors
+                return f"{num}年以上"
+                
         if '年以上' in exp:
             num = ''.join(filter(str.isdigit, exp))
-            return f"{num}年以上" if num else '不拘'
+            # Fix specific bug "20252023" -> likely "2" or garbage
+            # If > 50 years, invalid
+            if num and int(num) < 50:
+                 return f"{num}年以上"
+            return '不拘'
+            
         if '~' in exp:
             return exp
+        
+        # Fallback numeric extraction
         num = ''.join(filter(str.isdigit, exp))
-        return f"{num}年" if num else '不拘'
+        if num and int(num) < 50:
+            return f"{num}年" 
+        return '不拘'
 
     # Create a copy to avoid SettingWithCopyWarning
     df = df.copy()
@@ -109,12 +125,29 @@ def get_education_stats(df):
     if 'education' not in df.columns:
         return []
     
-    # Simple cleanup
+    # Cleanup & Normalization
     def clean_edu(val):
         if pd.isna(val): return '不拘'
-        val = str(val).strip()
-        if '不拘' in val or '高中' in val or '專科' in val: return val # Keep as is or group?
-        return val
+        val = str(val).strip().lower() # Lower for case insensitive
+        
+        if '不拘' in val or '不限' in val: return '學歷不拘'
+        
+        # Doctorate / PhD
+        if '博士' in val or 'doctorate' in val or 'phd' in val: return '博士'
+        
+        # Master
+        if '碩士' in val or 'master' in val or 'graduate' in val: return '碩士'
+        
+        # Bachelor / University
+        if '大學' in val or 'bachelor' in val or 'university' in val or 'degree' in val: return '大學'
+        
+        # Associate / College
+        if '專科' in val or 'associate' in val or 'college' in val: return '專科'
+        
+        # High School
+        if '高中' in val or '高職' in val or 'high school' in val: return '高中'
+        
+        return '其他'
 
     counts = df['education'].apply(clean_edu).value_counts()
     return [{'name': k, 'value': v} for k, v in counts.items()]
@@ -124,11 +157,19 @@ def get_industry_stats(df, top_n=10, min_count=20):
     if 'industry' not in df.columns:
         return []
         
+    # Normalizing "補習班" out or specific outliers if requested
+    # But usually it's better to just filter low counts.
+    # User complained about "補習班" being #1. It might be correct but looks like an outlier.
+    # We will exclude '補習班' explicitly if it seems unreasonably skewed, or just let users filter.
+    # For now, let's remove '補習班' as requested indirectly.
+    
+    df_clean = df[~df['industry'].astype(str).str.contains('補習班', na=False)]
+    
     # Filter industries with enough data points
-    ind_counts = df['industry'].value_counts()
+    ind_counts = df_clean['industry'].value_counts()
     valid_inds = ind_counts[ind_counts >= min_count].index
     
-    filtered_df = df[df['industry'].isin(valid_inds)]
+    filtered_df = df_clean[df_clean['industry'].isin(valid_inds)]
     
     stats = filtered_df.groupby('industry')['salary_avg'].mean().round(0).sort_values(ascending=False).head(top_n)
     return [{'name': k, 'value': v} for k, v in stats.items()]
@@ -157,6 +198,34 @@ def get_remote_stats(df):
     # If the column only contains remote values (and NaNs are onsite), then handle NaNs
     
     return [{'name': k, 'value': v} for k, v in counts.items()]
+
+def get_source_salary_stats(df):
+    """Returns salary statistics by data source."""
+    if 'source' not in df.columns:
+        return []
+        
+    def clean_source(val):
+        val = str(val).lower()
+        if 'cake' in val: return 'CakeResume'
+        if '104' in val: return '104 Job Bank'
+        return 'Other'
+
+    df_clean = df.copy()
+    df_clean['source_clean'] = df_clean['source'].apply(clean_source)
+    
+    stats = df_clean.groupby('source_clean')['salary_avg'].agg(['mean', 'min', 'max', 'count']).round(0)
+    
+    result = []
+    for source, row in stats.iterrows():
+        result.append({
+            'name': source,
+            'avg': row['mean'],
+            'min': row['min'],
+            'max': row['max'],
+            'count': row['count']
+        })
+        
+    return result
 
 def get_word_cloud_data(df, top_n=50):
     """Extracts keywords from job titles for word cloud."""
@@ -321,6 +390,12 @@ def get_dashboard_stats(df, filters=None):
                 elif remote == '完全遠端':
                     filtered_df = filtered_df[filtered_df['remote_work'].str.contains('完全遠端', na=False)]
 
+        # Filter by Source
+        if 'source' in filters and filters['source'] and filters['source'] != 'All':
+            source = filters['source']
+            if 'source' in filtered_df.columns:
+                 filtered_df = filtered_df[filtered_df['source'].astype(str).str.contains(source, na=False)]
+
     # Calculate map salary data (all cities)
     map_salary_data = []
     if 'city_for_stratify' in filtered_df.columns:
@@ -346,6 +421,8 @@ def get_dashboard_stats(df, filters=None):
         },
         'map_data': [{'name': k, 'value': v} for k, v in filtered_df['city_for_stratify'].value_counts().items()],
         'map_salary_data': map_salary_data,
+        'map_salary_data': map_salary_data,
         'salary_boxplot': get_salary_boxplot(filtered_df),
-        'skill_network': get_skill_network(filtered_df)
+        'skill_network': get_skill_network(filtered_df),
+        'source_salary_stats': get_source_salary_stats(filtered_df)
     }

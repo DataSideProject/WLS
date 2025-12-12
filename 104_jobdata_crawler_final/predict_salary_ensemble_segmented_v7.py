@@ -49,25 +49,118 @@ def log_print(message):
     log_lines.append(message)
 
 # ====================== 0. 輔助函式 ======================
-def parse_salary(salary):
-    """解析薪資，提取 min、max 和 note (不計算 avg)"""
-    if not salary or salary == "待遇面議":
+def parse_salary_advanced(row):
+    """
+    Advanced salary parsing for both 104 and CakeResume.
+    Returns: (min_salary, max_salary, note)
+    """
+    salary = str(row.get('salary', ''))
+    source = str(row.get('source', '')).lower()
+    
+    if not salary or salary == 'nan' or salary == 'None' or salary == "待遇面議":
         return None, None, "無薪資資訊"
-    salary = str(salary).replace(",", "")
-    match = re.match(r"月薪(\d+)(?:~(\d+))?元", salary)
-    if match:
-        min_salary = int(match.group(1))
-        max_salary = int(match.group(2)) if match.group(2) else None
-        note = "最低保證薪資" if not max_salary else ""
-        return min_salary, max_salary, note
-    match = re.match(r"年薪(\d+)(?:~(\d+))?元", salary)
-    if match:
-        min_salary = int(match.group(1)) // 13
-        max_salary = int(match.group(2)) // 13 if match.group(2) else None
-        note = "年薪轉換為月薪"
-        return min_salary, max_salary, note
-    else:
-        return None, None, "其他格式"
+
+    salary = salary.replace(',', '')
+    
+    # --- 104 Parser & General Chinese ---
+    if '日薪' in salary:
+        match = re.match(r".*日薪\s*(\d+)(?:~(\d+))?.*", salary)
+        if match:
+             s_min = int(match.group(1)) * 22
+             s_max = int(match.group(2)) * 22 if match.group(2) else None
+             return s_min, s_max, "日薪轉換月薪"
+             
+    if '時薪' in salary:
+        match = re.match(r".*時薪\s*(\d+)(?:~(\d+))?.*", salary)
+        if match:
+             s_min = int(match.group(1)) * 8 * 22
+             s_max = int(match.group(2)) * 8 * 22 if match.group(2) else None
+             return s_min, s_max, "時薪轉換月薪"
+
+    if '104' in source or '月薪' in salary or '年薪' in salary:
+        match = re.match(r".*月薪\s*(\d+)(?:~(\d+))?.*", salary)
+        if match:
+            s_min = int(match.group(1))
+            s_max = int(match.group(2)) if match.group(2) else None
+            return s_min, s_max, "最低保證薪資" if not s_max else ""
+            
+        match = re.match(r".*年薪\s*(\d+)(?:~(\d+))?.*", salary)
+        if match:
+            s_min = int(match.group(1)) // 13
+            s_max = int(match.group(2)) // 13 if match.group(2) else None
+            return s_min, s_max, "年薪轉換月薪"
+
+    # --- CakeResume Parser ---
+    # Common formats: "50K - 80K TWD", "1.5M ~ 2.0M TWD / Annum", "60,000 TWD", "190 ~ 220 TWD / 小時"
+    
+    # 1. Normalize
+    s_norm = salary.upper().replace(' ', '')
+    
+    # Currency Handling
+    is_usd = 'USD' in s_norm
+    exchange_rate = 32.5 if is_usd else 1.0
+    
+    s_norm = s_norm.replace('TWD', '').replace('USD', '')
+    
+    # 2. Check for Mode
+    is_annual = 'ANNUAL' in s_norm or '/YEAR' in s_norm or 'ANNUM' in s_norm or '年' in s_norm
+    is_hourly = 'HOUR' in s_norm or '小時' in s_norm or '/H' in s_norm
+    is_daily  = 'DAY' in s_norm or '日' in s_norm
+    
+    s_norm = s_norm.replace('/ANNUAL', '').replace('/ANNUM', '').replace('/YEAR', '').replace('/MONTH', '')
+    s_norm = s_norm.replace('/HOUR', '').replace('小時', '').replace('/H', '').replace('/DAY', '').replace('日', '')
+    
+    # 3. Detect Multiplier
+    multiplier = 1
+    if 'K' in s_norm: 
+        multiplier = 1000
+        s_norm = s_norm.replace('K', '')
+    elif 'M' in s_norm:
+        multiplier = 1000000
+        s_norm = s_norm.replace('M', '')
+        
+    try:
+        # 4. Parse Range
+        # Split by '~' or '-'
+        parts = re.split(r'[~\-]', s_norm)
+        parts = [p for p in parts if p] # Filter empty
+        
+        vals = []
+        for p in parts:
+            # Extract numbers (allow float)
+            num_match = re.search(r"(\d+(\.\d+)?)", p)
+            if num_match:
+                vals.append(float(num_match.group(1)) * multiplier * exchange_rate)
+        
+        if not vals:
+            return None, None, "無法解析格式"
+            
+        s_min = int(vals[0])
+        s_max = int(vals[1]) if len(vals) > 1 else None
+        
+        # 5. Conversion
+        if is_hourly:
+            s_min = s_min * 8 * 22
+            if s_max: s_max = s_max * 8 * 22
+            return s_min, s_max, "Cake時薪轉換"
+            
+        if is_daily:
+            s_min = s_min * 22
+            if s_max: s_max = s_max * 22
+            return s_min, s_max, "Cake日薪轉換"
+            
+        if is_annual:
+            s_min = s_min // 13
+            if s_max: s_max = s_max // 13
+            note = f"Cake年薪轉換{' (USD)' if is_usd else ''}"
+            return s_min, s_max, note
+            
+        return s_min, s_max, f"{'USD轉換' if is_usd else ''}"
+        
+    except Exception as e:
+        return None, None, f"解析錯誤: {salary}"
+
+    return None, None, "未知格式"
 
 def parse_education(edu):
     """解析學歷為數值等級"""
@@ -105,21 +198,93 @@ DATABASE = DB_NAME
 try:
     engine = create_engine(f'mysql+mysqlconnector://{USER}:{PASSWORD}@{HOST}:3306/{DATABASE}')
     log_print(f"連線至資料庫: {HOST}...")
-    df = pd.read_sql('SELECT * FROM 104rawdata', engine)
+    df = pd.read_sql('SELECT * FROM jobs_unified', engine)
     log_print(f"成功從資料庫讀取資料：{len(df)} 筆")
     
-    # 應用 parse_salary
-    log_print("解析薪資欄位...")
-    parsed_data = df['salary'].apply(parse_salary)
-    df['salary_min'] = parsed_data.apply(lambda x: x[0])
-    df['salary_max'] = parsed_data.apply(lambda x: x[1])
-    df['salary_note'] = parsed_data.apply(lambda x: x[2])
+    # 薪資解析 (Refactored)
+    log_print("執行薪資解析 (104 & CakeResume)...")
+    parsed_results = df.apply(parse_salary_advanced, axis=1)
+    
+    df['salary_min'] = parsed_results.apply(lambda x: x[0])
+    df['salary_max'] = parsed_results.apply(lambda x: x[1])
+    df['salary_note'] = parsed_results.apply(lambda x: x[2])
+    
+    # Casting to ensure numeric
+    df['salary_min'] = pd.to_numeric(df['salary_min'], errors='coerce')
+    df['salary_max'] = pd.to_numeric(df['salary_max'], errors='coerce')
+    
+    log_print(f"解析後有效薪資筆數: {df['salary_min'].count()}")
+    log_print(f"Top 5 Salaries:\n{df[['salary_min', 'source']].sort_values(by='salary_min', ascending=False).head(5)}")
+    
+    # 填充 salary_note: 若解析失敗但有 note 則保留，否則若 min 為空則無資訊
+    # (parse_salary_advanced already returns appropriate notes)
+    
+    # 重新命名欄位以符合後續程式碼需求 (Compatibility)
+    
+    # 重新命名欄位及解析 Raw Data 
+    # jobs_unified 现在有: salary_min, salary_max, location, job_title, company
+    # 新增 raw cols: education, experience, skills, description
+
+    # 1. Skills
+    if 'skills' in df.columns:
+        df['tools'] = df['skills'] 
+    elif 'tags' in df.columns:
+        df['tools'] = df['tags'] # Fallback
+        
+    if 'description' in df.columns:
+        df['job_description'] = df['description']
+        
+    # 2. Education Parsing (Text -> Int)
+    def parse_education_level_v7(text):
+        if pd.isna(text): return 0
+        text = str(text).lower()
+        if any(x in text for x in ['博士', 'phd', 'doctorate']): return 5
+        if any(x in text for x in ['碩士', 'master', 'graduate']): return 4
+        if any(x in text for x in ['大學', 'bachelor', 'university', 'degree']): return 3
+        if any(x in text for x in ['專科', 'associate']): return 2
+        if any(x in text for x in ['高中', '高職', 'high school']): return 1
+        return 0 # Unknown or other
+
+    df['edu_level'] = df['education'].apply(parse_education_level_v7)
+    
+    # 3. Experience Parsing (Text -> Years Float)
+    def parse_experience_years_v7(text):
+        if pd.isna(text): return 0.0
+        s = str(text).lower()
+        
+        # Chinese patterns
+        match = re.search(r'(\d+)\s*年以上', s)
+        if match: return float(match.group(1))
+        if "經歷不拘" in s or "經驗不拘" in s or "0年以上" in s: return 0.0
+        
+        # English patterns
+        match = re.search(r'(\d+)\+?\s*years?', s)
+        if match: return float(match.group(1))
+        
+        # Keywords Fallback
+        if "management" in s or "director" in s or "高階" in s: return 10.0
+        if "senior" in s or "中高階" in s: return 5.0
+        if "mid" in s or "中階" in s: return 3.0
+        if "entry" in s or "初階" in s or "助理" in s: return 0.0
+        
+        return 0.0
+
+    df['exp_years_raw'] = df['experience'].apply(parse_experience_years_v7)
+
+    if 'category' in df.columns:
+        df['job_categories'] = df['category']
+    elif 'job_categories' not in df.columns:
+        df['job_categories'] = ''
+
+
     
 except Exception as e:
     log_print(f"資料庫連線失敗: {e}")
     log_print("嘗試讀取本地備份 CSV...")
     try:
-        df = pd.read_csv(r'E:\Antigravity_HOME_PC\WLS\job_data_master_raw.csv') 
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(script_dir, 'job_unified_export.csv')
+        df = pd.read_csv(csv_path) 
         log_print(f"成功讀取本地 CSV：{len(df)} 筆")
         log_print("解析 CSV 薪資欄位...")
         parsed_data = df['salary'].apply(parse_salary)
@@ -131,16 +296,14 @@ except Exception as e:
         raise
 
 # ====================== 1.5 資料去重 ======================
-if 'job_id' in df.columns:
+# jobs_unified 已經去重過 (UNIQUE KEY)，但為了保險可以再做一次
+# User requested: deduplicate by job_title + company
+if 'job_title' in df.columns and 'company' in df.columns:
     initial_count = len(df)
-    if 'update_date' in df.columns:
-        df['update_date'] = pd.to_datetime(df['update_date'], errors='coerce')
-        df = df.sort_values(by=['job_id', 'update_date'])
-    
-    df = df.drop_duplicates(subset=['job_id'], keep='last')
+    df = df.drop_duplicates(subset=['job_title', 'company'], keep='last')
     log_print(f"已移除重複資料: {initial_count - len(df)} 筆 (剩餘 {len(df)} 筆)")
 else:
-    log_print("警告: 無法去重 (找不到 job_id 欄位)")
+    log_print("警告:無法去重 (找不到 job_title 或 company 欄位)")
 
 # ====================== 1.6 資料淨化 (Outlier Removal) ======================
 log_print("執行資料淨化 (剔除極端值)...")
@@ -182,7 +345,8 @@ top_cities = city_counts.head(10).index
 top10_jobs = df['job_title'].value_counts().head(10).index.tolist()
 for job in top10_jobs:
     safe = job.replace('/', '_').replace(' ', '_')
-    df[f'is_{safe}'] = (df['job_title'] == job).astype(int)
+    # User feedback: 'is_XXX' should likely cover partial matches (e.g. Senior XXX)
+    df[f'is_{safe}'] = df['job_title'].astype(str).str.contains(job, regex=False, na=False).astype(int)
 
 # 3. 技能
 all_tools = []
@@ -194,11 +358,24 @@ top_skills = [t[0] for t in Counter(all_tools).most_common(20)]
 for skill in top_skills:
     df[f'skill_{skill}'] = df['tools'].astype(str).str.contains(skill, case=False, na=False).astype(int)
 
-# 4. 學歷
-df['edu_level'] = df['education'].apply(parse_education)
+# 4. 學歷 (已處理)
+# df['edu_level'] = df['education'].apply(parse_education)
 
 # 5. 管理責任
-df['is_manager'] = df['management_responsibility'].apply(parse_management)
+# Use explicit management_responsibility column if available
+def parse_manager(val):
+    val = str(val).lower()
+    if '不需負擔管理責任' in val or 'not' in val or 'none' in val or val == 'nan':
+        return 0
+    if '管理' in val or 'manage' in val:
+        return 1
+    return 0
+
+if 'management_responsibility' in df.columns:
+    df['is_manager'] = df['management_responsibility'].apply(parse_manager)
+else:
+    # Fallback
+    df['is_manager'] = df['experience'].apply(lambda x: 1 if 'Management' in str(x) or '10年以上' in str(x) else 0)
 
 # 6. 產業
 top_industries = df['industry'].value_counts().head(10).index
@@ -211,7 +388,17 @@ def parse_exp(exp):
     match = re.search(r'(\d+)', exp)
     if match: return int(match.group(1))
     return 0
-df['exp_years_raw'] = df['experience'].apply(parse_exp)
+# 5.5 年資 (從 job_level 推算)
+# jobs_unified 已將年資整合為 job_level
+def map_job_level_to_years(lvl):
+    lvl = str(lvl).lower()
+    if 'management' in lvl: return 10.0
+    if 'senior' in lvl: return 7.0
+    if 'mid' in lvl: return 4.0
+    return 1.0 # Entry or others
+
+# df['exp_years_raw'] = df['experience'].apply(map_job_level_to_years) # Already parsed above
+# df['exp_years_raw'] = df['experience'].apply(parse_experience_years_v7)
 
 # 8. 職務類別 (job_categories)
 all_cats = []
@@ -272,8 +459,9 @@ feature_map = {} # 用來存儲 欄位名 -> 原始關鍵字 的對照表
 log_print("處理 job_description TF-IDF (Top 100, jieba)...")
 desc_cols = process_tfidf('job_description', 'desc', max_features=100)
 
-log_print("處理 other_conditions TF-IDF (Top 100, jieba)...")
-cond_cols = process_tfidf('other_conditions', 'cond', max_features=100)
+# log_print("處理 other_conditions TF-IDF (Top 100, jieba)...")
+# cond_cols = process_tfidf('other_conditions', 'cond', max_features=100)
+cond_cols = []
 
 # 交叉特徵
 for job in top10_jobs:
@@ -323,6 +511,8 @@ def build_ensemble():
     return VotingRegressor([('rf', rf), ('xgb', xgb), ('gb', gb), ('cat', cat)])
 
 def train_segment_model(df_train, df_predict, target_col, segment_name):
+    log_print(f"[{segment_name}] Training check: Train Size={len(df_train)}, Target={target_col}")
+
     if len(df_train) < 10:
         log_print(f"  [{segment_name}] 訓練資料不足 ({len(df_train)} 筆)，跳過")
         return None, None, [], []
@@ -330,13 +520,24 @@ def train_segment_model(df_train, df_predict, target_col, segment_name):
     X_train = df_train[feature_cols].copy()
     X_train = X_train.apply(pd.to_numeric, errors='coerce').fillna(0)
     y_train_log = np.log1p(df_train[target_col])
+    
+    log_print(f"[{segment_name}] X_train shape: {X_train.shape}")
+    if X_train.shape[1] == 0:
+        log_print(f"[{segment_name}] 錯誤：無特徵欄位！")
+        return None, None, [], []
 
     lasso = LassoCV(cv=5, random_state=42, n_jobs=-1)
     lasso.fit(X_train, y_train_log)
     sel_features = X_train.columns[np.abs(lasso.coef_) > 1e-4]
-    X_train_sel = X_train[sel_features]
     
     log_print(f"  [{segment_name}] 特徵篩選: {len(feature_cols)} -> {len(sel_features)}")
+
+    if len(sel_features) == 0:
+        log_print(f"  [{segment_name}] 警告：Lasso 未選出任何特徵，改用全部特徵！")
+        X_train_sel = X_train
+        sel_features = X_train.columns
+    else:
+        X_train_sel = X_train[sel_features]
 
     ensemble = build_ensemble()
     

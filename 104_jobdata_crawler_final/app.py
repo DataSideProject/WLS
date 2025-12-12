@@ -39,6 +39,11 @@ def load_data():
         
         print(f"Loaded {len(df)} rows successfully.")
         
+        # Convert uuid to job_id if needed
+        if 'uuid' in df.columns:
+            if 'job_id' not in df.columns:
+                df.rename(columns={'uuid': 'job_id'}, inplace=True)
+                
         # Convert job_id to string for consistent matching
         if 'job_id' in df.columns:
             df['job_id'] = df['job_id'].astype(str)
@@ -110,85 +115,103 @@ def index():
 
 @app.route('/api/jobs')
 def get_jobs():
-    if df is None:
-        return jsonify([])
-    
-    # Get filter parameters
-    location = request.args.get('location')
-    salary_min = request.args.get('salary_min', type=float)
-    salary_max = request.args.get('salary_max', type=float)
-    category = request.args.get('category')
-    is_manager = request.args.get('is_manager', type=int)
-    remote_work = request.args.get('remote_work')
-    search = request.args.get('search')
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 50, type=int)
-    
-    # Start with full dataset
-    filtered_df = df.copy()
-    
-    # Apply filters
-    if location and location != 'All':
-        filtered_df = filtered_df[filtered_df['location'].str.contains(location, na=False)]
-    
-    if salary_min is not None:
-        filtered_df = filtered_df[filtered_df['salary_min'] >= salary_min]
-    
-    if salary_max is not None:
-        filtered_df = filtered_df[filtered_df['salary_max'] <= salary_max]
-    
-    if category and category != 'All':
-        # Check if category column exists
-        cat_col = f'cat_{category}'
-        if cat_col in filtered_df.columns:
-            filtered_df = filtered_df[filtered_df[cat_col] == 1]
-    
-    if is_manager == 1:
-        filtered_df = filtered_df[filtered_df['is_manager'] == 1]
-    
-    if remote_work and remote_work != 'All':
-        if remote_work == '部分遠端':
-            filtered_df = filtered_df[filtered_df['remote_work'].str.contains('部分遠端', na=False)]
-        elif remote_work == '完全遠端':
-            filtered_df = filtered_df[filtered_df['remote_work'].str.contains('完全遠端', na=False)]
-            
-    if search:
-        search_term = search.lower()
-        filtered_df = filtered_df[
-            filtered_df['job_title'].str.lower().str.contains(search_term, na=False) | 
-            filtered_df['company'].str.lower().str.contains(search_term, na=False)
-        ]
-    
-    # Calculate pagination
-    total_count = len(filtered_df)
-    total_pages = (total_count + per_page - 1) // per_page
-    start_idx = (page - 1) * per_page
-    end_idx = start_idx + per_page
-    
-    # Get page data
-    page_df = filtered_df.iloc[start_idx:end_idx]
-    
-    # Select columns
-    cols = ['job_id', 'job_title', 'company', 'location', 'salary_min', 'salary_max', 'salary_note']
-    if 'pred_min' in page_df.columns:
-        cols.extend(['pred_min', 'pred_max'])
-    if 'is_manager' in page_df.columns:
-        cols.append('is_manager')
-    if 'remote_work' in page_df.columns:
-        cols.append('remote_work')
-    
-    # Replace NaN with None for valid JSON
-    jobs_df = page_df[cols].copy()
-    jobs_df = jobs_df.replace({np.nan: None})
-    jobs = jobs_df.to_dict(orient='records')
-    
-    return jsonify({
-        'jobs': jobs,
-        'total_count': total_count,
-        'page': page,
-        'per_page': per_page,
-        'total_pages': total_pages
-    })
+    try:
+        if df is None:
+            return jsonify([])
+        
+        # Get filter parameters
+        location = request.args.get('location')
+        salary_min = request.args.get('salary_min', type=float)
+        salary_max = request.args.get('salary_max', type=float)
+        category = request.args.get('category')
+        is_manager = request.args.get('is_manager', type=int)
+        remote_work = request.args.get('remote_work')
+        search = request.args.get('search')
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 50, type=int)
+        
+        # Start with full dataset
+        filtered_df = df.copy()
+        
+        # Apply filters
+        if location and location != 'All':
+            filtered_df = filtered_df[filtered_df['location'].str.contains(location, na=False)]
+        
+        if salary_min is not None:
+            filtered_df = filtered_df[filtered_df['salary_min'] >= salary_min]
+        
+        if salary_max is not None:
+            filtered_df = filtered_df[filtered_df['salary_max'] <= salary_max]
+        
+        if category and category != 'All':
+            # Check if category column exists
+            cat_col = f'cat_{category}'
+            if cat_col in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df[cat_col] == 1]
+        
+        if is_manager == 1:
+            filtered_df = filtered_df[filtered_df['is_manager'] == 1]
+        
+        if remote_work and remote_work != 'All':
+            if remote_work == '部分遠端':
+                filtered_df = filtered_df[filtered_df['remote_work'].str.contains('部分遠端', na=False)]
+            elif remote_work == '完全遠端':
+                filtered_df = filtered_df[filtered_df['remote_work'].str.contains('完全遠端', na=False)]
+                
+                
+        # Get Filter for Source
+        source = request.args.get('source')
+        if source and source != 'All':
+            if 'source' in filtered_df.columns:
+                # Ensure column is string and filter
+                filtered_df = filtered_df[filtered_df['source'].astype(str).str.contains(source, case=False, na=False)]
+
+
+        if search:
+            search_term = search.lower()
+            filtered_df = filtered_df[
+                filtered_df['job_title'].str.lower().str.contains(search_term, na=False) | 
+                filtered_df['company'].str.lower().str.contains(search_term, na=False)
+            ]
+        
+        # Calculate pagination
+        total_count = len(filtered_df)
+        total_pages = (total_count + per_page - 1) // per_page
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        
+        # Get page data
+        page_df = filtered_df.iloc[start_idx:end_idx]
+        
+        # Select columns - Add 'source' and 'link' to output
+        cols = ['job_id', 'job_title', 'company', 'location', 'salary_min', 'salary_max', 'salary_note']
+        if 'pred_min' in page_df.columns:
+            cols.extend(['pred_min', 'pred_max'])
+        if 'is_manager' in page_df.columns:
+            cols.append('is_manager')
+        if 'remote_work' in page_df.columns:
+            cols.append('remote_work')
+        if 'source' in page_df.columns:
+            cols.append('source')
+        if 'link' in page_df.columns:
+            cols.append('link')
+        
+        # Replace NaN with None for valid JSON
+        jobs_df = page_df[cols].copy()
+        jobs_df = jobs_df.replace({np.nan: None})
+        jobs = jobs_df.to_dict(orient='records')
+        
+        return jsonify({
+            'jobs': jobs,
+            'total_count': total_count,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': total_pages
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/job/<job_id>')
 def get_job_details(job_id):
@@ -253,6 +276,14 @@ def get_filter_options():
     # Get remote work options
     remote_options = ['All', '部分遠端', '完全遠端']
     
+    # Get Source options (e.g. 104, cakeresume)
+    source_options = ['All']
+    if 'source' in df.columns:
+        # Normalize and get unique
+        sources = df['source'].astype(str).unique().tolist()
+        # Clean up duplicates like "104" vs "104人力銀行" if any, but simplistic unique is fine
+        source_options.extend(sorted(sources))
+    
     # Count management positions
     manager_count = int(df['is_manager'].sum())
     
@@ -264,6 +295,7 @@ def get_filter_options():
         'categories': job_categories,
         'salary_range': salary_range,
         'remote_options': remote_options,
+        'source_options': source_options,
         'manager_count': manager_count
     })
 
@@ -289,6 +321,11 @@ def get_analysis_stats():
     remote = request.args.get('remote')
     if remote and remote != 'All':
         filters['remote'] = remote
+        
+    # Source Filter
+    source = request.args.get('source')
+    if source and source != 'All':
+         filters['source'] = source
         
     stats = analysis_utils.get_dashboard_stats(df, filters)
     return jsonify(stats)
