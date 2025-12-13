@@ -37,6 +37,7 @@ flowchart TD
 
     subgraph 視覺化應用
         H --> I[啟動 Flask 伺服器<br>app.py]
+        I -. 引用 .-> I_utils[數據運算模組<br>analysis_utils.py<br>負責圖表統計邏輯]
         I --> J[本地測試<br>http://localhost:5000<br>技能樹 + 儀表板 + 搜尋]
         J --> K1[使用 ngrok<br>快速暴露到公網<br>臨時分享測試用]
         J --> K2[部署到 Vercel<br>永久上線<br>自動 HTTPS + 自訂域名]
