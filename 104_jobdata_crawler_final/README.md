@@ -26,11 +26,11 @@ flowchart TD
         C --> D[/GCP MariaDB<br>104: 104rawdata資料表<br>cake: job_details資料表/]
     end
 
-    subgraph 資料清洗與薪資預測
+    subgraph ETL與薪資預測
         AB[合併多平台資料<br>整理成統一格式<br>merge_to_db.py]
         D --> AB
-        AB --> E[predict_salary_ensemble_segmented_v7.py<br>年資分群<br>Ensemble模型預測]
-        E --> F[/job_data_with_full_salary_v7_segmented.csv<br>薪資填補完成<br>含報告.txt 與殘差圖.png/]
+        AB --> E[predict_salary_model.py<br>年資分群<br>Ensemble模型預測]
+        E --> F[/job_data_segmented.csv<br>薪資填補完成<br>含報告.txt 與殘差圖.png/]
         F --> G[generate_predictions.py<br>最終預測 無資料洩漏]
         G --> H[/job_data_final_with_predictions.csv<br>唯一上線資料/]
     end
