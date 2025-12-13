@@ -17,29 +17,33 @@ Live Demo：http://localhost:5000 （執行 app.py 後開啟）
 flowchart TD
     subgraph 爬蟲與資料匯入
         A[定期執行爬蟲<br>104_crawler_final.py]
-        AA[定期執行其他平台爬蟲<br>CakeResume 等]
-        A --> B[/104,cake raw.csv/]
+        AA[定期執行cakeresume爬蟲<br>]
+        A --> B[/存成各自的raw.csv<br>/]
         AA --> B
-        B --> C[daily_append.py<br>增量匯入資料庫<br>或workbench匯入]
-        C --> D[/GCP MariaDB<br>104rawdata 資料表<br>job_detals: cake/]
+        B --> C[daily_append.py<br>增量匯入資料庫<br>或用 Workbench 手動匯入]
+        C --> D[/GCP MariaDB<br>104: 104rawdata資料表<br>cake: job_details資料表/]
     end
 
     subgraph 薪資預測與視覺化應用
-        AB[合併多平台資料<br>整理成統一格式]
+        AB[合併多平台資料<br>整理成統一格式<br>merge_to_db.py]
         D --> AB
-        AB --> E[predict_salary_ensemble_segmented_v7.py<br>年資分群 + Ensemble 模型]
-        E --> F[/job_data_with_full_salary_v7_segmented.csv<br>薪資填補完成<br>含報告與殘差圖/]
+        AB --> E[predict_salary_ensemble_segmented_v7.py<br>年資分群<br>Ensemble模型預測]
+        E --> F[/job_data_with_full_salary_v7_segmented.csv<br>薪資填補完成<br>含報告.txt 與殘差圖.png/]
         F --> G[generate_predictions.py<br>最終預測 無資料洩漏]
-        G --> H[/job_data_final_with_predictions.csv<br>唯一真相來源/]
+        G --> H[/job_data_final_with_predictions.csv<br>唯一上線資料/]
         H --> I[啟動 Flask 伺服器<br>app.py]
-        I --> J[瀏覽器開啟<br>http://localhost:5000]
+        I --> J[本地測試<br>http://localhost:5000<br>技能樹 + 儀表板 + 搜尋]
+        J --> K1[使用 ngrok<br>快速暴露到公網<br>臨時分享測試用]
+        J --> K2[部署到 Vercel<br>永久上線<br>自動 HTTPS + 自訂域名]
+        K1 --> L[任何人用 ngrok 提供的 URL<br>即可瀏覽你的專題網站]
+        K2 --> M[任何人用 Vercel 提供的域名<br>即可瀏覽你的專題網站]
     end
 
     classDef process fill:#2F80ED,stroke:#fff,color:#fff
     classDef file fill:#27AE60,stroke:#fff,color:#fff
 
-    class A,AA,AB,C,E,G,I process
-    class B,D,F,H file
+    class A,AA,AB,C,E,G,I,J,K1,K2 process
+    class B,D,F,H,L,M file
 ```
 
 
