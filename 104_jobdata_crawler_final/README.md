@@ -20,7 +20,7 @@ flowchart TD
         AA[定期執行爬蟲<br/>Cake]
         A --> B[/job_data_master_raw.csv<br/>每日自動更新 + 去重/]
         B --> C{"daily_append.py<br/>增量匯入資料庫"}
-        AA --> AC["匯入資料庫"] --> D
+        AA --> D
         C --> D[/GCP MariaDB<br/>104rawdata 資料表<br/>永遠最新/]
     end
 
