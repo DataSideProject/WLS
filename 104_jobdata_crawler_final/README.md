@@ -26,13 +26,16 @@ flowchart TD
         C --> D[/GCP MariaDB<br>104: 104rawdata資料表<br>cake: job_details資料表/]
     end
 
-    subgraph 薪資預測與視覺化應用
+    subgraph 薪資預測
         AB[合併多平台資料<br>整理成統一格式<br>merge_to_db.py]
         D --> AB
         AB --> E[predict_salary_ensemble_segmented_v7.py<br>年資分群<br>Ensemble模型預測]
         E --> F[/job_data_with_full_salary_v7_segmented.csv<br>薪資填補完成<br>含報告.txt 與殘差圖.png/]
         F --> G[generate_predictions.py<br>最終預測 無資料洩漏]
         G --> H[/job_data_final_with_predictions.csv<br>唯一上線資料/]
+    end
+
+    subgraph 視覺化應用
         H --> I[啟動 Flask 伺服器<br>app.py]
         I --> J[本地測試<br>http://localhost:5000<br>技能樹 + 儀表板 + 搜尋]
         J --> K1[使用 ngrok<br>快速暴露到公網<br>臨時分享測試用]
