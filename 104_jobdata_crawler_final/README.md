@@ -84,7 +84,7 @@ flowchart TD
 
 #### 3. 薪資預測模型 (AI Model Training)
 
-- **`predict_salary_ensemble_segmented_v7.py`**
+- **`predict_salary_model.py`**
 
   - **功能**：模型訓練與初步預測腳本（含分群策略）。
   - **細節**：

@@ -595,8 +595,7 @@ segments = ['Junior', 'Senior']
 targets = ['salary_min', 'salary_max']
 
 results = {}
-all_residuals_min = []
-all_residuals_max = []
+residuals_map = {} # Store residuals by key: "Junior_salary_min", etc.
 feature_imps = []
 
 for target in targets:
@@ -614,10 +613,9 @@ for target in targets:
         
         if metrics:
             results[f"{seg}_{target}"] = metrics
-            if target == 'salary_min':
-                all_residuals_min.extend(resids)
-            else:
-                all_residuals_max.extend(resids)
+            
+            # Store residuals separately for plotting
+            residuals_map[f"{seg}_{target}"] = resids
             feature_imps.append(imp)
             
             if preds is not None:
@@ -639,14 +637,44 @@ for seg in segments:
 avg_mae_min = weighted_mae_min / total_samples
 avg_mae_max = weighted_mae_max / total_samples
 
-plt.figure(figsize=(15, 5))
-plt.subplot(1, 2, 1)
-sns.histplot(all_residuals_min, kde=True, color='blue')
-plt.title(f'Overall Residuals (Min)\nMAE: {avg_mae_min:.0f}')
+# 產生 2x2 圖表 (Junior/Senior x Min/Max)
+plt.figure(figsize=(16, 12))
 
-plt.subplot(1, 2, 2)
-sns.histplot(all_residuals_max, kde=True, color='green')
-plt.title(f'Overall Residuals (Max)\nMAE: {avg_mae_max:.0f}')
+# 1. Junior Min
+plt.subplot(2, 2, 1)
+if 'Junior_salary_min' in residuals_map:
+    sns.histplot(residuals_map['Junior_salary_min'], kde=True, color='blue')
+    mae = results.get('Junior_salary_min', {}).get('MAE', 0)
+    plt.title(f'Junior Min Salary Residuals\nMAE: {mae:.0f}')
+else:
+    plt.text(0.5, 0.5, 'No Data', ha='center')
+
+# 2. Senior Min
+plt.subplot(2, 2, 2)
+if 'Senior_salary_min' in residuals_map:
+    sns.histplot(residuals_map['Senior_salary_min'], kde=True, color='green')
+    mae = results.get('Senior_salary_min', {}).get('MAE', 0)
+    plt.title(f'Senior Min Salary Residuals\nMAE: {mae:.0f}')
+else:
+    plt.text(0.5, 0.5, 'No Data', ha='center')
+
+# 3. Junior Max
+plt.subplot(2, 2, 3)
+if 'Junior_salary_max' in residuals_map:
+    sns.histplot(residuals_map['Junior_salary_max'], kde=True, color='orange')
+    mae = results.get('Junior_salary_max', {}).get('MAE', 0)
+    plt.title(f'Junior Max Salary Residuals\nMAE: {mae:.0f}')
+else:
+    plt.text(0.5, 0.5, 'No Data', ha='center')
+
+# 4. Senior Max
+plt.subplot(2, 2, 4)
+if 'Senior_salary_max' in residuals_map:
+    sns.histplot(residuals_map['Senior_salary_max'], kde=True, color='red')
+    mae = results.get('Senior_salary_max', {}).get('MAE', 0)
+    plt.title(f'Senior Max Salary Residuals\nMAE: {mae:.0f}')
+else:
+    plt.text(0.5, 0.5, 'No Data', ha='center')
 
 plt.tight_layout()
 script_dir = os.path.dirname(os.path.abspath(__file__))

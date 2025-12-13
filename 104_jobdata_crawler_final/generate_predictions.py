@@ -11,7 +11,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_FILE = os.path.join(BASE_DIR, 'job_data_with_full_salary_v7_segmented.csv')
+INPUT_FILE = os.path.join(BASE_DIR, 'job_data_segmented.csv')
 OUTPUT_FILE = os.path.join(BASE_DIR, 'job_data_final_with_predictions.csv')
 
 def load_data():

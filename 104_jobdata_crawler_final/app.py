@@ -24,7 +24,7 @@ def load_data():
     try:
         base_dir = os.path.dirname(os.path.abspath(__file__))
         data_path = os.path.join(base_dir, 'job_data_final_with_predictions.csv')
-        fallback_path = os.path.join(base_dir, 'job_data_with_full_salary_v7_segmented.csv')
+        fallback_path = os.path.join(base_dir, 'job_data_segmented.csv')
         
         if os.path.exists(data_path):
             print(f"Loading primary data from {data_path}...")
