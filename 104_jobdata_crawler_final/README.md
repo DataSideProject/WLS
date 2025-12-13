@@ -15,11 +15,13 @@ Live Demo：http://localhost:5000 （執行 app.py 後開啟）
 
 ```mermaid
 flowchart TD
-    A[每日執行爬蟲 104_crawler_final.py]
+    A[定期執行爬蟲 104_crawler_final.py]
     A --> B["job_data_master_raw.csv<br/>每日自動更新 + 去重"]
     B --> C{"daily_append.py<br/>增量匯入資料庫"}
+    AA["定期執行爬蟲Cake"] --> D
     C --> D["GCP MariaDB<br/>104rawdata 資料表<br/>永遠最新"]
-    D --> E["predict_salary_ensemble_segmented_7.py<br/>從資料庫讀最新資料<br/>Ensemble + 年資分群預測"]
+    D --> AB["合併多間人力銀行<br/>資料整理統一格式"]
+    AB --> E["predict_salary_ensemble_segmented_7.py<br/>從資料庫讀最新資料<br/>Ensemble + 年資分群預測"]
     E --> F["job_data_with_full_salary_v7_segmented.csv<br/>+ 報告 + 殘差圖"]
     F --> G["generate_predictions.py<br/>最終預測無資料洩漏<br/>只用真實薪資訓練"]
     G --> H["job_data_final_with_predictions.csv<br/>唯一真相來源"]
