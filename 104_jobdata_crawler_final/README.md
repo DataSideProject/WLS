@@ -17,39 +17,63 @@ Live Demo：http://localhost:5000 （執行 app.py 後開啟）ngrok link: https
 
 ```mermaid
 flowchart TD
-    subgraph 爬蟲與資料匯入
+    %% 設定子圖表方向與樣式
+    classDef process fill:#2F80ED,stroke:#fff,color:#fff,stroke-width:2px;
+    classDef file fill:#27AE60,stroke:#fff,color:#fff,stroke-width:2px;
+    classDef database fill:#8E44AD,stroke:#fff,color:#fff,stroke-width:2px;
+
+    subgraph DataOps [爬蟲與資料庫]
+        direction TB
         A[定期執行爬蟲<br>104_crawler_final.py]
-        AA[定期執行cakeresume爬蟲<br>]
-        A --> B[/存成各自的raw.csv<br>/]
+        AA[定期執行Cake爬蟲<br>cakeresume_crawler]
+        B[/存成 raw.csv/]
+        C[daily_append.py<br>增量匯入資料庫]
+        D[("GCP MariaDB<br>(104rawdata + job_details)")]
+
+        A --> B
         AA --> B
-        B --> C[daily_append.py<br>增量匯入資料庫<br>或用 Workbench 手動匯入]
-        C --> D[/GCP MariaDB<br>104: 104rawdata資料表<br>cake: job_details資料表/]
+        B --> C --> D
     end
 
-    subgraph ETL與薪資預測
-        AB[合併多平台資料<br>整理成統一格式<br>merge_to_db.py]
-        D --> AB
-        AB --> E[predict_salary_model.py<br>年資分群<br>Ensemble模型預測]
-        E --> F[/job_data_segmented.csv<br>薪資填補完成<br>含報告.txt 與殘差圖.png/]
-        F --> G[generate_predictions.py<br>最終預測 無資料洩漏]
-        G --> H[/job_data_final_with_predictions.csv<br>唯一上線資料/]
+    subgraph MLOps [ETL與薪資預測]
+        direction TB
+        AB[merge_to_db.py<br>資料清洗與合併]
+        E[predict_salary_model.py<br>年資分群 Ensemble]
+        F[/job_data_segmented.csv/]
+        G[generate_predictions.py<br>最終全量預測]
+        H[/job_data_final_with_predictions.csv<br>上線用資料/]
+
+        D --> AB --> E --> F --> G --> H
     end
 
-    subgraph 視覺化應用
-        H --> I[啟動 Flask 伺服器<br>app.py]
-        I -. 引用 .-> I_utils[數據運算模組<br>analysis_utils.py<br>負責圖表統計邏輯]
-        I --> J[本地測試<br>http://localhost:5000<br>技能樹 + 儀表板 + 搜尋]
-        J --> K1[使用 ngrok<br>快速暴露到公網<br>臨時分享測試用]
-        J --> K2["部署到 GCP VM<br>永久上線 (n1-standard-1)<br>排程爬蟲 + 網站託管"]
-        K1 --> L[任何人用 ngrok 提供的 URL<br>即可瀏覽你的專題網站]
-        K2 --> M[任何人用 VM 的公網 IP<br>即可瀏覽你的專題網站]
+    subgraph WebApp [視覺化應用]
+        direction TB
+        I[app.py<br>啟動 Flask 伺服器]
+        I_utils[analysis_utils.py<br>數據運算模組]
+        J[本地測試<br>localhost:5000]
+
+        H --> I
+        I -.-> I_utils
+        I --> J
     end
 
-    classDef process fill:#2F80ED,stroke:#fff,color:#fff
-    classDef file fill:#27AE60,stroke:#fff,color:#fff
+    subgraph Deploy [佈署方式]
+        direction TB
+        K1[ngrok<br>臨時公網展示]
+        K2["GCP VM (n1-standard-1)<br>長期佈署 & 排程"]
+        L[外部使用者<br>(經 ngrok URL)]
+        M[外部使用者<br>(經 VM Public IP)]
 
-    class A,AA,AB,C,E,G,I,J,K1,K2 process
-    class B,D,F,H,L,M file
+        J -.-> K1
+        J -.-> K2
+        K1 --> L
+        K2 --> M
+    end
+
+    %% 樣式套用
+    class A,AA,C,AB,E,G,I,I_utils,J,K1,K2 process
+    class B,F,H,L,M file
+    class D database
 ```
 
 ### 核心程式碼功能說明
