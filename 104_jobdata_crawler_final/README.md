@@ -40,9 +40,9 @@ flowchart TD
         I -. 引用 .-> I_utils[數據運算模組<br>analysis_utils.py<br>負責圖表統計邏輯]
         I --> J[本地測試<br>http://localhost:5000<br>技能樹 + 儀表板 + 搜尋]
         J --> K1[使用 ngrok<br>快速暴露到公網<br>臨時分享測試用]
-        J --> K2[部署到 Vercel<br>永久上線<br>自動 HTTPS + 自訂域名]
+        J --> K2[部署到 GCP VM<br>永久上線 (n1-standard-1)<br>排程爬蟲 + 網站託管]
         K1 --> L[任何人用 ngrok 提供的 URL<br>即可瀏覽你的專題網站]
-        K2 --> M[任何人用 Vercel 提供的域名<br>即可瀏覽你的專題網站]
+        K2 --> M[任何人用 VM 的公網 IP<br>即可瀏覽你的專題網站]
     end
 
     classDef process fill:#2F80ED,stroke:#fff,color:#fff
