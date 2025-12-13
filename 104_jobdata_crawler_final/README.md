@@ -17,31 +17,29 @@ Live Demo：http://localhost:5000 （執行 app.py 後開啟）
 flowchart TD
     subgraph 爬蟲與資料匯入
         A[定期執行爬蟲<br>104_crawler_final.py]
-        AA[定期執行爬蟲<br>CakeResume 等其他平台]
-        A --> B[/job_data_master_raw.csv<br>每日自動更新 + 去重/]
+        AA[定期執行其他平台爬蟲<br>CakeResume 等]
+        A --> B[/job_data_master_raw.csv<br>每日自動更新並去重/]
         AA --> B
-        B --> C[daily_append.py<br>增量匯入資料庫<br>(自動檢查並只匯入新資料)]
+        B --> C[daily_append.py<br>增量匯入資料庫]
         C --> D[/GCP MariaDB<br>104rawdata 資料表<br>永遠保持最新/]
     end
 
     subgraph 薪資預測與視覺化應用
-        AB[合併多間人力銀行資料<br>整理成統一格式]
+        AB[合併多平台資料<br>整理成統一格式]
         D --> AB
-        AB --> E[predict_salary_ensemble_segmented_v7.py<br>從資料庫讀最新資料<br>年資分群 + Ensemble 模型預測]
-        E --> F[/job_data_with_full_salary_v7_segmented.csv<br>薪資填補完成<br>+ 預測報告.txt<br>+ 殘差圖.png/]
-        F --> G[generate_predictions.py<br>最終預測<br>(只用真實薪資訓練，無洩漏)]
+        AB --> E[predict_salary_ensemble_segmented_v7.py<br>年資分群 + Ensemble 模型]
+        E --> F[/job_data_with_full_salary_v7_segmented.csv<br>薪資填補完成<br>含報告與殘差圖/]
+        F --> G[generate_predictions.py<br>最終預測 無資料洩漏]
         G --> H[/job_data_final_with_predictions.csv<br>唯一真相來源/]
-        H --> I[app.py + index.html<br>Flask 網頁伺服器啟動]
-        I --> J[瀏覽器開 http://localhost:5000<br>互動式技能樹 + 儀表板 + 職缺搜尋]
+        H --> I[啟動 Flask 伺服器<br>app.py]
+        I --> J[瀏覽器開啟<br>http://localhost:5000]
     end
 
-    %% 顏色設定：過程藍色、產出綠色
-    classDef process fill:#2F80ED,stroke:#2F80ED,color:#fff
-    classDef output fill:#27AE60,stroke:#27AE60,color:#fff
+    classDef process fill:#2F80ED,stroke:#fff,color:#fff
+    classDef file fill:#27AE60,stroke:#fff,color:#fff
 
     class A,AA,AB,C,E,G,I process
-    class B,D,F,H output
-   
+    class B,D,F,H file
 ```
 
 
