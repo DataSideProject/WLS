@@ -49,8 +49,9 @@ def cleanup_chrome_processes():
 # -------------------------------------------------
 # 2. 斷點 & 複合去重
 # -------------------------------------------------
-CHECKPOINT_FILE = "checkpoint.json"
-EXISTING_KEYS_FILE = "existing_keys.txt"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CHECKPOINT_FILE = os.path.join(BASE_DIR, "checkpoint.json")
+EXISTING_KEYS_FILE = os.path.join(BASE_DIR, "existing_keys.txt")
 
 def save_checkpoint(page):
     with open(CHECKPOINT_FILE, "w", encoding="utf-8") as f:
