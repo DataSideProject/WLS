@@ -18,10 +18,10 @@ flowchart TD
     subgraph 爬蟲與資料匯入
         A[定期執行爬蟲<br>104_crawler_final.py]
         AA[定期執行其他平台爬蟲<br>CakeResume 等]
-        A --> B[/job_data_master_raw.csv<br>每日自動更新並去重/]
+        A --> B[/104,cake raw.csv/]
         AA --> B
-        B --> C[daily_append.py<br>增量匯入資料庫]
-        C --> D[/GCP MariaDB<br>104rawdata 資料表<br>永遠保持最新/]
+        B --> C[daily_append.py<br>增量匯入資料庫<br>或workbench匯入]
+        C --> D[/GCP MariaDB<br>104rawdata 資料表<br>job_detals: cake/]
     end
 
     subgraph 薪資預測與視覺化應用
