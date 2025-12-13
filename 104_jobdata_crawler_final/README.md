@@ -15,39 +15,32 @@ Live Demo：http://localhost:5000 （執行 app.py 後開啟）
 
 ```mermaid
 flowchart TD
-    subgraph "爬蟲與資料匯入"
-        A[定期執行爬蟲<br/>104_crawler_final.py]
-        AA[定期執行爬蟲<br/>Cake]
-        A --> B[/job_data_master_raw.csv<br/>每日自動更新 + 去重/]
-        B --> C{"daily_append.py<br/>增量匯入資料庫"}
-        AA --> D
-        C --> D[/GCP MariaDB<br/>104rawdata 資料表<br/>永遠最新/]
+    subgraph 爬蟲與資料匯入
+        A[定期執行爬蟲<br>104_crawler_final.py]
+        AA[定期執行爬蟲<br>CakeResume 等其他平台]
+        A --> B[/job_data_master_raw.csv<br>每日自動更新 + 去重/]
+        AA --> B
+        B --> C[daily_append.py<br>增量匯入資料庫<br>(自動檢查並只匯入新資料)]
+        C --> D[/GCP MariaDB<br>104rawdata 資料表<br>永遠保持最新/]
     end
 
-    subgraph "預測與應用"
-        AB[合併多間人力銀行<br/>資料整理統一格式]
+    subgraph 薪資預測與視覺化應用
+        AB[合併多間人力銀行資料<br>整理成統一格式]
         D --> AB
-        AB --> E[predict_salary_ensemble_segmented_7.py<br/>從資料庫讀最新資料<br/>Ensemble + 年資分群預測]
-        E --> F[/job_data_with_full_salary_v7_segmented.csv<br/>預測報告與殘差圖]
-        F --> G[generate_predictions.py<br/>最終預測無資料洩漏<br/>只用真實薪資訓練]
-        G --> H[/job_data_final_with_predictions.csv<br/>唯一真相來源/]
-        H --> I[app.py + index.html<br/>Flask 網頁伺服器]
-        I --> J[瀏覽器開 localhost:5000<br/>技能樹 + 儀表板 + 搜尋]
+        AB --> E[predict_salary_ensemble_segmented_v7.py<br>從資料庫讀最新資料<br>年資分群 + Ensemble 模型預測]
+        E --> F[/job_data_with_full_salary_v7_segmented.csv<br>薪資填補完成<br>+ 預測報告.txt<br>+ 殘差圖.png/]
+        F --> G[generate_predictions.py<br>最終預測<br>(只用真實薪資訓練，無洩漏)]
+        G --> H[/job_data_final_with_predictions.csv<br>唯一真相來源/]
+        H --> I[app.py + index.html<br>Flask 網頁伺服器啟動]
+        I --> J[瀏覽器開 http://localhost:5000<br>互動式技能樹 + 儀表板 + 職缺搜尋]
     end
 
-    %% 顏色區分：過程藍色、產出綠色、決策黃色
-    style A fill:#2F80ED,stroke:#2F80ED,color:#fff
-    style AA fill:#2F80ED,stroke:#2F80ED,color:#fff
-    style AB fill:#2F80ED,stroke:#2F80ED,color:#fff
-    style E fill:#2F80ED,stroke:#2F80ED,color:#fff
-    style G fill:#2F80ED,stroke:#2F80ED,color:#fff
-    style I fill:#2F80ED,stroke:#2F80ED,color:#fff
-    style J fill:#2F80ED,stroke:#2F80ED,color:#fff
-    style B fill:#27AE60,stroke:#27AE60,color:#fff
-    style D fill:#27AE60,stroke:#27AE60,color:#fff
-    style F fill:#27AE60,stroke:#27AE60,color:#fff
-    style H fill:#27AE60,stroke:#27AE60,color:#fff
-    style C fill:#F2C94C,stroke:#F2C94C,color:#000
+    %% 顏色設定：過程藍色、產出綠色
+    classDef process fill:#2F80ED,stroke:#2F80ED,color:#fff
+    classDef output fill:#27AE60,stroke:#27AE60,color:#fff
+
+    class A,AA,AB,C,E,G,I process
+    class B,D,F,H output
    
 ```
 
