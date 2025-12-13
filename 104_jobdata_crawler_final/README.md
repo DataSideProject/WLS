@@ -1,6 +1,6 @@
 # 台灣科技職缺薪資預測平台  
-**104 人力銀行 × AI 薪資預測 × 視覺化儀表板**  
-Live Demo：http://localhost:5000 （執行 app.py 後開啟）
+**104 人力銀行 x Cakeresume × AI 薪資預測 × 視覺化儀表板**  
+Live Demo：http://localhost:5000 （執行 app.py 後開啟）ngrok link: https://trisomic-nonpermissively-suzanna.ngrok-free.dev/
 
 ## 專案特色
 1. **每日自動爬蟲 + 資料庫增量更新** → 永遠掌握最新職缺  
@@ -53,6 +53,7 @@ flowchart TD
 |--------------------------------------------|---------------------------------------------|
 | `104_crawler_final.py`                     | 每日執行，抓104職缺（支援斷點續爬）            |
 | `daily_append.py`                          | 把新資料增量匯入 GCP MariaDB（可排程）         |
+| `merge_to_db.py`                          | 把不同人力銀行資料清洗並統整             |
 | `predict_salary_ensemble_segmented_v7.py`  | 從資料庫讀最新資料 → Ensemble + 分群預測（產生報告） |
 | `generate_predictions.py`                  | 最終預測腳本（無資料洩漏）→ 產生 Flask 用的 CSV |
 | `app.py`                                   | Flask 主程式，啟動網頁                        |
@@ -70,13 +71,16 @@ python 104_crawler_final.py --end_page 50
 # 2. 匯入資料庫
 python daily_append.py
 
-# 3. 初步預測 + 產生報告
+# 3. 不同人力銀行格式清理後合併匯入新table
+merge_to_db.py
+
+# 4. 初步預測 + 產生報告
 python predict_salary_ensemble_segmented_v7.py
 
-# 4. 最終預測（無資料洩漏）
+# 5. 最終預測（無資料洩漏）
 python generate_predictions.py
 
-# 5. 啟動網站
+# 6. 啟動網站
 python app.py
 # → 瀏覽器打開 http://localhost:5000
 ```
