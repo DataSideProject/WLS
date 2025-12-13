@@ -61,8 +61,8 @@ flowchart TD
         direction TB
         K1[ngrok<br>臨時公網展示]
         K2["GCP VM (n1-standard-1)<br>長期佈署 & 排程"]
-        L[外部使用者<br>(經 ngrok URL)]
-        M[外部使用者<br>(經 VM Public IP)]
+        L["外部使用者<br>(經 ngrok URL)"]
+        M["外部使用者<br>(經 VM Public IP)"]
 
         J -.-> K1
         J -.-> K2
