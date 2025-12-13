@@ -26,7 +26,7 @@ flowchart TD
         C --> D[/GCP MariaDB<br>104: 104rawdata資料表<br>cake: job_details資料表/]
     end
 
-    subgraph 薪資預測
+    subgraph 資料清洗與薪資預測
         AB[合併多平台資料<br>整理成統一格式<br>merge_to_db.py]
         D --> AB
         AB --> E[predict_salary_ensemble_segmented_v7.py<br>年資分群<br>Ensemble模型預測]
