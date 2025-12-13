@@ -28,7 +28,7 @@ flowchart TD
         AB[合併多間人力銀行<br/>資料整理統一格式]
         D --> AB
         AB --> E[predict_salary_ensemble_segmented_7.py<br/>從資料庫讀最新資料<br/>Ensemble + 年資分群預測]
-        E --> F[/job_data_with_full_salary_v7_segmented.csv<br/> 報告 (TXT) + 殘差圖 (PNG)/]
+        E --> F[/job_data_with_full_salary_v7_segmented.csv<br/> 預測報告  + 殘差圖 ]
         F --> G[generate_predictions.py<br/>最終預測無資料洩漏<br/>只用真實薪資訓練]
         G --> H[/job_data_final_with_predictions.csv<br/>唯一真相來源/]
         H --> I[app.py + index.html<br/>Flask 網頁伺服器]
