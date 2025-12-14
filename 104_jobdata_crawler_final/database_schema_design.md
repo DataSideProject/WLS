@@ -59,6 +59,12 @@ erDiagram
         varchar type "Tools 或 WorkSkill"
     }
 
+    %% 維度表：來源 (104, CakeResume)
+    dim_sources {
+        int source_id PK
+        varchar source_name
+    }
+
     %% 預測結果事實表 (MLOps)
     fact_job_predictions {
         int prediction_id PK
@@ -73,6 +79,7 @@ erDiagram
     %% 關聯 (Relationships)
     dim_companies ||--|{ fact_job_postings : "posts"
     dim_locations ||--|{ fact_job_postings : "located_at"
+    dim_sources   ||--|{ fact_job_postings : "originates_from"
 
     %% 多對多關聯 (Bridge Tables)
     fact_job_postings ||--|{ bridge_job_categories : "has_category"
@@ -90,20 +97,21 @@ erDiagram
 
 下表說明如何將您的 `job_data_master_raw.csv` 欄位映射到上述資料庫表結構。
 
-| Raw CSV Column   | Target Table              | Target Column              | Transformation / Logic                                              |
-| :--------------- | :------------------------ | :------------------------- | :------------------------------------------------------------------ |
-| `job_id`         | **fact_job_postings**     | `job_id`                   | 直接對應 (Primary Key)                                              |
-| `job_title`      | **fact_job_postings**     | `job_title`                | 直接對應                                                            |
-| `company`        | **dim_companies**         | `name`                     | 需去重 (Deduplicate)                                                |
-| `industry`       | **dim_companies**         | `industry`                 | 存入公司維度                                                        |
-| `location`       | **dim_locations**         | `city`, `district`         | 解析字串 (e.g. "台北市中正區" -> City:台北市, Dist:中正區)          |
-| `experience`     | **fact_job_postings**     | `experience_req`           | 標準化格式                                                          |
-| `education`      | **fact_job_postings**     | `education_req`            | 標準化格式                                                          |
-| `salary`         | **fact_job_postings**     | `salary_min`, `salary_max` | Regex 解析數字，另外存 `salary_type`                                |
-| `job_categories` | **bridge_job_categories** | `category_id`              | **Split by `,` or `、`** -> 查表 `dim_categories` -> 寫入 Bridge    |
-| `tools`          | **bridge_job_skills**     | `skill_id`                 | **Split by `,`** -> 查表 `dim_skills` (Type='Tool') -> 寫入 Bridge  |
-| `work_skills`    | **bridge_job_skills**     | `skill_id`                 | **Split by `,`** -> 查表 `dim_skills` (Type='Skill') -> 寫入 Bridge |
-| `update_date`    | **fact_job_postings**     | `post_date`                | 格式清洗為 YYYY-MM-DD                                               |
+| Raw CSV Column        | Target Table              | Target Column              | Transformation / Logic                                               |
+| :-------------------- | :------------------------ | :------------------------- | :------------------------------------------------------------------- |
+| `[Filename/Metadata]` | **fact_job_postings**     | `source_id`                | **Mapping Logic**: 若檔案來自 104 -> ID=1; 若來自 CakeResume -> ID=2 |
+| `job_id`              | **fact_job_postings**     | `job_id`                   | 直接對應 (Primary Key)                                               |
+| `job_title`           | **fact_job_postings**     | `job_title`                | 直接對應                                                             |
+| `company`             | **dim_companies**         | `name`                     | 需去重 (Deduplicate)                                                 |
+| `industry`            | **dim_companies**         | `industry`                 | 存入公司維度                                                         |
+| `location`            | **dim_locations**         | `city`, `district`         | 解析字串 (e.g. "台北市中正區" -> City:台北市, Dist:中正區)           |
+| `experience`          | **fact_job_postings**     | `experience_req`           | 標準化格式                                                           |
+| `education`           | **fact_job_postings**     | `education_req`            | 標準化格式                                                           |
+| `salary`              | **fact_job_postings**     | `salary_min`, `salary_max` | Regex 解析數字，另外存 `salary_type`                                 |
+| `job_categories`      | **bridge_job_categories** | `category_id`              | **Split by `,` or `、`** -> 查表 `dim_categories` -> 寫入 Bridge     |
+| `tools`               | **bridge_job_skills**     | `skill_id`                 | **Split by `,`** -> 查表 `dim_skills` (Type='Tool') -> 寫入 Bridge   |
+| `work_skills`         | **bridge_job_skills**     | `skill_id`                 | **Split by `,`** -> 查表 `dim_skills` (Type='Skill') -> 寫入 Bridge  |
+| `update_date`         | **fact_job_postings**     | `post_date`                | 格式清洗為 YYYY-MM-DD                                                |
 
 ---
 
