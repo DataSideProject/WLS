@@ -119,3 +119,42 @@ erDiagram
 4.  **Load**:
     - 將結果寫入 **`fact_job_predictions`**。
     - **不要** update `fact_job_postings`，確保原始資料完整性。
+
+---
+
+## 5. 多來源資料整合策略 (Multi-Source Integration)
+
+針對包含其他不同來源（如 CakeResume, Yourator）且欄位不一致（缺產業、缺學歷）的情況，建議採用 **Unified Fact Table (統一事實表)** 策略，而非分開存：
+
+### 5.1 架構調整
+
+1.  **新增 `dim_sources` 維度表**:
+    - `source_id`: 1, 2
+    - `source_name`: '104', 'CakeResume'
+2.  **事實表 (`fact_job_postings`) 新增 `source_id` 欄位**。
+
+### 5.2 缺失欄位處理 (Handling Missing Dimensions)
+
+當 CakeResume 資料缺乏「產業 (`industry`)」或「學歷 (`education`)」時：
+
+- **不要用 NULL**: 在 Data Warehouse 中，Foreign Key 盡量避免存 NULL，因為會造成 JOIN 時資料消失。
+- **使用 "Unknown Member" (未知成員)**:
+  - 在 `dim_companies` 若缺產業，填入 "不詳" 或 "Unknown"。
+  - 在 `dim_education` 建立一筆 ID=0, Name='不拘/不詳'。
+  - **ETL 邏輯**:
+    ```python
+    # Pseudo code
+    if row['education'] is None:
+        education_id = 0  # 指向 'Unknown'
+    else:
+        education_id = lookup_education_id(row['education'])
+    ```
+
+### 5.3 為什麼要合在一起？
+
+這樣您才能回答跨平台的問題：
+
+- _"Python 工程師在 104 和 CakeResume 上的平均薪資差異是多少？"_
+- _"全台灣（不分平台）的 React 職缺總共有多少？"_
+
+若分開存成 `table_104` 和 `table_cakeresume`，要做這種分析會非常痛苦 (需要大量的 UNION ALL)。
