@@ -1,7 +1,8 @@
 import pandas as pd
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import text, create_engine
-from datetime import datetime
+from datetime import datetime, timezone
+import re
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmakertime
 import sys
 import os
 import re
@@ -121,22 +122,50 @@ def parse_location(loc_str):
     # Fallback: 視為國家/地區本身
     return loc_str, '', ''
 
+# 引入 ETL Mapping
+try:
+    from etl_mappings import ETL_MAPPINGS
+except ImportError:
+    # Fallback default if file missing
+    print("Warning: etl_mappings.py not found, using default 104 mapping.")
+    ETL_MAPPINGS = {
+        '104': {
+            'table_name': '104rawdata',
+            'source_id': 1,
+            'columns': {
+                'job_id': 'job_id', 'company': 'company', 'industry': 'industry', 'location': 'location',
+                'job_title': 'job_title', 'salary': 'salary', 'experience': 'experience', 'education': 'education',
+                'link': 'link', 'management_responsibility': 'management_responsibility',
+                'work_shift': 'work_shift', 'remote_work': 'remote_work', 'bt_exp': 'BT_EXP',
+                'languages': 'languages', 'job_description': 'job_description', 'other_conditions': 'other_conditions',
+                'update_date': 'update_date_clean', 'job_categories': 'job_categories',
+                'tools': 'tools', 'work_skills': 'work_skills', 'tags': 'tags'
+            }
+        }
+    }
+
 # ==================== Main ETL Logic ====================
 
-def run_etl():
-    print("開始 ETL 流程...")
+def run_etl(source_key='104'):
+    print(f"開始 ETL 流程 (Source: {source_key})...")
     
+    if source_key not in ETL_MAPPINGS:
+        print(f"錯誤: 找不到來源 {source_key} 的設定檔")
+        return
+        
+    config = ETL_MAPPINGS[source_key]
+    cols = config['columns'] # Column Mapping Dict
+    SOURCE_TABLE = config['table_name']
+    SOURCE_ID_VAL = config['source_id']
+
     # 0. 建立 Source Connection (Raw Data)
     SOURCE_DB = 'rawdata'
-    # 假設 db_config 來自 parent 或 current
     conn_str_source = f'mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:3306/{SOURCE_DB}'
     source_engine = create_engine(conn_str_source)
     
-    print(f"從資料庫 {SOURCE_DB} 讀取原始資料...")
+    print(f"從資料庫 {SOURCE_DB} 讀取原始資料表 {SOURCE_TABLE}...")
     try:
-        # 只選取需要的欄位或是全拿 (全拿比較保險，反正欄位多)
-        # 注意：DB中的欄位名稱可能跟 CSV Header 略有不同，需確認 (通常是一樣的，因為 CSV 是匯出的)
-        query = "SELECT * FROM 104rawdata" 
+        query = f"SELECT * FROM {SOURCE_TABLE}" 
         df = pd.read_sql(query, source_engine)
         print(f"已從 DB 讀取 {len(df)} 筆原始資料")
     except Exception as e:
@@ -154,23 +183,51 @@ def run_etl():
     cache_skill = {r.skill_name: r.skill_id for r in session.query(DimSkill).all()}
     cache_benefit = {r.benefit_name: r.benefit_id for r in session.query(DimBenefit).all()}
     
-    # Source ID (假設都來自 104 = 1)
-    source_id_104 = 1 
+    # 載入已存在的 Job ID + Post Date 以進行去重 (Deduplication)
+    # 支援歷史資料：若同一 job_id 但不同 post_date，視為新資料
+    print("載入現有資料 (Job ID + Date) 以去重...")
+    existing_jobs = set((r.job_id, r.post_date) for r in session.query(FactJobPosting.job_id, FactJobPosting.post_date).all())
+    print(f"已存在 {len(existing_jobs)} 筆職缺記錄")
 
     print("開始逐筆寫入資料庫...")
     count = 0
+    duplicate_count = 0
+    success_count = 0
+    fail_count = 0
+    
     for _, row in df.iterrows():
+        count += 1
         try:
+            # Dynamic Column Access
+            job_id_val = row.get(cols['job_id'])
+            job_id_str = str(job_id_val) if pd.notnull(job_id_val) else 'UNKNOWN'
+            
+            # Date Parsing moved UP for Deduplication Check
+            post_date_val = None
+            try:
+                d_str = str(row.get(cols['update_date'], '')).split(' ')[0] 
+                post_date_val = datetime.strptime(d_str, '%Y-%m-%d').date()
+            except:
+                post_date_val = datetime.today().date()
+
+            # ---> Deduplication Check (Composite Key) <---
+            if (job_id_str, post_date_val) in existing_jobs:
+                duplicate_count += 1
+                if duplicate_count % 1000 == 0:
+                     print(f"已跳過 {duplicate_count} 筆重複資料...")
+                continue
+            # -----------------------------
+
             # --- Dimensions ---
             
             # Company
-            comp_name = str(row.get('company', 'Unknown'))
+            comp_name = str(row.get(cols['company'], 'Unknown')).strip().replace('\r', '').replace('\n', ' ')
             comp_id = get_or_create_dim(session, DimCompany, {'name': comp_name}, 
-                                      defaults={'industry': row.get('industry', '')}, 
+                                      defaults={'industry': row.get(cols['industry'], '')}, 
                                       cache=cache_company)
             
             # Location
-            loc_full = str(row.get('location', 'Unknown'))
+            loc_full = str(row.get(cols['location'], 'Unknown')).strip().replace('\r', '').replace('\n', ' ')
             country, city, dist = parse_location(loc_full)
             
             loc_id = get_or_create_dim(session, DimLocation, {'full_address': loc_full}, 
@@ -179,46 +236,38 @@ def run_etl():
             
             # --- Fact Job Postings ---
             
-            s_min, s_max, s_type = parse_salary(row.get('salary', ''))
+            s_min, s_max, s_type = parse_salary(row.get(cols['salary'], ''))
             
-            # 轉換日期
-            post_date_val = None
-            try:
-                # 假設 raw data 格式是 '2024-12-14'
-                d_str = str(row.get('update_date_clean', '')).split(' ')[0] # 移除可能的誤導字元
-                post_date_val = datetime.strptime(d_str, '%Y-%m-%d').date()
-            except:
-                post_date_val = datetime.today().date() # Fallback
-
             fact = FactJobPosting(
-                job_id = str(row['job_id']),
+                job_id = job_id_str,
                 company_id = comp_id,
                 location_id = loc_id,
-                source_id = source_id_104,
-                job_title = row.get('job_title', ''),
+                source_id = SOURCE_ID_VAL,
+                job_title = str(row.get(cols['job_title'], '')).strip().replace('\r', '').replace('\n', ' '),
                 salary_min = s_min,
                 salary_max = s_max,
                 salary_type = s_type,
-                experience_req = str(row.get('experience', '')),
-                education_req = str(row.get('education', '')), # educat... in header check?
+                experience_req = str(row.get(cols['experience'], '')).strip(),
+                education_req = str(row.get(cols['education'], '')).strip(), 
                 post_date = post_date_val,
                 # New Columns
-                job_url = str(row.get('link', f'https://www.104.com.tw/job/{row["job_id"]}')),
-                isManager = (str(row.get('management_responsibility', '')) != 'nan' and str(row.get('management_responsibility', '')) != '不需負擔管理責任'),
-                work_shift = str(row.get('work_shift', '')),
-                remote_work = str(row.get('remote_work', '')),
-                bt_exp = str(row.get('BT_EXP', '')),
-                language = str(row.get('languages', '')), 
-                job_description = str(row.get('job_description', '')),
-                other_conditions = str(row.get('other_conditions', ''))
+                job_url = str(row.get(cols['link'], f'https://www.104.com.tw/job/{job_id_str}')).strip(),
+                isManager = (str(row.get(cols['management_responsibility'], '')) != 'nan' and str(row.get(cols['management_responsibility'], '')) != '不需負擔管理責任'),
+                work_shift = str(row.get(cols['work_shift'], '')).strip(),
+                remote_work = str(row.get(cols['remote_work'], '')).strip(),
+                bt_exp = str(row.get(cols['bt_exp'], '')).strip(),
+                language = str(row.get(cols['languages'], '')).strip(), 
+                job_description = str(row.get(cols['job_description'], '')).strip(), 
+                other_conditions = str(row.get(cols['other_conditions'], '')).strip()
             )
+
             session.add(fact)
             session.flush() # 為了取得 posting_id
             
             # --- Bridge Tables ---
             
-            # Categories (Split by comma or ideographic comma)
-            cats_raw = str(row.get('job_categories', ''))
+            # Categories 
+            cats_raw = str(row.get(cols['job_categories'], ''))
             cats = re.split(r'[,、]', cats_raw)
             for c_name in cats:
                 c_name = c_name.strip()
@@ -226,10 +275,8 @@ def run_etl():
                 c_id = get_or_create_dim(session, DimCategory, {'category_name': c_name}, cache=cache_category)
                 session.add(BridgeJobCategory(posting_id=fact.posting_id, category_id=c_id))
             
-            # Skills (Tools + Work Skills)
-            # 假設 user 有 tools 和 work_skills 欄位，或合併
-            # 這裡示範 tools
-            tools_raw = str(row.get('tools', '')) # 確保 header 正確
+            # Skills (Tools)
+            tools_raw = str(row.get(cols['tools'], '')) 
             tools = re.split(r'[,、]', tools_raw)
             for t_name in tools:
                 t_name = t_name.strip()
@@ -240,7 +287,7 @@ def run_etl():
                 session.add(BridgeJobSkill(posting_id=fact.posting_id, skill_id=s_id, types='tool'))
             
             # Work Skills
-            skills_raw = str(row.get('work_skills', '')) 
+            skills_raw = str(row.get(cols['work_skills'], '')) 
             skills = re.split(r'[,、]', skills_raw)
             for s_name in skills:
                 s_name = s_name.strip()
@@ -251,29 +298,58 @@ def run_etl():
                 session.add(BridgeJobSkill(posting_id=fact.posting_id, skill_id=s_id, types='work_skill'))
             
             # Application Tags / Benefits
-            # e.g. "年終獎金, 節日獎金/禮品, 津貼/補助"
-            tags_raw = str(row.get('tags', '')) 
+            tags_raw = str(row.get(cols['tags'], '')) 
             tags = re.split(r'[,、]', tags_raw)
             for tag_name in tags:
                 tag_name = tag_name.strip()
                 if not tag_name: continue
-                # 如果是 "津貼/補助" 這種，可以切更細或保持原樣，這裡保持原樣
                 b_id = get_or_create_dim(session, DimBenefit, {'benefit_name': tag_name}, 
                                        cache=cache_benefit)
                 session.add(BridgeJobBenefit(posting_id=fact.posting_id, benefit_id=b_id))
 
-            count += 1
-            if count % 100 == 0:
+            success_count += 1
+            if success_count % 1000 == 0:
                 session.commit()
-                print(f"已處理 {count} 筆...")
+                print(f"進度：已處理 {count} 筆 | 成功匯入: {success_count} | 跳過重複: {duplicate_count} | 失敗: {fail_count}")
+            
+            # Important: Update local set for intra-batch deduplication
+            existing_jobs.add((job_id_str, post_date_val))
                 
         except Exception as e:
-            print(f"Error processing row {count}: {e}")
+            fail_count += 1
+            error_msg = f"[Error] Row {count} (Job ID: {row.get(cols['job_id'])}) Failed: {e}"
+            print(error_msg)
+            
+            # Log to file for detailed inspection
+            with open('etl_failure_log.txt', 'a', encoding='utf-8') as f:
+                f.write(f"{datetime.now(timezone.utc)} - {error_msg}\n")
+                f.write(f"Row Data: {row.to_dict()}\n")
+                f.write("-" * 30 + "\n")
+            
             session.rollback()
+            # CRITICAL: Rollback means IDs created in this transaction are gone from DB, 
+            # but they might still be in our local cache! We MUST clear caches to prevent FK errors.
+            cache_company.clear()
+            cache_location.clear()
+            cache_category.clear()
+            cache_skill.clear()
+            cache_benefit.clear()
             continue
 
     session.commit()
-    print(f"全部完成！共匯入 {count} 筆職缺與相關維度資料。")
+    print("="*50)
+    print(f"ETL 執行完成報告 ({source_key})")
+    print("="*50)
+    print(f"資料來源總筆數: {len(df)}")
+    print(f"成功寫入 (Inserted): {success_count}")
+    print(f"重複跳過 (Skipped) : {duplicate_count}")
+    print(f"寫入失敗 (Failed)  : {fail_count}")
+    print("="*50)
 
 if __name__ == "__main__":
-    run_etl()
+    # 可從參數讀取 user 指定的 source_key，預設 104
+    source_arg = '104'
+    if len(sys.argv) > 1:
+        source_arg = sys.argv[1]
+    
+    run_etl(source_key=source_arg)

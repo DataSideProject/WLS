@@ -83,19 +83,19 @@ class FactJobPosting(Base):
     source_id = Column(Integer, ForeignKey('dim_sources.source_id'), index=True)
     
     # Attributes
-    job_title = Column(String(255), index=True) # 常用於 LIKE 搜尋
+    job_title = Column(String(500), index=True) # 常用於 LIKE 搜尋
     salary_min = Column(Integer, index=True)    # 常用於 Range 搜尋 (> 50000)
     salary_max = Column(Integer)
     salary_type = Column(String(20)) # '年薪' or '月薪' or '時薪' or '日薪' or '面議'
     experience_req = Column(String(50))
     education_req = Column(String(50))
     post_date = Column(Date, index=True)        # 常用於時間區間篩選
-    job_url = Column(String(255)) # https://www.104.com.tw/job/{job_id}
+    job_url = Column(Text) # https://www.104.com.tw/job/{job_id}
     isManager = Column(Boolean)
     work_shift = Column(String(100)) # '日班' or '晚班' or '大夜班'
-    remote_work = Column(String(50)) # '完全遠端' or '部分遠端' or '現場'
-    bt_exp = Column(String(50)) # '外派出差需求'
-    language = Column(String(50))
+    remote_work = Column(String(500)) # '完全遠端' or '部分遠端' or '現場'
+    bt_exp = Column(String(100)) # '外派出差需求'
+    language = Column(String(500))
     job_description = Column(Text) # Source of Truth for NLP
     other_conditions = Column(Text)
     
@@ -138,7 +138,7 @@ class BridgeJobBenefit(Base):
 # ==================== 執行建立 ====================
 if __name__ == "__main__":
     print("正在建立資料庫 Schema...")
-    # Base.metadata.drop_all(engine) # 小心使用，這會刪除所有表
+    Base.metadata.drop_all(engine) # 小心使用，這會刪除所有表
     Base.metadata.create_all(engine)
     
     # 初始化預設資料 (Source)
