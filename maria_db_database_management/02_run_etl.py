@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import datetime, timezone
 import re
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmakertime
+from sqlalchemy.orm import sessionmaker
 import sys
 import os
 import re

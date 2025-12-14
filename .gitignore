@@ -12,3 +12,4 @@ logs/
 existing_keys.txt
 checkpoint.json
 model_diagnostics*.png
+etl_failure_log.txt

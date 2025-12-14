@@ -29,7 +29,7 @@ with root_engine.connect() as conn:
 
 # 再連到新資料庫
 CONNECTION_STRING = f'mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:3306/{NEW_DB_NAME}'
-engine = create_engine(CONNECTION_STRING, echo=True)
+engine = create_engine(CONNECTION_STRING, echo=False)
 Base = declarative_base()
 
 # ==================== 維度表 (Dimensions) ====================
