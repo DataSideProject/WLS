@@ -39,7 +39,9 @@ erDiagram
     %% 維度表：地區
     dim_locations {
         int location_id PK
+        varchar country "e.g. 台灣"
         varchar city "縣市 (e.g. 台北市)"
+        varchar district "行政區 (e.g. 中正區)"
     }
 
     %% 維度表：職務類別 (參考 104 分類)
@@ -114,12 +116,20 @@ erDiagram
 | `location`            | **dim_locations**         | `city`, `district`         | 解析字串 (e.g. "台北市中正區" -> City:台北市, Dist:中正區)           |
 | `experience`          | **fact_job_postings**     | `experience_req`           | 標準化格式                                                           |
 | `education`           | **fact_job_postings**     | `education_req`            | 標準化格式                                                           |
-| `salary`              | **fact_job_postings**     | `salary_min`, `salary_max` | Regex 解析數字，另外存 `salary_type`                                 |
+| `salary`              | **fact_job_postings**     | `salary_min`, `salary_max` | Regex 解析數字，另外存 `salary_type` (年/月/日/時)                   |
 | `job_categories`      | **bridge_job_categories** | `category_id`              | **Split by `,` or `、`** -> 查表 `dim_categories` -> 寫入 Bridge     |
 | `tools`               | **bridge_job_skills**     | `skill_id`                 | **Split by `,`** -> 查表 `dim_skills` (Type='Tool') -> 寫入 Bridge   |
 | `work_skills`         | **bridge_job_skills**     | `skill_id`                 | **Split by `,`** -> 查表 `dim_skills` (Type='Skill') -> 寫入 Bridge  |
 | `tags`                | **bridge_job_benefits**   | `benefit_id`               | **Split by `,`** -> 查表 `dim_benefits` -> 寫入 Bridge (e.g. 年終)   |
 | `update_date`         | **fact_job_postings**     | `post_date`                | 格式清洗為 YYYY-MM-DD                                                |
+| `link`                | **fact_job_postings**     | `job_url`                  | 原始連結                                                             |
+| `management_resp...`  | **fact_job_postings**     | `isManager`                | boolean (是否管理職)                                                 |
+| `work_shift`          | **fact_job_postings**     | `work_shift`               | 上班時段 (日班/晚班...)                                              |
+| `remote_work`         | **fact_job_postings**     | `remote_work`              | 遠端工作 (完全/部分/否)                                              |
+| `BT_EXP`              | **fact_job_postings**     | `bt_exp`                   | 出差外派說明                                                         |
+| `languages`           | **fact_job_postings**     | `language`                 | 語言能力 (e.g. 英文--聽:精通...)                                     |
+| `job_description`     | **fact_job_postings**     | `job_description`          | **Text (Source of Truth)** for NLP                                   |
+| `other_conditions`    | **fact_job_postings**     | `other_conditions`         | **Text (Source of Truth)** for NLP                                   |
 
 ---
 
