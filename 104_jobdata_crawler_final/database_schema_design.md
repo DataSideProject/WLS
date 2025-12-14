@@ -14,21 +14,19 @@
 
 ```mermaid
 erDiagram
-    %% 核心事實表
+    %% 核心事實表 (Fact Table)
+    %% 改用 Surrogate Key (posting_id) 作為 PK，允許同一 job_id 在不同日期重複出現
     fact_job_postings {
-        varchar job_id PK "來自 104 的原始 ID"
+        bigint posting_id PK "流水號 (Surrogate Key)"
+        varchar job_id "104 原始 ID (Business Key)"
         int company_id FK
         int location_id FK
+        int source_id FK
         varchar job_title
-        varchar job_description
-        int salary_min "解析後的最低薪資"
-        int salary_max "解析後的最高薪資"
-        varchar salary_type "月薪/年薪/面議"
-        varchar experience_req "經歷要求"
-        varchar education_req "學歷要求"
-        varchar remote_work "是否遠端"
-        date post_date "刊登日期"
-        datetime created_at
+        int salary_min
+        int salary_max
+        date post_date "關鍵：每次刊登的日期"
+        boolean is_active "是否當下有效"
     }
 
     %% 維度表：公司
@@ -41,9 +39,7 @@ erDiagram
     %% 維度表：地區
     dim_locations {
         int location_id PK
-        varchar full_address "原始字串"
         varchar city "縣市 (e.g. 台北市)"
-        varchar district "行政區 (e.g. 中正區)"
     }
 
     %% 維度表：職務類別 (參考 104 分類)
@@ -56,7 +52,6 @@ erDiagram
     dim_skills {
         int skill_id PK
         varchar skill_name "e.g. Python, Git"
-        varchar type "Tools 或 WorkSkill"
     }
 
     %% 維度表：來源 (104, CakeResume)
@@ -99,6 +94,9 @@ erDiagram
 
 | Raw CSV Column        | Target Table              | Target Column              | Transformation / Logic                                               |
 | :-------------------- | :------------------------ | :------------------------- | :------------------------------------------------------------------- |
+| `[Auto-Inc]`          | **fact_job_postings**     | `posting_id`               | 自動遞增流水號 (Primary Key)                                         |
+| `job_id`              | **fact_job_postings**     | `job_id`                   | **Business Key** (不用唯一，可重複)                                  |
+| `filesource`          | **fact_job_postings**     | `source_id`                | Metadata Mapping                                                     |
 | `[Filename/Metadata]` | **fact_job_postings**     | `source_id`                | **Mapping Logic**: 若檔案來自 104 -> ID=1; 若來自 CakeResume -> ID=2 |
 | `job_id`              | **fact_job_postings**     | `job_id`                   | 直接對應 (Primary Key)                                               |
 | `job_title`           | **fact_job_postings**     | `job_title`                | 直接對應                                                             |
