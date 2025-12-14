@@ -52,21 +52,7 @@ def extract_skills_from_text(text: str) -> list:
                     
     return list(found_skills)
 
-def parse_salary_104(salary: str) -> Tuple[Optional[float], Optional[float]]:
-    if not salary or str(salary) == "待遇面議":
-        return None, None
-    salary = str(salary).replace(",", "")
-    match = re.match(r"月薪(\d+)(?:~(\d+))?元", salary)
-    if match:
-        min_s = float(match.group(1))
-        max_s = float(match.group(2)) if match.group(2) else None
-        return min_s, max_s
-    match = re.match(r"年薪(\d+)(?:~(\d+))?元", salary)
-    if match:
-        min_s = float(match.group(1)) / 13.0
-        max_s = float(match.group(2)) / 13.0 if match.group(2) else None
-        return min_s, max_s
-    return None, None
+
 
 def parse_education_from_text(text: str) -> str:
     if pd.isna(text): return "Unknown"
