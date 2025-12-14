@@ -46,5 +46,17 @@
     ],
     "Marketing & SEO": [
         "Google Analytics", "Google Tag Manager", "SEO", "SEM", "Google關鍵字廣告", "Google Display Network", "Facebook", "Instagram", "Line", "e-commerce", "Screaming Frog SEO Spider", "SimilarWeb", "Google Trend"
+    ],
+    "HR - Recruiting": [
+        "執行日常招募業務", "面試技巧", "招募任用制度設計", "招募選才", "人才招募", "面試", "任用", "獵頭", "Headhunter"
+    ],
+    "HR - Training": [
+        "人員培訓、激勵、輔導與管理", "員工教育訓練與需求分析", "教育訓練規劃與執行", "人才發展", "培訓", "TTQS", "講師"
+    ],
+    "HR - C&B": [
+        "績效與薪酬管理", "勞工保險相關法規", "薪資計算", "勞健保", "所得稅", "考勤管理", "績效考核", "保險作業"
+    ],
+    "HR - Admin & Compliance": [
+        "具備人力資源相關知識", "行政事務處理", "文書處理/排版能力", "文件或資料輸入建檔處理", "勞基法", "勞動法令", "員工關係", "勞資爭議", "勞工安全衛生"
     ]
 }
