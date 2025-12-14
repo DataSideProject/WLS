@@ -60,6 +60,12 @@ erDiagram
         varchar source_name
     }
 
+    %% 維度表：公司福利 (Tags)
+    dim_benefits {
+        int benefit_id PK
+        varchar benefit_name "e.g. 年終獎金, 旅遊補助"
+    }
+
     %% 預測結果事實表 (MLOps)
     fact_job_predictions {
         int prediction_id PK
@@ -82,6 +88,9 @@ erDiagram
 
     fact_job_postings ||--|{ bridge_job_skills : "requires"
     dim_skills ||--|{ bridge_job_skills : "listed_in"
+
+    fact_job_postings ||--|{ bridge_job_benefits : "offers"
+    dim_benefits ||--|{ bridge_job_benefits : "listed_in"
 
     fact_job_postings ||--o{ fact_job_predictions : "has_prediction"
 ```
@@ -109,6 +118,7 @@ erDiagram
 | `job_categories`      | **bridge_job_categories** | `category_id`              | **Split by `,` or `、`** -> 查表 `dim_categories` -> 寫入 Bridge     |
 | `tools`               | **bridge_job_skills**     | `skill_id`                 | **Split by `,`** -> 查表 `dim_skills` (Type='Tool') -> 寫入 Bridge   |
 | `work_skills`         | **bridge_job_skills**     | `skill_id`                 | **Split by `,`** -> 查表 `dim_skills` (Type='Skill') -> 寫入 Bridge  |
+| `tags`                | **bridge_job_benefits**   | `benefit_id`               | **Split by `,`** -> 查表 `dim_benefits` -> 寫入 Bridge (e.g. 年終)   |
 | `update_date`         | **fact_job_postings**     | `post_date`                | 格式清洗為 YYYY-MM-DD                                                |
 
 ---
@@ -164,3 +174,20 @@ erDiagram
 - _"全台灣（不分平台）的 React 職缺總共有多少？"_
 
 若分開存成 `table_104` 和 `table_cakeresume`，要做這種分析會非常痛苦 (需要大量的 UNION ALL)。
+
+---
+
+## 9. 效能優化策略 (Indexing Strategy)
+
+針對頻繁查詢的場景，已在 `fact_job_postings` 設置以下 **索引 (Index)**：
+
+| 欄位 (Column) | 索引類型              | 目的 (Purpose)                                                            |
+| :------------ | :-------------------- | :------------------------------------------------------------------------ |
+| `job_id`      | **Standard Index**    | **快速查找歷史紀錄**: `WHERE job_id = 'J001'`                             |
+| `post_date`   | **Standard Index**    | **時間區間篩選**: `WHERE post_date BETWEEN '2024-01-01' AND '2024-03-31'` |
+| `salary_min`  | **Standard Index**    | **薪資範圍搜尋**: `WHERE salary_min > 50000`                              |
+| `job_title`   | **Standard Index**    | **關鍵字搜尋**: `WHERE job_title LIKE '%Python%'`                         |
+| `company_id`  | **Foreign Key Index** | **加速 JOIN**: 連結 `dim_companies`                                       |
+| `source_id`   | **Foreign Key Index** | **來源篩選**: `WHERE source_id = 1`                                       |
+
+這些索引能顯著提升前端 Dashboard 查詢與 Model 訓練撈取資料的速度。
