@@ -3,19 +3,25 @@ from datetime import datetime, timezone
 import re
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from etl_transformers import (
+    parse_salary, parse_location, 
+    parse_salary_cakeresume, parse_location_cakeresume, 
+    parse_experience_cakeresume, parse_management_cakeresume,
+    get_md5_id
+)
 import sys
 import os
 import re
 
 # 引入 Schema 定義
 from importlib import import_module
-try:
-    # Try importing from the same directory first
-    import sys
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # Add parent for db_config
-    from db_config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
-except ImportError:
-    print("Warning: Could not import db_config directly.")
+# Add parent directory to path to find db_config
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from db_config import DB_HOST, DB_USER, DB_PASSWORD
     
 create_schema = import_module("01_create_schema")
 Base = create_schema.Base
@@ -83,44 +89,6 @@ def get_or_create_dim(session, Model, filters, defaults=None, cache=None):
         cache[filter_key] = list(instance.__table__.primary_key.columns)[0].type.python_type(getattr(instance, list(instance.__table__.primary_key.columns)[0].name))
         
     return getattr(instance, list(instance.__table__.primary_key.columns)[0].name)
-
-def parse_location(loc_str):
-    """
-    解析地點，回傳 (Country, City, District)
-    邏輯：
-    1. 檢查是否為台灣縣市 -> Country='台灣'
-    2. 檢查常見國家關鍵字 (日本, 美國...) -> Country=關鍵字
-    3. 其他 -> Country=原始字串
-    """
-    if pd.isna(loc_str): return 'Unknown', 'Unknown', 'Unknown'
-    loc_str = str(loc_str).strip()
-    
-    # 台灣縣市列表
-    tw_cities = ['台北市', '新北市', '桃園市', '台中市', '台南市', '高雄市', 
-                 '基隆市', '新竹市', '嘉義市', '新竹縣', '苗栗縣', '彰化縣', 
-                 '南投縣', '雲林縣', '嘉義縣', '屏東縣', '宜蘭縣', '花蓮縣', 
-                 '台東縣', '澎湖縣', '金門縣', '連江縣']
-                 
-    for city in tw_cities:
-        if loc_str.startswith(city):
-            # e.g. "台北市中正區" -> TW, 台北市, 中正區
-            # e.g. "台北市" -> TW, 台北市, ''
-            dist = loc_str[len(city):]
-            return '台灣', city, dist
-            
-    # 國際地點簡易判斷
-    if any(c in loc_str for c in ['日本', '越南', '印尼', '泰國', '菲律賓', '馬來西亞', '新加坡', '韓國']):
-        # 假設前兩個字是國家 (e.g. 日本大阪) -> 日本, 大阪
-        # 但有些是 "亞洲其他"
-        if len(loc_str) >= 2:
-            return loc_str[:2], loc_str[2:], ''
-            
-    if '美國' in loc_str: return '美國', loc_str, ''
-    if '中國' in loc_str or '大陸' in loc_str: return '中國', loc_str, ''
-    if '洲' in loc_str: return loc_str, '', '' # 中美洲, 亞洲其他
-    
-    # Fallback: 視為國家/地區本身
-    return loc_str, '', ''
 
 # 引入 ETL Mapping
 try:
@@ -199,16 +167,31 @@ def run_etl(source_key='104'):
         count += 1
         try:
             # Dynamic Column Access
-            job_id_val = row.get(cols['job_id'])
-            job_id_str = str(job_id_val) if pd.notnull(job_id_val) else 'UNKNOWN'
-            
             # Date Parsing moved UP for Deduplication Check
             post_date_val = None
             try:
-                d_str = str(row.get(cols['update_date'], '')).split(' ')[0] 
-                post_date_val = datetime.strptime(d_str, '%Y-%m-%d').date()
+                date_raw = str(row.get(cols['update_date'], '')).strip()
+                if source_key == 'cakeresume':
+                     # 假設 CakeResume 是 datetime 物件或完整字串
+                     if isinstance(row.get(cols['update_date']), datetime):
+                         post_date_val = row.get(cols['update_date']).date()
+                     else:
+                         post_date_val = datetime.strptime(date_raw.split(' ')[0], '%Y-%m-%d').date()
+                else:
+                    d_str = date_raw.split(' ')[0] 
+                    post_date_val = datetime.strptime(d_str, '%Y-%m-%d').date()
             except:
                 post_date_val = datetime.today().date()
+
+            # Job ID Logic
+            job_id_val = row.get(cols['job_id'])
+            if source_key == 'cakeresume':
+                # User Request: source_id + id (e.g., "2_software-engineer-slug")
+                # No MD5, uses raw slug
+                raw_id = str(job_id_val).strip()
+                job_id_str = f"{SOURCE_ID_VAL}_{raw_id}"
+            else:
+                job_id_str = str(job_id_val) if pd.notnull(job_id_val) else 'UNKNOWN'
 
             # ---> Deduplication Check (Composite Key) <---
             if (job_id_str, post_date_val) in existing_jobs:
@@ -228,7 +211,10 @@ def run_etl(source_key='104'):
             
             # Location
             loc_full = str(row.get(cols['location'], 'Unknown')).strip().replace('\r', '').replace('\n', ' ')
-            country, city, dist = parse_location(loc_full)
+            if source_key == 'cakeresume':
+                 country, city, dist = parse_location_cakeresume(loc_full)
+            else:
+                 country, city, dist = parse_location(loc_full)
             
             loc_id = get_or_create_dim(session, DimLocation, {'full_address': loc_full}, 
                                      defaults={'country': country, 'city': city, 'district': dist}, 
@@ -236,7 +222,14 @@ def run_etl(source_key='104'):
             
             # --- Fact Job Postings ---
             
-            s_min, s_max, s_type = parse_salary(row.get(cols['salary'], ''))
+            if source_key == 'cakeresume':
+                s_min, s_max, s_type = parse_salary_cakeresume(row.get(cols['salary'], ''))
+                exp_req = parse_experience_cakeresume(row.get(cols['experience'], ''))
+                is_mgr = parse_management_cakeresume(row.get(cols['management_responsibility'], ''))
+            else:
+                s_min, s_max, s_type = parse_salary(row.get(cols['salary'], ''))
+                exp_req = str(row.get(cols['experience'], '')).strip()
+                is_mgr = (str(row.get(cols['management_responsibility'], '')) != 'nan' and str(row.get(cols['management_responsibility'], '')) != '不需負擔管理責任')
             
             fact = FactJobPosting(
                 job_id = job_id_str,
@@ -247,12 +240,12 @@ def run_etl(source_key='104'):
                 salary_min = s_min,
                 salary_max = s_max,
                 salary_type = s_type,
-                experience_req = str(row.get(cols['experience'], '')).strip(),
+                experience_req = exp_req,
                 education_req = str(row.get(cols['education'], '')).strip(), 
                 post_date = post_date_val,
                 # New Columns
                 job_url = str(row.get(cols['link'], f'https://www.104.com.tw/job/{job_id_str}')).strip(),
-                isManager = (str(row.get(cols['management_responsibility'], '')) != 'nan' and str(row.get(cols['management_responsibility'], '')) != '不需負擔管理責任'),
+                isManager = is_mgr,
                 work_shift = str(row.get(cols['work_shift'], '')).strip(),
                 remote_work = str(row.get(cols['remote_work'], '')).strip(),
                 bt_exp = str(row.get(cols['bt_exp'], '')).strip(),

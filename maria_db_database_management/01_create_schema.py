@@ -10,8 +10,8 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
 try:
-    from db_config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
-    print(f"成功載入設定: {DB_HOST} / {DB_NAME}")
+    from db_config import DB_HOST, DB_USER, DB_PASSWORD
+    print(f"成功載入設定: {DB_HOST}")
 except ImportError:
     print("錯誤：找不到 db_config.py，請確保它位於上一層目錄")
     exit(1)
@@ -75,7 +75,7 @@ class FactJobPosting(Base):
     __tablename__ = 'fact_job_postings'
     
     posting_id = Column(BigInteger, primary_key=True, autoincrement=True)
-    job_id = Column(String(50), nullable=False, index=True) # Business Key, 加 Index 加速搜尋
+    job_id = Column(String(255), nullable=False, index=True) # Business Key, 加 Index 加速搜尋
     
     # Foreign Keys (通常資料庫會自動對 FK 設 Index，但在 SQLAlchemy 顯式宣告有助於釐清)
     company_id = Column(Integer, ForeignKey('dim_companies.company_id'), index=True)

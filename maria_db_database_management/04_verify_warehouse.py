@@ -41,6 +41,17 @@ def verify_warehouse():
                     print(f"   - {tbl:<25}: error ({e})")
                 
             print("-" * 30)
+
+            # 1.5. 來源分佈 (Source Breakdown)
+            print("[1.5] 資料來源分佈 (Source Breakdown):")
+            try:
+                src_res = conn.execute(text("SELECT source_id, COUNT(*) FROM fact_job_postings GROUP BY source_id")).fetchall()
+                for sid, scnt in src_res:
+                    print(f"   - Source {sid}: {scnt} rows")
+            except Exception as e:
+                print(f"   - Check failed: {e}")
+            
+            print("-" * 30)
             
             # 2. 資料完整性 (Integrity Check)
             print("[2] 資料品質檢查 (Data Quality):")

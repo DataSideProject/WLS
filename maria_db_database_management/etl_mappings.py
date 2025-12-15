@@ -40,32 +40,32 @@ ETL_MAPPINGS = {
     
     # 範例：CakeResume (請依照實際欄位名稱修改右側字串)
     'cakeresume': {
-        'table_name': 'cake_raw_table_name', # 請修改為實際 Table 名稱
+        'table_name': 'job_details', # 請修改為實際 Table 名稱
         'source_id': 2,
         
         'columns': {
-            'job_id': 'job_id',           # 假設
-            'company': 'company_name',    # 假設
-            'industry': 'industry_type',  # 假設
-            'location': 'location_str',   # 假設
-            'job_title': 'title',         # 假設
-            'salary': 'salary_range',     # 假設
-            'experience': 'exp_req',      # 假設
-            'education': 'edu_req',       # 假設
+            'job_id': 'id',          
+            'company': 'company',    
+            'industry': None,  
+            'location': 'location',   
+            'job_title': 'job_title',         
+            'salary': 'salary',     
+            'experience': 'experience',      
+            'education': None,       
             'link': 'url',
-            'management_responsibility': 'is_manager', # 需確認邏輯
-            'work_shift': 'shift',
+            'management_responsibility': 'management', 
+            'work_shift': None,
             'remote_work': 'remote',
-            'bt_exp': 'business_trip',
-            'languages': 'lang',
-            'job_description': 'desc',
-            'other_conditions': 'requirements',
-            'update_date': 'date',
+            'bt_exp': None,
+            'languages': None,
+            'job_description': 'content',
+            'other_conditions': 'original_tags',
+            'update_date': 'created_at',
             
             'job_categories': 'category',
-            'tools': 'tech_stack',
-            'work_skills': 'skills',
-            'tags': 'benefits'
+            'tools': 'analyzed_skills',
+            'work_skills': None,
+            'tags': None
         }
     }
 }

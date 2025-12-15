@@ -13,7 +13,7 @@ def inspect_source_data():
     print("="*50)
 
     # 1. 連線 Raw Data
-    SOURCE_DB = 'rawdata'
+    SOURCE_DB = 'job_data_warehouse'
     conn_str = f'mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:3306/{SOURCE_DB}'
     try:
         engine = create_engine(conn_str)
@@ -24,7 +24,7 @@ def inspect_source_data():
 
     # 2. 讀取資料
     # 使用者可以傳入 table name，目前先預設 104rawdata
-    target_table = 'job_details' 
+    target_table = 'fact_job_postings' 
     if len(sys.argv) > 1:
         target_table = sys.argv[1]
         
