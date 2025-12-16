@@ -9,8 +9,12 @@ import os
 import traceback
 
 # Import credentials
+# Import credentials
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     from db_config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+
 except ImportError:
     print("Error: db_config.py not found.")
     exit(1)

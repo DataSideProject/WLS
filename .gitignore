@@ -13,3 +13,16 @@ existing_keys.txt
 checkpoint.json
 model_diagnostics*.png
 etl_failure_log.txt
+
+# ML Pipeline Diagnostics
+machine_learning_pipeline/*.txt
+machine_learning_pipeline/*.json
+gen_error*.txt
+cols_list.txt
+raw_cols.json
+pipeline_test.txt
+pipeline_cols_test.txt
+
+# System
+.venv/
+.vscode/

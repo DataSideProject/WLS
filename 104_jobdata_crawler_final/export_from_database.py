@@ -5,8 +5,11 @@ import re
 import os
 
 # ==================== 1. 設定 ====================
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     from db_config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+
 except ImportError:
     print("錯誤：找不到 db_config.py，請確認已建立設定檔。")
     exit(1)

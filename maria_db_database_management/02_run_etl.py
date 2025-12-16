@@ -7,8 +7,9 @@ from etl_transformers import (
     parse_salary, parse_location, 
     parse_salary_cakeresume, parse_location_cakeresume, 
     parse_experience_cakeresume, parse_management_cakeresume,
-    get_md5_id
+    get_md5_id, normalize_remote
 )
+
 import sys
 import os
 import re
@@ -247,7 +248,8 @@ def run_etl(source_key='104'):
                 job_url = str(row.get(cols['link'], f'https://www.104.com.tw/job/{job_id_str}')).strip(),
                 isManager = is_mgr,
                 work_shift = str(row.get(cols['work_shift'], '')).strip(),
-                remote_work = str(row.get(cols['remote_work'], '')).strip(),
+                remote_work = normalize_remote(str(row.get(cols['remote_work'], '')).strip()),
+
                 bt_exp = str(row.get(cols['bt_exp'], '')).strip(),
                 language = str(row.get(cols['languages'], '')).strip(), 
                 job_description = str(row.get(cols['job_description'], '')).strip(), 

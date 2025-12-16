@@ -1,6 +1,8 @@
 import re
 from datetime import datetime
 import hashlib
+import pandas as pd
+
 
 # ==================== Data Parsing Logic ====================
 
@@ -93,6 +95,30 @@ def parse_location(loc_str):
     
     return loc_str, '', ''
 
+
+COUNTRY_MAPPING = {
+    'Vietnam': '越南',
+    'Japan': '日本',
+    'United States': '美國',
+    'USA': '美國',
+    'India': '印度',
+    'Indonesia': '印尼',
+    'Republic of Indonesia': '印尼',
+    'Thailand': '泰國',
+    'Kingdom of Thailand': '泰國',
+    'Malaysia': '馬來西亞',
+    'Singapore': '新加坡',
+    'Republic of Singapore': '新加坡',
+    'Philippines': '菲律賓',
+    'Australia': '澳洲',
+    'South Korea': '南韓',
+    'Korea': '南韓',
+    'Hong Kong': '香港',
+    'China': '中國',
+    'Hungary': '匈牙利',
+    'Switzerland': '瑞士'
+}
+
 def parse_location_cakeresume(loc_str):
     """
     解析 CakeResume 地點
@@ -121,24 +147,63 @@ def parse_location_cakeresume(loc_str):
     # 取最後一個做為 Country (通常最後是國家)，取第一個做為 City
     if len(parts) >= 2:
         country = parts[-1]
+        
+        # Normalization
+        if country in COUNTRY_MAPPING:
+            country = COUNTRY_MAPPING[country]
+            
         city = parts[0]
         return country, city, ''
         
     return parts[0], '', ''
 
+
+
+def normalize_remote(remote_str):
+    """
+    Standardize remote work descriptions.
+    Categories: '完全遠端', '部分遠端', or original/None
+    """
+    if not remote_str or pd.isna(remote_str) or str(remote_str).lower() == 'none' or str(remote_str).strip() == '':
+        return None
+    
+    s = str(remote_str).lower()
+    
+    # Full Remote
+    if any(x in s for x in ['完全', 'full', '100%', 'remote only']):
+        return '完全遠端'
+        
+    # Partial Remote
+    if any(x in s for x in ['部分', 'partial', 'hybrid', '混合', '彈性', 'home based', 'work from home']):
+        # Some 104 descriptions are tricky, but generally '部分' is safer for WFH mentions unless explicitly Full
+        return '部分遠端'
+        
+    return remote_str
+
 def parse_salary_cakeresume(salary_str):
     """
     解析 CakeResume 薪資
     範例: '100,000 ~ 150,000 TWD / 月', '200,000 USD / 年', '38000+ TWD / 月'
+    Includes Currency Conversion to TWD.
+    Rates (Approx): USD 32.5, JPY 0.22, SGD 24.0
     """
     if not salary_str: return None, None, '面議'
     
     s_clean = str(salary_str).replace(',', '').upper()
     
-    # 1. 判斷幣別
+    # 1. 判斷幣別 & Rate
     currency = 'TWD'
-    if 'USD' in s_clean: currency = 'USD'
-    elif 'JPY' in s_clean: currency = 'JPY'
+    rate = 1.0
+    
+    if 'USD' in s_clean: 
+        currency = 'USD'
+        rate = 32.5
+    elif 'JPY' in s_clean: 
+        currency = 'JPY'
+        rate = 0.22
+    elif 'SGD' in s_clean:
+        currency = 'SGD'
+        rate = 24.0
     
     # 2. 判斷週期
     s_type = '月薪'
@@ -146,9 +211,8 @@ def parse_salary_cakeresume(salary_str):
     elif '/ 小時' in s_clean or '/ HOUR' in s_clean: s_type = '時薪'
     elif '/ 日' in s_clean or '/ DAY' in s_clean: s_type = '日薪'
     
-    # 如果是非台幣，標註上去
-    if currency != 'TWD':
-        s_type = f"{s_type}({currency})"
+    # No longer appending currency to type, as we convert value to TWD
+    # if currency != 'TWD': s_type = f"{s_type}({currency})"
         
     # 3. 提取數字
     # 格式可能為 "100000 ~ 150000" 或 "38000+"
@@ -157,13 +221,14 @@ def parse_salary_cakeresume(salary_str):
     val_max = None
     
     if len(nums) >= 2:
-        val_min = int(nums[0])
-        val_max = int(nums[1])
+        val_min = int(float(nums[0]) * rate)
+        val_max = int(float(nums[1]) * rate)
     elif len(nums) == 1:
-        val_min = int(nums[0])
+        val_min = int(float(nums[0]) * rate)
         val_max = val_min # 或 None 代表 "38000+"
         
     return val_min, val_max, s_type
+
 
 def parse_experience_cakeresume(exp_str):
     """
@@ -174,12 +239,15 @@ def parse_experience_cakeresume(exp_str):
     if '不拘' in str(exp_str): return '經歷不拘'
     
     # 嘗試提取數字
-    match = re.search(r'(\d+)', str(exp_str))
-    if match:
-        year = match.group(1)
-        return f"{year}年以上"
+    # 避免抓到西元年份 (e.g. 2022, 2025)，設定合理範圍 (e.g. < 50)
+    nums = re.findall(r'(\d+)', str(exp_str))
+    for num in nums:
+        val = int(num)
+        if 0 < val <= 50:
+            return f"{val}年以上"
         
     return str(exp_str)
+
 
 def parse_management_cakeresume(mgmt_str):
     """

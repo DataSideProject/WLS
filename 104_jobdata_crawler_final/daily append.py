@@ -2,6 +2,8 @@
 # 自動把 job_data_master_raw.csv 的新資料匯入 MariaDB，並自動去重
 
 import pandas as pd
+import sys
+
 from sqlalchemy import create_engine, text
 import os
 from datetime import datetime
@@ -9,23 +11,30 @@ import time
 
 # ==================== 1. 設定 ====================
 # 請修改成你的 GCP MariaDB 資訊
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, parent_dir)
+
 try:
-    from db_config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+    from db_config import DB_HOST, DB_USER, DB_PASSWORD
 except ImportError:
-    print("錯誤：找不到 db_config.py")
+    print("錯誤：找不到 db_config.py 或 缺少必要變數")
     exit(1)
+
+
 
 HOST = DB_HOST
 USER = DB_USER
 PASSWORD = DB_PASSWORD
-DATABASE = DB_NAME
+DATABASE = 'rawdata'
 TABLE = '104rawdata'
 
 # 連線
 engine = create_engine(f'mysql+mysqlconnector://{USER}:{PASSWORD}@{HOST}:3306/{DATABASE}')
 
 # CSV 檔案（你爬蟲產生的 master 檔）
-CSV_FILE = 'job_data_master_raw.csv'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CSV_FILE = os.path.join(BASE_DIR, 'job_data_master_raw.csv')
+
 
 # import_to_mariadb_safe.py
 # 可與爬蟲同時執行，不會衝突！
