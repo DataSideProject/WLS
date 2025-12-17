@@ -71,18 +71,27 @@ def load_job_data_from_db(limit=None):
             
             # Normalize: Annual -> Monthly (/13)
             # Normalize: Annual -> Monthly (/13)
-            # Use strict string stripping to avoid "年薪 " vs "年薪" mismatch
-            df_view['salary_type'] = df_view['salary_type'].astype(str).str.strip()
-            mask_annual = df_view['salary_type'] == '年薪'
+            # Use strict string stripping and check unique values
+            if 'salary_type' in df_view.columns:
+                df_view['salary_type'] = df_view['salary_type'].fillna('')
+                # DEBUG: Print unique salary types seen by pandas
+                unique_types = df_view['salary_type'].unique()
+                print(f"DEBUG: Unique salary_types found: {unique_types}")
+                
+                # Normalize
+                mask_annual = df_view['salary_type'].astype(str).str.strip() == '年薪'
+                
+                # Apply conversion
+                if mask_annual.any():
+                    df_view.loc[mask_annual, 'salary_min'] = df_view.loc[mask_annual, 'salary_min'] / 13.0
+                    df_view.loc[mask_annual, 'salary_max'] = df_view.loc[mask_annual, 'salary_max'] / 13.0
             
-            # Apply conversion
-            df_view.loc[mask_annual, 'salary_min'] = df_view.loc[mask_annual, 'salary_min'] / 13.0
-            df_view.loc[mask_annual, 'salary_max'] = df_view.loc[mask_annual, 'salary_max'] / 13.0
-            
-            # Round to integer (Fill NaN with 0 first to prevent crash for Negotiable jobs)
+            # Final Integer Cast (Handle NaN)
             df_view['salary_min'] = df_view['salary_min'].fillna(0).astype(int)
             df_view['salary_max'] = df_view['salary_max'].fillna(0).astype(int)
-            print(f"  -> Normalized '年薪' to Monthly (div 13). Count: {mask_annual.sum()}")
+            
+            if 'mask_annual' in locals():
+                print(f"  -> Normalized '年薪' to Monthly (div 13). Count: {mask_annual.sum()}")
 
         print("Fetching Dimension/Bridge Tables for Multi-valued attributes...")
         
