@@ -7,9 +7,10 @@ def get_salary_distribution(df):
     """Returns salary distribution data for histogram."""
     # Use pred_avg if available, else salary_avg
     if 'pred_avg' in df.columns:
-        salaries = df['pred_avg'].dropna()
+        # Filter out 0 salaries (Negotiable/Unknown) to avoid skewing stats
+        salaries = df[df['pred_avg'] > 0]['pred_avg'].dropna()
     else:
-        salaries = df['salary_avg'].dropna()
+        salaries = df[df['salary_avg'] > 0]['salary_avg'].dropna()
         
     hist, bin_edges = np.histogram(salaries, bins=20)
     return {
@@ -66,7 +67,8 @@ def get_experience_stats(df):
     df = df.copy()
     df['exp_clean'] = df['experience'].apply(clean_exp)
     
-    stats = df.groupby('exp_clean')['salary_avg'].mean().round(0)
+    df_clean_sal = df[df['salary_avg'] > 0].copy()
+    stats = df_clean_sal.groupby('exp_clean')['salary_avg'].mean().round(0)
     
     # Sort by defined order
     sorted_stats = []
