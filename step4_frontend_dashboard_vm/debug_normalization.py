@@ -9,8 +9,9 @@ def debug_specific_row(target_id=17540):
     # 1. Raw DB Check
     engine = get_db_engine()
     print("1. Raw DB Query:")
+    from sqlalchemy import text
     with engine.connect() as conn:
-        result = conn.execute(f"SELECT posting_id, salary_type, salary_min, salary_max FROM view_ml_dataset WHERE posting_id = {target_id}")
+        result = conn.execute(text(f"SELECT posting_id, salary_type, salary_min, salary_max FROM view_ml_dataset WHERE posting_id = {target_id}"))
         for row in result:
             print(f"   DB Row: {row}")
             stype = row[1]
