@@ -79,9 +79,9 @@ def load_job_data_from_db(limit=None):
             df_view.loc[mask_annual, 'salary_min'] = df_view.loc[mask_annual, 'salary_min'] / 13.0
             df_view.loc[mask_annual, 'salary_max'] = df_view.loc[mask_annual, 'salary_max'] / 13.0
             
-            # Round to integer
-            df_view['salary_min'] = df_view['salary_min'].astype(int)
-            df_view['salary_max'] = df_view['salary_max'].astype(int)
+            # Round to integer (Fill NaN with 0 first to prevent crash for Negotiable jobs)
+            df_view['salary_min'] = df_view['salary_min'].fillna(0).astype(int)
+            df_view['salary_max'] = df_view['salary_max'].fillna(0).astype(int)
             print(f"  -> Normalized '年薪' to Monthly (div 13). Count: {mask_annual.sum()}")
 
         print("Fetching Dimension/Bridge Tables for Multi-valued attributes...")
