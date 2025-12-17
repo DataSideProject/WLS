@@ -1,7 +1,7 @@
 # Frontend Dashboard Deployment Guide (GCP VM)
 
 本指南提供一份**完全 Copy-Paste** 的操作流程，協助您從零開始在 GCP VM 上部署 Dashboard。
-本流程採用 **Git Sparse Checkout** 方式，只抓取專案中的 `frontend_dashboard_vm` 資料夾，保持環境乾淨。
+本流程採用 **Git Sparse Checkout** 方式，只抓取專案中的 `step4_frontend_dashboard_vm` 資料夾，保持環境乾淨。
 
 ---
 
@@ -40,7 +40,7 @@ cd /opt/dashboard
 
 ### Step 3: Git 初始化與單獨抓取資料夾 (Sparse Checkout)
 
-這個步驟會只抓取 `frontend_dashboard_vm` 資料夾的內容。
+這個步驟會只抓取 `step4_frontend_dashboard_vm` 資料夾的內容。
 
 ```bash
 # 初始化空的 git repo
@@ -51,13 +51,14 @@ git remote add origin <您的_GITHUB_REPO_URL>  # <--- 請替換成您的 Repo U
 git config core.sparseCheckout true
 
 # 指定要抓取的資料夾路徑
-echo "frontend_dashboard_vm/" >> .git/info/sparse-checkout
+# 指定要抓取的資料夾路徑
+echo "step4_frontend_dashboard_vm/" >> .git/info/sparse-checkout
 
 # 拉取程式碼 (假設主分支為 main)
 git pull origin main
 
 # 進入該資料夾
-cd frontend_dashboard_vm
+cd step4_frontend_dashboard_vm
 ```
 
 ### Step 4: 建立 Python 虛擬環境
@@ -134,5 +135,5 @@ nohup python app.py > app.log 2>&1 &
   ```bash
   cd /opt/dashboard
   git pull origin main
-  # 若有新套件依賴，記得再 pip install -r frontend_dashboard_vm/requirements.txt
+  # 若有新套件依賴，記得再 pip install -r step4_frontend_dashboard_vm/requirements.txt
   ```
