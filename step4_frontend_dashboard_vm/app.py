@@ -57,6 +57,10 @@ def prepare_dataframe_for_analysis(df_in):
         df_out['pred_max'] = pd.to_numeric(df_out['predicted_salary_max'], errors='coerce')
         df_out['pred_avg'] = (df_out['pred_min'] + df_out['pred_max']) / 2
         
+        # KEY FIX: If Actual Salary is 0 or NaN (Negotiable), use Predicted Salary
+        mask_use_pred = (df_out['salary_avg'].fillna(0) == 0) & (df_out['pred_avg'] > 0)
+        df_out.loc[mask_use_pred, 'salary_avg'] = df_out.loc[mask_use_pred, 'pred_avg']
+        
     return df_out
 
 def load_data():

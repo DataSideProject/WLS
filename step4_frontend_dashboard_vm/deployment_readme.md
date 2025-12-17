@@ -20,7 +20,7 @@
 
 ```bash
 sudo apt update
-sudo apt install -y python3 python3-pip python3-venv git nano mysql-client
+sudo apt install -y python3 python3-pip python3-venv git nano mysql-client mariadb-server
 ```
 
 ### Step 2: 建立部署目錄與權限設定 (非 Root 執行)
@@ -103,13 +103,16 @@ _(保存離開：按 `Ctrl+O` -> `Enter` -> `Ctrl+X`)_
 python 09_create_ml_view.py
 ```
 
+> **注意：空的資料庫？**
+> 如果這是全新的 VM，您的資料庫是空的。請參考 **[data_migration_guide.md](data_migration_guide.md)** 將本機資料匯入 VM。
+
 ### Step 7: 啟動網站 (背景執行)
 
 使用 `nohup` 讓網站在背景執行，即使斷開 SSH 連線也不會停止。
 
 ```bash
 # 啟動 app.py，日誌輸出到 app.log
-nohup python app.py > app.log 2>&1 &
+nohup python3 app.py > app.log 2>&1 &
 ```
 
 ### Step 8: 驗證
@@ -118,6 +121,10 @@ nohup python app.py > app.log 2>&1 &
 `http://<GCP_VM_EXTERNAL_IP>:5000`
 
 若看到畫面，即表示部署成功！🎉
+
+> **無法連線？**
+> 若瀏覽器轉圈圈或顯示無法連線，通常是 **GCP 防火牆 (Firewall)** 沒開。
+> 請參考同目錄下的 **[gcp_firewall_guide.md](gcp_firewall_guide.md)** 教學，設定開放 `tcp:5000` 連接埠。
 
 ---
 

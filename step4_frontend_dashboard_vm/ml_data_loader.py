@@ -63,12 +63,16 @@ def load_job_data_from_db(limit=None):
         # 1.5 Filter & Normalize Salary (Monthly Basis)
         if 'salary_type' in df_view.columns and 'salary_min' in df_view.columns:
             print("Filtering & Normalizing Salaries...")
-            # Filter: Keep only '月薪' and '年薪'
-            original_count = len(df_view)
-            df_view = df_view[df_view['salary_type'].isin(['月薪', '年薪'])].copy()
-            print(f"  -> Filtered out Hourly/Daily. {original_count} -> {len(df_view)} rows.")
+            # Filter: REMOVED to allow '待遇面議' (Negotiable) jobs to be shown
+            # We want to display all jobs in the dashboard, even if they don't have a raw salary (we'll use predictions)
+            # original_count = len(df_view)
+            # df_view = df_view[df_view['salary_type'].isin(['月薪', '年薪'])].copy()
+            # print(f"  -> Filtered out Hourly/Daily. {original_count} -> {len(df_view)} rows.")
             
             # Normalize: Annual -> Monthly (/13)
+            # Normalize: Annual -> Monthly (/13)
+            # Use strict string stripping to avoid "年薪 " vs "年薪" mismatch
+            df_view['salary_type'] = df_view['salary_type'].astype(str).str.strip()
             mask_annual = df_view['salary_type'] == '年薪'
             
             # Apply conversion
@@ -78,7 +82,7 @@ def load_job_data_from_db(limit=None):
             # Round to integer
             df_view['salary_min'] = df_view['salary_min'].astype(int)
             df_view['salary_max'] = df_view['salary_max'].astype(int)
-            print("  -> Normalized '年薪' to Monthly (div 13).")
+            print(f"  -> Normalized '年薪' to Monthly (div 13). Count: {mask_annual.sum()}")
 
         print("Fetching Dimension/Bridge Tables for Multi-valued attributes...")
         
