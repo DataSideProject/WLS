@@ -123,6 +123,13 @@ log_print("進行特徵工程...")
 log_print(f"Columns available: {df.columns.tolist()}")
 
 # 1. 地區處理
+def parse_city(addr):
+    if pd.isna(addr): return 'Unknown'
+    addr = str(addr)
+    # Location should be synthesized by loader now (City+District)
+    if len(addr) >= 3: return addr[:3] # Take top level (e.g. 台北市)
+    return addr
+
 try:
     df['city_for_stratify'] = df['location'].apply(parse_city)
 except KeyError as e:
@@ -218,6 +225,21 @@ for comp in top_companies:
     if not safe_comp: safe_comp = 'unknown_company'
     df[f'company_{safe_comp}'] = (df['company'] == comp).astype(int)
 
+# 9.5 福利 (Benefits) [NEW]
+if 'benefits' in df.columns:
+    df['benefits'] = df['benefits'].fillna('')
+    all_benefits = []
+    for bens in df['benefits']:
+        all_benefits.extend([b.strip() for b in str(bens).split(',') if b.strip()])
+    
+    # Take top 20 benefits
+    top_benefits = [b[0] for b in Counter(all_benefits).most_common(20)]
+    
+    for ben in top_benefits:
+        df[f'ben_{ben}'] = df['benefits'].astype(str).str.contains(ben, regex=False, na=False).astype(int)
+else:
+    top_benefits = []
+
 # 10. 文字特徵 (TF-IDF with jieba)
 def jieba_tokenizer(text):
     return jieba.lcut(text)
@@ -284,6 +306,7 @@ feature_cols.append('exp_years_scaled')
 feature_cols.append('edu_level')
 feature_cols.extend([f'cat_{cat}' for cat in top_cats])
 feature_cols.extend([f'company_{re.sub(r"[^\w]", "", str(comp))}' for comp in top_companies])
+feature_cols.extend([f'ben_{ben}' for ben in top_benefits])
 feature_cols.extend(desc_cols)
 feature_cols.extend(cond_cols)
 
@@ -300,7 +323,7 @@ def build_ensemble():
     rf = RandomForestRegressor(n_estimators=300, random_state=42)
     gb = GradientBoostingRegressor(n_estimators=300, random_state=42)
     xgb = XGBRegressor(n_estimators=500, learning_rate=0.05, max_depth=6, random_state=42)
-    cat = CatBoostRegressor(iterations=500, depth=8, learning_rate=0.05, random_seed=42, verbose=0)
+    cat = CatBoostRegressor(iterations=500, depth=8, learning_rate=0.05, random_seed=42, verbose=0, train_dir='machine_learning_pipeline/catboost_info')
     return VotingRegressor([('rf', rf), ('xgb', xgb), ('gb', gb), ('cat', cat)])
 
 def train_segment_model(df_train, df_predict, target_col, segment_name):

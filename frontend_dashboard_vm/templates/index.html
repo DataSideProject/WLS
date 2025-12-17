@@ -787,11 +787,6 @@
                   <label class="filter-label">📍 Location</label>
                   <select id="filterLocation" class="filter-select"><option value="All">All Locations</option></select>
                 </div>
-                <!-- Skills -->
-                <div class="filter-section">
-                  <label class="filter-label">🛠️ Skills</label>
-                  <input type="text" id="filterSkill" class="filter-input" placeholder="Ex: Python, React..." />
-                </div>
                 <!-- Salary -->
                 <div class="filter-section">
                   <label class="filter-label">💰 Salary Range (TWD)</label>
@@ -1258,12 +1253,6 @@
             params.append("search", searchTerm);
           }
 
-          // Add skill filter
-          const skill = document.getElementById("filterSkill")?.value;
-          if (skill) {
-            params.append("skill", skill);
-          }
-
           const res = await fetch(`/api/jobs?${params.toString()}`);
           if (!res.ok) throw new Error("API returned error: " + res.status);
 
@@ -1318,7 +1307,6 @@
         document.getElementById("filterManager").checked = false;
         document.getElementById("filterRemote").value = "All";
         document.getElementById("filterSource").value = "All";
-        document.getElementById("filterSkill").value = "";
         document.getElementById("search").value = "";
         loadJobs(1);
       }
@@ -1352,15 +1340,6 @@
         const searchInput = document.getElementById("search");
         if (searchInput) {
           searchInput.addEventListener(
-            "input",
-            debounce(() => loadJobs(1), 500)
-          );
-        }
-
-        // Add debounce for skill input
-        const skillInput = document.getElementById("filterSkill");
-        if (skillInput) {
-          skillInput.addEventListener(
             "input",
             debounce(() => loadJobs(1), 500)
           );

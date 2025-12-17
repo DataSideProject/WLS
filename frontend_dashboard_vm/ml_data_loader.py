@@ -3,11 +3,11 @@ from sqlalchemy import create_engine
 import sys
 import os
 
-# Ensure we can find db_config in the root directory (WLS)
-current_dir = os.path.dirname(os.path.abspath(__file__))
-wls_root = os.path.dirname(current_dir) # Go up one level
-if wls_root not in sys.path:
-    sys.path.insert(0, wls_root)
+# Ensure we use local db_config
+# current_dir = os.path.dirname(os.path.abspath(__file__))
+# wls_root = os.path.dirname(current_dir) # Go up one level
+# if wls_root not in sys.path:
+#    sys.path.insert(0, wls_root)
 
 try:
     from db_config import DB_HOST, DB_USER, DB_PASSWORD

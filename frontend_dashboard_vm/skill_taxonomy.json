@@ -1,0 +1,62 @@
+{
+    "Programming Languages": [
+        "Python", "Java", "JavaScript", "C++", "C#", "C", "PHP", "R", "Go", "Ruby", "Scala", "Kotlin", "Swift", "Dart", "Rust", "Perl", "Objective-C", "Assembly", "COBOL", "Delphi", "Visual Basic", "VBA", "VBScript"
+    ],
+    "Web Frontend": [
+        "HTML", "CSS", "JavaScript", "React", "ReactJS", "ReactNative", "Angular", "AngularJS", "VueJS", "jQuery", "Redux", "Sass", "Bootstrap", "Tailwind", "TypeScript", "AJAX", "DHTML", "Webpack"
+    ],
+    "Web Backend & Frameworks": [
+        "Node.js", "Django", "Flask", "Spring", "ASP.NET", "PHP", "Laravel", "Rails", "Express", "Struts", "JSP", "Servlets", "J2EE", "Tomcat", "WebLogic", "WebSphere"
+    ],
+    "Database & Data Storage": [
+        "MySQL", "MS SQL", "PostgreSQL", "Oracle", "MongoDB", "Redis", "DB2", "Sybase", "Informix", "Access", "SAPDB", "Teradata", "PL/SQL", "ANSI SQL", "NoSQL", "RDBMS"
+    ],
+    "Data Science & AI": [
+        "PyTorch", "tensorflow", "Keras", "scikit-learn", "NLP", "LLM", "ChatGPT", "Computer Vision", "OpenCV", "Prompt", "Machine Learning", "Deep Learning", "MLOPs"
+    ],
+    "Big Data & Analytics": [
+        "Hadoop", "Spark", "Hive", "ETL", "Power BI", "Tableau", "Looker studio", "Google Data Studio", "SAS", "SPSS", "Cognos", "DataStage", "Informatica", "OLAP"
+    ],
+    "Cloud & Infrastructure": [
+        "AWS", "Microsoft Azure", "Google Cloud", "Firebase", "Docker", "Kubernetes", "Jenkins", "CI/CD", "Terraform", "Ansible", "SaaS", "Cloud"
+    ],
+    "DevOps & Version Control": [
+        "Git", "Github", "GitLab", "SVN", "Jenkins", "Docker", "Kubernetes", "CI/CD", "Version Control", "Scrum", "JIRA", "Agile"
+    ],
+    "Operating Systems & Servers": [
+        "Linux", "Unix", "Windows Server 2019", "Windows Server 2012", "Windows Server 2008", "Windows 10", "Windows 7", "Solaris", "HP-UX", "AIX", "Mac OS", "iOS", "Android"
+    ],
+    "Networking & Security": [
+        "TCP/IP", "VPN", "Firewall", "VLAN", "BGP", "OSPF", "DHCP", "DNS", "FTP", "HTTP", "SNMP", "IDS", "IPS", "Security", "Cisco", "Routers", "LAN", "WAN", "WLAN"
+    ],
+    "Embedded & Hardware": [
+        "FPGA", "VHDL", "Verilog", "MCU", "ARM", "DSP", "ASIC", "CPLD", "Firmware", "RF", "EMC/EMI", "PCB", "PCBA", "SMT", "USB技術", "Bluetooth"
+    ],
+    "CAD & 3D Design": [
+        "AutoCAD", "AutoCad 2D", "AutoCad 3D", "SolidWorks", "Pro/E", "Catia", "Inventor", "Revit", "Rhino", "SketchUp", "3ds Max", "Blender", "Cinema 4D", "Unity", "Unity3D", "Unreal Engine"
+    ],
+    "EDA & Circuit Design": [
+        "OrCAD", "Cadence Allegro", "PADS", "Protel", "P-CAD", "PowerPCB", "SPICE", "Synopsys", "ANSYS", "LabVIEW"
+    ],
+    "Design & Creative Tools": [
+        "Photoshop", "Adobe Photoshop", "Illustrator", "Adobe InDesign", "Premiere", "Figma", "Sketch", "Adobe XD", "Axure RP", "InVision", "Canva", "Krita", "Wireframe", "PowerMockup"
+    ],
+    "Office & Business Tools": [
+        "Excel", "Word", "PowerPoint", "Outlook", "Access", "Visio", "Project", "OneNote", "Planner", "SAP", "SAP HANA", "Oracle ERP", "鼎新", "正航", "天心資訊", "MES", "MRP", "ERP"
+    ],
+    "Marketing & SEO": [
+        "Google Analytics", "Google Tag Manager", "SEO", "SEM", "Google關鍵字廣告", "Google Display Network", "Facebook", "Instagram", "Line", "e-commerce", "Screaming Frog SEO Spider", "SimilarWeb", "Google Trend"
+    ],
+    "HR - Recruiting": [
+        "執行日常招募業務", "面試技巧", "招募任用制度設計", "招募選才", "人才招募", "面試", "任用", "獵頭", "Headhunter"
+    ],
+    "HR - Training": [
+        "人員培訓、激勵、輔導與管理", "員工教育訓練與需求分析", "教育訓練規劃與執行", "人才發展", "培訓", "TTQS", "講師"
+    ],
+    "HR - C&B": [
+        "績效與薪酬管理", "勞工保險相關法規", "薪資計算", "勞健保", "所得稅", "考勤管理", "績效考核", "保險作業"
+    ],
+    "HR - Admin & Compliance": [
+        "具備人力資源相關知識", "行政事務處理", "文書處理/排版能力", "文件或資料輸入建檔處理", "勞基法", "勞動法令", "員工關係", "勞資爭議", "勞工安全衛生"
+    ]
+}

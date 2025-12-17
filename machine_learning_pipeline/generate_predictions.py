@@ -54,6 +54,11 @@ def main():
         log_print("Error: No data loaded.")
         exit(1)
     log_print(f"Loaded {len(df)} rows.")
+    dups = df.columns[df.columns.duplicated()].tolist()
+    if dups:
+        log_print(f"WARNING: Duplicate columns found: {dups}")
+        df = df.loc[:, ~df.columns.duplicated()]
+        log_print("Dropped duplicate columns.")
 
     # Ensure numeric
     df['salary_min'] = pd.to_numeric(df['salary_min'], errors='coerce')
@@ -138,6 +143,16 @@ def main():
         if not safe_comp: safe_comp = 'unknown_company'
         df[f'company_{safe_comp}'] = (df['company'] == comp).astype(int)
 
+    # 9. Benefits
+    if 'benefits' in df.columns:
+        df['benefits'] = df['benefits'].fillna('')
+        all_benefits = []
+        for bens in df['benefits']:
+            all_benefits.extend([b.strip() for b in str(bens).split(',') if b.strip()])
+        top_benefits = [b[0] for b in Counter(all_benefits).most_common(20)]
+        for ben in top_benefits:
+            df[f'ben_{ben}'] = df['benefits'].astype(str).str.contains(ben, regex=False, na=False).astype(int)
+
     # 9. TF-IDF
     def jieba_tokenizer(text):
         return jieba.lcut(text)
@@ -171,7 +186,7 @@ def main():
     for col in df.columns:
         if col.startswith('is_') or col.startswith('skill_') or col.startswith('industry_') or \
         col.startswith('cat_') or col.startswith('company_') or col.startswith('desc_') or \
-        '_in_' in col:
+        col.startswith('ben_') or '_in_' in col:
             features.append(col)
     features.extend(['exp_years_scaled', 'edu_level', 'is_manager'])
     # Remove non-features
@@ -183,7 +198,7 @@ def main():
         rf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
         gb = GradientBoostingRegressor(n_estimators=100, random_state=42)
         xgb = XGBRegressor(n_estimators=200, learning_rate=0.05, max_depth=6, random_state=42, n_jobs=-1)
-        cat = CatBoostRegressor(iterations=200, depth=8, learning_rate=0.05, random_seed=42, verbose=0)
+        cat = CatBoostRegressor(iterations=200, depth=8, learning_rate=0.05, random_seed=42, verbose=0, train_dir='machine_learning_pipeline/catboost_info')
         return VotingRegressor([('rf', rf), ('xgb', xgb), ('gb', gb), ('cat', cat)])
 
     # Prepare Data
@@ -196,8 +211,26 @@ def main():
         exit(1)
 
     log_print(f"Training on {len(train_df)} rows...")
+    log_print(f"Features: {features[:10]} ... ({len(features)} total)")
+    
+    X = df[features].apply(pd.to_numeric, errors='coerce').fillna(0)
+    log_print(f"X shape: {X.shape}")
+    mask_train = df['salary_min'].notna() & df['salary_max'].notna() & (df['salary_min'] > 0)
+    train_df = df[mask_train]
 
     X_train = X.loc[mask_train]
+    y_min = np.log1p(train_df['salary_min'])
+    
+    # Force numeric float and convert to numpy array to avoid DataFrame/XGBoost issues
+    X_df = df[features].apply(pd.to_numeric, errors='coerce').fillna(0).astype(float)
+    
+    mask_train = df['salary_min'].notna() & df['salary_max'].notna() & (df['salary_min'] > 0)
+    train_df = df[mask_train]
+
+    # Convert to numpy
+    X_train = X_df.loc[mask_train].values
+    X_all = X_df.values # For prediction
+
     y_min = np.log1p(train_df['salary_min'])
     y_max = np.log1p(train_df['salary_max'])
 
@@ -205,14 +238,14 @@ def main():
     log_print("Training Salary Min Model...")
     model_min = build_ensemble()
     model_min.fit(X_train, y_min)
-    df['pred_min_log'] = model_min.predict(X)
+    df['pred_min_log'] = model_min.predict(X_all)
     df['predicted_salary_min'] = np.expm1(df['pred_min_log'])
 
     # Train Max Model
     log_print("Training Salary Max Model...")
     model_max = build_ensemble()
     model_max.fit(X_train, y_max)
-    df['pred_max_log'] = model_max.predict(X)
+    df['pred_max_log'] = model_max.predict(X_all)
     df['predicted_salary_max'] = np.expm1(df['pred_max_log'])
 
     log_print("PreparingDB Insert...")
@@ -250,15 +283,12 @@ def main():
     trans = conn.begin()
 
     try:
-        # 1. Clear Table (or strictly for these jobs? Let's clear ALL for full refresh as requested)
-        # User said "integrate... generate predictions", usually implies full refresh.
-        log_print("Clearing fact_job_predictions table...")
-        conn.execute(text("DELETE FROM fact_job_predictions")) # Risky but clean
-        # Alternatively: check if we should only delete logic?
-        # Given the task is to "organize... for better maintainability", a full refresh ensures consistency.
+        # 1. Clear Table (Removed to keep history)
+        # log_print("Clearing fact_job_predictions table...")
+        # conn.execute(text("DELETE FROM fact_job_predictions")) 
         
         # 2. Insert
-        log_print(f"Inserting {len(db_df)} predictions directly to DB...")
+        log_print(f"Appending {len(db_df)} predictions to DB (History Mode)...")
         # Chunk insert to avoid packet size issues
         chunk_size = 1000
         for i in range(0, len(db_df), chunk_size):
