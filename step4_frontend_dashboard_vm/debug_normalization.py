@@ -3,7 +3,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 from ml_data_loader import load_job_data_from_db, get_db_engine
 
-def debug_specific_row(target_id=17540):
+def debug_specific_row(target_id=17605):
     print(f"--- DEBUGGING NORMALIZATION FOR ID {target_id} ---")
     
     # 1. Raw DB Check
