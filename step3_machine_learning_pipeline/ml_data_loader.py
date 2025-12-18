@@ -63,21 +63,29 @@ def load_job_data_from_db(limit=None):
         # 1.5 Filter & Normalize Salary (Monthly Basis)
         if 'salary_type' in df_view.columns and 'salary_min' in df_view.columns:
             print("Filtering & Normalizing Salaries...")
-            # Filter: Keep only '月薪' and '年薪'
-            original_count = len(df_view)
-            df_view = df_view[df_view['salary_type'].isin(['月薪', '年薪'])].copy()
-            print(f"  -> Filtered out Hourly/Daily. {original_count} -> {len(df_view)} rows.")
+            # Filter: REMOVED to allow '待遇面議' (Negotiable) jobs to be shown
+            # We want to display all jobs in the dashboard, even if they don't have a raw salary (we'll use predictions)
+            # original_count = len(df_view)
+            # df_view = df_view[df_view['salary_type'].isin(['月薪', '年薪'])].copy()
+            # print(f"  -> Filtered out Hourly/Daily. {original_count} -> {len(df_view)} rows.")
             
             # Normalize: Annual -> Monthly (/13)
-            mask_annual = df_view['salary_type'] == '年薪'
+            # Use strict string stripping and check unique values
+            if 'salary_type' in df_view.columns:
+                df_view['salary_type'] = df_view['salary_type'].fillna('')
+                unique_types = df_view['salary_type'].unique()
+                print(f"DEBUG: Unique salary_types found: {unique_types}")
+
+                mask_annual = df_view['salary_type'].astype(str).str.strip() == '年薪'
+                
+                # Apply conversion
+                if mask_annual.any():
+                    df_view.loc[mask_annual, 'salary_min'] = df_view.loc[mask_annual, 'salary_min'] / 13.0
+                    df_view.loc[mask_annual, 'salary_max'] = df_view.loc[mask_annual, 'salary_max'] / 13.0
             
-            # Apply conversion
-            df_view.loc[mask_annual, 'salary_min'] = df_view.loc[mask_annual, 'salary_min'] / 13.0
-            df_view.loc[mask_annual, 'salary_max'] = df_view.loc[mask_annual, 'salary_max'] / 13.0
-            
-            # Round to integer
-            df_view['salary_min'] = df_view['salary_min'].astype(int)
-            df_view['salary_max'] = df_view['salary_max'].astype(int)
+            # Round to integer (Fill NaN with 0 first to prevent crash for Negotiable jobs)
+            df_view['salary_min'] = df_view['salary_min'].fillna(0).astype(int)
+            df_view['salary_max'] = df_view['salary_max'].fillna(0).astype(int)
             print("  -> Normalized '年薪' to Monthly (div 13).")
 
         print("Fetching Dimension/Bridge Tables for Multi-valued attributes...")

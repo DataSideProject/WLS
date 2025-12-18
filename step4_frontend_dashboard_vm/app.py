@@ -99,9 +99,17 @@ def load_data():
                 'pred_salary_max': 'predicted_salary_max'
             }, inplace=True)
             
+            # Type Safety for Merge
+            job_df['posting_id'] = job_df['posting_id'].astype(str)
+            pred_df['posting_id'] = pred_df['posting_id'].astype(str)
+            
             # Merge
             job_df = pd.merge(job_df, pred_df, on='posting_id', how='left')
             print(f"Merged with predictions. Total rows: {len(job_df)}")
+            
+            # DEBUG
+            missing_preds = job_df['predicted_salary_min'].isna().sum()
+            print(f"DEBUG: Jobs with missing predictions: {missing_preds}/{len(job_df)}")
         else:
             print("No predictions found in DB.")
 

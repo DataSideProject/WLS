@@ -198,7 +198,7 @@ def main():
         rf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
         gb = GradientBoostingRegressor(n_estimators=100, random_state=42)
         xgb = XGBRegressor(n_estimators=200, learning_rate=0.05, max_depth=6, random_state=42, n_jobs=-1)
-        cat = CatBoostRegressor(iterations=200, depth=8, learning_rate=0.05, random_seed=42, verbose=0, train_dir='machine_learning_pipeline/catboost_info')
+        cat = CatBoostRegressor(iterations=200, depth=8, learning_rate=0.05, random_seed=42, verbose=0, train_dir=os.path.join(current_dir, 'catboost_info'))
         return VotingRegressor([('rf', rf), ('xgb', xgb), ('gb', gb), ('cat', cat)])
 
     # Prepare Data
