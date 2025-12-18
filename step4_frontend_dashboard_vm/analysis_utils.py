@@ -296,12 +296,22 @@ def get_salary_boxplot(df):
             q1 = np.percentile(salaries, 25)
             median = np.percentile(salaries, 50)
             q3 = np.percentile(salaries, 75)
-            min_val = np.min(salaries)
-            max_val = np.max(salaries)
             
-            # Simple outliers check (optional, ECharts handles basic boxplot data)
-            # ECharts expects: [min, Q1, median, Q3, max]
+            # IQR Method for Whiskers (exclude outliers)
+            iqr = q3 - q1
+            lower_bound = q1 - 1.5 * iqr
+            upper_bound = q3 + 1.5 * iqr
             
+            # Find values within bounds
+            valid_stats = salaries[(salaries >= lower_bound) & (salaries <= upper_bound)]
+            
+            if not valid_stats.empty:
+                min_val = np.min(valid_stats)
+                max_val = np.max(valid_stats)
+            else:
+                min_val = np.min(salaries)
+                max_val = np.max(salaries)
+
             boxplot_data.append([
                 int(min_val), 
                 int(q1), 
