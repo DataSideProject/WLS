@@ -398,6 +398,19 @@ def get_dashboard_stats(df, filters=None):
             if 'source' in filtered_df.columns:
                  filtered_df = filtered_df[filtered_df['source'].astype(str).str.contains(source, na=False)]
 
+    # --- Outlier Treatment ---
+    # User requested handling for extreme values.
+    # We filter out the top 1% of salaries to remove statistical outliers (like mislabeled Annual salaries).
+    if 'salary_avg' in filtered_df.columns and not filtered_df.empty:
+        # Calculate threshold on non-zero salaries
+        valid_salaries = filtered_df[filtered_df['salary_avg'] > 0]['salary_avg']
+        if not valid_salaries.empty:
+            # Use 99.5th percentile to be safe but effective against 1M+ outliers
+            threshold = valid_salaries.quantile(0.995)
+            # Keep rows within threshold OR rows with 0 salary (negotiable)
+            mask_keep = (filtered_df['salary_avg'] <= threshold) | (filtered_df['salary_avg'].isna())
+            filtered_df = filtered_df[mask_keep]
+
     # Calculate map salary data (all cities)
     map_salary_data = []
     if 'city_for_stratify' in filtered_df.columns:
