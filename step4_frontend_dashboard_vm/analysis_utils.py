@@ -431,7 +431,12 @@ def get_dashboard_stats(df, filters=None):
             # FILTER 2: Remove High Outliers
             mask_valid_max = (filtered_df['salary_avg'] <= threshold) | (filtered_df['salary_avg'].isna())
             
-            filtered_df = filtered_df[mask_valid_min & mask_valid_max]
+            # FILTER 3: Exclude Interns/Assistants/Part-time/Substitute Services from Stats
+            # These roles often have min-wage salaries that skew the "Engineer" boxplots
+            exclude_keywords = ['實習', '助理', '工讀', 'intern', 'assistant', 'part-time', 'part time', '研發替代役']
+            mask_roles = ~filtered_df['job_title'].astype(str).str.lower().apply(lambda x: any(k in x for k in exclude_keywords))
+            
+            filtered_df = filtered_df[mask_valid_min & mask_valid_max & mask_roles]
 
     # Calculate map salary data (all cities)
     map_salary_data = []
