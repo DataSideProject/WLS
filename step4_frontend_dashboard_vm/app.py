@@ -147,7 +147,7 @@ def load_data():
 def categorize_skills(tools_str):
     if not tools_str or str(tools_str).strip() == '--':
         return {}
-    raw_skills = [t.strip() for t in str(tools_str).split(',') if t.strip()]
+    raw_skills = [t.strip() for t in str(tools_str).split(',') if t.strip() and t.strip() not in ['--', '不拘', '不限', 'na', 'n/a']]
     categorized = {}
     skill_to_cat = {}
     for cat, skills in taxonomy.items():
