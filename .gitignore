@@ -26,3 +26,11 @@ pipeline_cols_test.txt
 # System
 .venv/
 .vscode/
+
+# New Generated Files
+catboost_info_*/
+**/catboost_info_*/
+**/salary_prediction_report.txt
+**/job_data_segmented.csv
+**/gen_error_global.txt
+
