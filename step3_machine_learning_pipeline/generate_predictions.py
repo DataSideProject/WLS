@@ -43,6 +43,23 @@ except ImportError as e:
 def get_db_engine():
     return create_engine(f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:3306/{DB_NAME}')
 
+def get_segment_name(row):
+    src = str(row.get('source', '')).strip()
+    exp = float(row.get('exp_years_raw', 0))
+    
+    if src == 'CakeResume':
+        return 'CakeResume'
+    elif src == '104':
+        if exp >= 3:
+            return '104_Senior'
+        elif exp > 0:
+            return '104_Junior'
+        else: # exp == 0
+            return '104_Unspecified'
+    else:
+        # Fallback for unknown sources (treat as 104 Unspecified or generic)
+        return '104_Unspecified'
+
 def log_print(msg):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
 
@@ -193,60 +210,89 @@ def main():
     features = [f for f in features if f not in ['salary_min', 'salary_max']]
     log_print(f"Training with {len(features)} features.")
 
-    # ================= 3. Training & Prediction =================
-    def build_ensemble():
+    # ================= 3. Training & Prediction (Granular Segmentation) =================
+    
+    # 1. Prepare Features & Data
+    # Use STRICT Filtering for Training (Fix Data Leakage: exclude 0/Negotiable salaries)
+    # Note: NaNs were filled with 0 by loader, so we must check > 0
+    mask_train_strict = (df['salary_min'] > 0) & (df['salary_max'] > 0)
+    train_full = df[mask_train_strict].copy()
+    
+    if train_full.empty:
+        log_print("Error: No valid training data (salary > 0).")
+        exit(1)
+        
+    log_print(f"Training Data Size (Strict > 0): {len(train_full)} rows.")
+    
+    # Helper to build model
+    def build_ensemble(segment_name):
         rf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
         gb = GradientBoostingRegressor(n_estimators=100, random_state=42)
         xgb = XGBRegressor(n_estimators=200, learning_rate=0.05, max_depth=6, random_state=42, n_jobs=-1)
-        cat = CatBoostRegressor(iterations=200, depth=8, learning_rate=0.05, random_seed=42, verbose=0, train_dir=os.path.join(current_dir, 'catboost_info'))
+        # Use unique train_dir to avoid conflict
+        cat = CatBoostRegressor(iterations=200, depth=8, learning_rate=0.05, random_seed=42, verbose=0, 
+                               train_dir=os.path.join(current_dir, f'catboost_info_{segment_name}'))
         return VotingRegressor([('rf', rf), ('xgb', xgb), ('gb', gb), ('cat', cat)])
 
-    # Prepare Data
-    X = df[features].fillna(0)
-    mask_train = df['salary_min'].notna() & df['salary_max'].notna() & (df['salary_min'] > 0)
-    train_df = df[mask_train]
-
-    if train_df.empty:
-        log_print("Error: No training data available (empty salary cols).")
-        exit(1)
-
-    log_print(f"Training on {len(train_df)} rows...")
-    log_print(f"Features: {features[:10]} ... ({len(features)} total)")
+    # Identify Segments
+    train_full['segment'] = train_full.apply(get_segment_name, axis=1)
+    df['segment'] = df.apply(get_segment_name, axis=1) # Apply to all data for prediction lookup
     
-    X = df[features].apply(pd.to_numeric, errors='coerce').fillna(0)
-    log_print(f"X shape: {X.shape}")
-    mask_train = df['salary_min'].notna() & df['salary_max'].notna() & (df['salary_min'] > 0)
-    train_df = df[mask_train]
-
-    X_train = X.loc[mask_train]
-    y_min = np.log1p(train_df['salary_min'])
+    segments = ['104_Senior', '104_Junior', '104_Unspecified', 'CakeResume']
+    models_min = {}
+    models_max = {}
     
-    # Force numeric float and convert to numpy array to avoid DataFrame/XGBoost issues
-    X_df = df[features].apply(pd.to_numeric, errors='coerce').fillna(0).astype(float)
-    
-    mask_train = df['salary_min'].notna() & df['salary_max'].notna() & (df['salary_min'] > 0)
-    train_df = df[mask_train]
+    # Initialize prediction columns with NaN
+    df['predicted_salary_min'] = np.nan
+    df['predicted_salary_max'] = np.nan
 
-    # Convert to numpy
-    X_train = X_df.loc[mask_train].values
-    X_all = X_df.values # For prediction
-
-    y_min = np.log1p(train_df['salary_min'])
-    y_max = np.log1p(train_df['salary_max'])
-
-    # Train Min Model
-    log_print("Training Salary Min Model...")
-    model_min = build_ensemble()
-    model_min.fit(X_train, y_min)
-    df['pred_min_log'] = model_min.predict(X_all)
-    df['predicted_salary_min'] = np.expm1(df['pred_min_log'])
-
-    # Train Max Model
-    log_print("Training Salary Max Model...")
-    model_max = build_ensemble()
-    model_max.fit(X_train, y_max)
-    df['pred_max_log'] = model_max.predict(X_all)
-    df['predicted_salary_max'] = np.expm1(df['pred_max_log'])
+    # 2. Train and Predict by Segment
+    for seg in segments:
+        log_print(f"\nProcessing Segment: {seg}...")
+        
+        # --- Training ---
+        seg_train_data = train_full[train_full['segment'] == seg]
+        n_train = len(seg_train_data)
+        
+        if n_train < 10:
+            log_print(f"  Warning: Not enough training data for {seg} ({n_train} rows). Skipping custom model (Fallback behavior needed?).")
+            # If CakeResume has 0 rows (unlikely), we might skip. 
+            # But currently Cake has ~280 rows.
+            # If skipped, predictions will remain NaN? Or fallback to global?
+            # For now, let's assume we have data. If not, we might need a fallback.
+            if n_train == 0: continue
+            
+        X_train_seg = seg_train_data[features].apply(pd.to_numeric, errors='coerce').fillna(0).values
+        y_min_seg = np.log1p(seg_train_data['salary_min'])
+        y_max_seg = np.log1p(seg_train_data['salary_max'])
+        
+        log_print(f"  Training Min Model ({n_train} rows)...")
+        model_min = build_ensemble(f"{seg}_min")
+        model_min.fit(X_train_seg, y_min_seg)
+        models_min[seg] = model_min
+        
+        log_print(f"  Training Max Model ({n_train} rows)...")
+        model_max = build_ensemble(f"{seg}_max")
+        model_max.fit(X_train_seg, y_max_seg)
+        models_max[seg] = model_max
+        
+        # --- Prediction (Apply to ALL rows belonging to this segment) ---
+        mask_seg_all = (df['segment'] == seg)
+        X_all_seg = df.loc[mask_seg_all, features].apply(pd.to_numeric, errors='coerce').fillna(0).values
+        
+        if len(X_all_seg) > 0:
+            pred_min_log = model_min.predict(X_all_seg)
+            pred_max_log = model_max.predict(X_all_seg)
+            
+            df.loc[mask_seg_all, 'predicted_salary_min'] = np.expm1(pred_min_log)
+            df.loc[mask_seg_all, 'predicted_salary_max'] = np.expm1(pred_max_log)
+            log_print(f"  Generated predictions for {len(X_all_seg)} rows.")
+            
+    # Fallback for any rows that didn't get a segment or failed prediction (fill with Unspecified model if available?)
+    # For now, we leave them as NaN or check counts
+    missing_pred = df['predicted_salary_min'].isna().sum()
+    if missing_pred > 0:
+        log_print(f"Warning: {missing_pred} rows have no prediction (Unknown segment or empty model).")
 
     log_print("PreparingDB Insert...")
     # Handle duplicate posting_id columns safely (if any, though loader handles posting_id usually)

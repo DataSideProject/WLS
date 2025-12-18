@@ -69,16 +69,23 @@ def load_job_data_from_db(limit=None):
             # df_view = df_view[df_view['salary_type'].isin(['月薪', '年薪'])].copy()
             # print(f"  -> Filtered out Hourly/Daily. {original_count} -> {len(df_view)} rows.")
             
-            # Normalize: Annual -> Monthly (/13), Hourly -> Monthly (*174), Daily -> Monthly (*22)
+            # Filter: Exclude Hourly and Daily wages as requested
+            # Reason: Converting Hourly ($190) * 174 ($33060) inflates it ~15% above Monthly Min Wage ($29000), causing noise.
+            print("Filtering out Hourly and Daily wages...")
+            if 'salary_type' in df_view.columns:
+                # Keep only Annual, Monthly, or Negotiable (which might be null or '面議')
+                # Explicitly DROP '時薪', '日薪'
+                mask_exclude = df_view['salary_type'].isin(['時薪', '日薪'])
+                if mask_exclude.any():
+                    print(f"  -> Dropping {mask_exclude.sum()} rows of Hourly/Daily jobs.")
+                    df_view = df_view[~mask_exclude].copy()
+
+            # Normalize: Only needed for Annual -> Monthly (/13)
             if 'salary_type' in df_view.columns:
                 df_view['salary_type'] = df_view['salary_type'].fillna('')
-                unique_types = df_view['salary_type'].unique()
-                print(f"DEBUG: Unique salary_types found: {unique_types}")
                 
                 # Masks
                 mask_annual = df_view['salary_type'].astype(str).str.strip() == '年薪'
-                mask_hourly = df_view['salary_type'].astype(str).str.strip() == '時薪'
-                mask_daily  = df_view['salary_type'].astype(str).str.strip() == '日薪'
 
                 # Apply conversions
                 # Annual / 13
@@ -86,22 +93,11 @@ def load_job_data_from_db(limit=None):
                     df_view.loc[mask_annual, 'salary_min'] = df_view.loc[mask_annual, 'salary_min'] / 13.0
                     df_view.loc[mask_annual, 'salary_max'] = df_view.loc[mask_annual, 'salary_max'] / 13.0
                 
-                # Hourly * 174 (Standard monthly working hours approx)
-                if mask_hourly.any():
-                    print(f"  -> Normalizing {mask_hourly.sum()} Hourly jobs (* 174)...")
-                    df_view.loc[mask_hourly, 'salary_min'] = df_view.loc[mask_hourly, 'salary_min'] * 174.0
-                    df_view.loc[mask_hourly, 'salary_max'] = df_view.loc[mask_hourly, 'salary_max'] * 174.0
-                
-                # Daily * 22 (Standard monthly working days approx)
-                if mask_daily.any():
-                    print(f"  -> Normalizing {mask_daily.sum()} Daily jobs (* 22)...")
-                    df_view.loc[mask_daily, 'salary_min'] = df_view.loc[mask_daily, 'salary_min'] * 22.0
-                    df_view.loc[mask_daily, 'salary_max'] = df_view.loc[mask_daily, 'salary_max'] * 22.0
+                print("  -> Normalized '年薪' to Monthly (div 13).")
             
             # Final Integer Cast
             df_view['salary_min'] = df_view['salary_min'].fillna(0).astype(int)
             df_view['salary_max'] = df_view['salary_max'].fillna(0).astype(int)
-            print("  -> Normalized '年薪' to Monthly (div 13).")
 
         print("Fetching Dimension/Bridge Tables for Multi-valued attributes...")
         

@@ -94,25 +94,16 @@ except Exception as e:
 
 # ====================== 1.6 資料淨化 (Outlier Removal) ======================
 log_print("執行資料淨化 (剔除極端值)...")
-mask_has_salary = df['salary_min'].notna() & df['salary_max'].notna()
+# FIX: Filter > 0. Previously used notna() but loader fills NaNs with 0.
+mask_has_salary = (df['salary_min'] > 0) & (df['salary_max'] > 0)
 df_salary = df[mask_has_salary]
 df_no_salary = df[~mask_has_salary]
 
 if len(df_salary) > 100:
-    q01_min = df_salary['salary_min'].quantile(0.01)
-    q99_min = df_salary['salary_min'].quantile(0.99)
-    q01_max = df_salary['salary_max'].quantile(0.01)
-    q99_max = df_salary['salary_max'].quantile(0.99)
-    
-    log_print(f"薪資範圍過濾: Min({q01_min:.0f}~{q99_min:.0f}), Max({q01_max:.0f}~{q99_max:.0f})")
-    
-    df_salary_clean = df_salary[
-        (df_salary['salary_min'] >= q01_min) & (df_salary['salary_min'] <= q99_min) &
-        (df_salary['salary_max'] >= q01_max) & (df_salary['salary_max'] <= q99_max)
-    ]
-    
-    log_print(f"已剔除極端值: {len(df_salary) - len(df_salary_clean)} 筆")
-    df = pd.concat([df_salary_clean, df_no_salary], ignore_index=True)
+    log_print("Skipping strict outlier removal for Source Separation Experiment.")
+    # Keep original df
+    # df_salary_clean = ...
+    # df = pd.concat([df_salary_clean, df_no_salary], ignore_index=True)
 else:
     log_print("薪資資料過少，跳過極端值剔除。")
 
@@ -225,7 +216,7 @@ for comp in top_companies:
     if not safe_comp: safe_comp = 'unknown_company'
     df[f'company_{safe_comp}'] = (df['company'] == comp).astype(int)
 
-# 9.5 福利 (Benefits) [NEW]
+# 9.5 福利 (Benefits) [RESTORED]
 if 'benefits' in df.columns:
     df['benefits'] = df['benefits'].fillna('')
     all_benefits = []
@@ -323,7 +314,7 @@ def build_ensemble():
     rf = RandomForestRegressor(n_estimators=300, random_state=42)
     gb = GradientBoostingRegressor(n_estimators=300, random_state=42)
     xgb = XGBRegressor(n_estimators=500, learning_rate=0.05, max_depth=6, random_state=42)
-    cat = CatBoostRegressor(iterations=500, depth=8, learning_rate=0.05, random_seed=42, verbose=0, train_dir='machine_learning_pipeline/catboost_info')
+    cat = CatBoostRegressor(iterations=500, depth=8, learning_rate=0.05, random_seed=42, verbose=0, train_dir=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'catboost_info'))
     return VotingRegressor([('rf', rf), ('xgb', xgb), ('gb', gb), ('cat', cat)])
 
 def train_segment_model(df_train, df_predict, target_col, segment_name):
@@ -400,17 +391,26 @@ def train_segment_model(df_train, df_predict, target_col, segment_name):
 # ====================== 3. 執行分群訓練 (Segmentation) ======================
 log_print("\n=== 開始分群訓練 (Junior vs Senior) ===")
 
-original_complete_indices = df[df['salary_min'].notna() & df['salary_max'].notna()].index
+# FIX: Use strict > 0 check because NaNs were filled with 0.
+train_mask = (df['salary_min'] > 0) & (df['salary_max'] > 0)
+original_complete_indices = df[train_mask].index
 train_full = df.loc[original_complete_indices].copy()
-predict_none = df[df['salary_min'].isna() & df['salary_max'].isna()].copy()
+predict_none = df[~train_mask].copy()
 
 def get_segment_mask(dframe, segment):
-    if segment == 'Junior':
-        return dframe['exp_years_raw'] < 3
-    else:
-        return dframe['exp_years_raw'] >= 3
+    if segment == 'CakeResume':
+        return dframe['source'] == 'CakeResume'
+    elif segment == '104_Unspecified':
+        return (dframe['source'] == '104') & (dframe['exp_years_raw'] == 0)
+    elif segment == '104_Junior':
+        return (dframe['source'] == '104') & (dframe['exp_years_raw'] > 0) & (dframe['exp_years_raw'] < 3)
+    elif segment == '104_Senior':
+        return (dframe['source'] == '104') & (dframe['exp_years_raw'] >= 3)
+    return pd.Series([False]*len(dframe), index=dframe.index)
 
-segments = ['Junior', 'Senior']
+# Segmentation: 104 Split (3-way) + Cake
+segments = ['104_Unspecified', '104_Junior', '104_Senior', 'CakeResume']
+log_print(f"Segmentation Strategy: Granular -> {segments}")
 targets = ['salary_min', 'salary_max']
 
 results = {}
@@ -465,19 +465,19 @@ plt.figure(figsize=(16, 12))
 # (User wanted full file, so I kept the plotting structure but simplified boilerplate if identical)
 # ... plotting code kept generic ...
 
-positions = [(2,2,1), (2,2,2), (2,2,3), (2,2,4)]
-keys = ['Junior_salary_min', 'Senior_salary_min', 'Junior_salary_max', 'Senior_salary_max']
-titles = ['Junior Min', 'Senior Min', 'Junior Max', 'Senior Max']
-colors = ['blue', 'green', 'orange', 'red']
+# Generic Plotting for up to 4 segments
+available_keys = list(residuals_map.keys())
+plot_keys = available_keys[:4]
 
-for pos, key, title, color in zip(positions, keys, titles, colors):
+for i, key in enumerate(plot_keys):
+    pos = (2, 2, i+1)
     plt.subplot(*pos)
-    if key in residuals_map:
-        sns.histplot(residuals_map[key], kde=True, color=color)
-        mae = results.get(key, {}).get('MAE', 0)
-        plt.title(f'{title} Salary Residuals\nMAE: {mae:.0f}')
-    else:
-        plt.text(0.5, 0.5, 'No Data', ha='center')
+    sns.histplot(residuals_map[key], kde=True)
+    mae = results.get(key, {}).get('MAE', 0)
+    plt.title(f'{key} Residuals\nMAE: {mae:.0f}')
+    
+if not plot_keys:
+    plt.text(0.5, 0.5, 'No Data to plot', ha='center')
 
 plt.tight_layout()
 script_dir = os.path.dirname(os.path.abspath(__file__))
