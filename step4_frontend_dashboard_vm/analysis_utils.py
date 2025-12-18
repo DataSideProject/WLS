@@ -415,8 +415,8 @@ def get_dashboard_stats(df, filters=None):
             threshold = valid_salaries.quantile(0.995)
             
             # FILTER 1: Remove impossible monthly salaries (e.g. hourly wage 190)
-            # Assuming monthly salary < 5000 is invalid/hourly
-            mask_valid_min = (filtered_df['salary_avg'] >= 5000) | (filtered_df['salary_avg'].isna()) | (filtered_df['salary_avg'] == 0)
+            # Assuming monthly salary < 29000 (Min Wage) is invalid/hourly
+            mask_valid_min = (filtered_df['salary_avg'] >= 29000) | (filtered_df['salary_avg'].isna()) | (filtered_df['salary_avg'] == 0)
             
             # FILTER 2: Remove High Outliers
             mask_valid_max = (filtered_df['salary_avg'] <= threshold) | (filtered_df['salary_avg'].isna())
