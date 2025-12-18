@@ -165,7 +165,13 @@ def get_industry_stats(df, top_n=10, min_count=20):
     # We will exclude '補習班' explicitly if it seems unreasonably skewed, or just let users filter.
     # For now, let's remove '補習班' as requested indirectly.
     
-    df_clean = df[~df['industry'].astype(str).str.contains('補習班', na=False)]
+    # Filter empty or 'nan' industries
+    df_clean = df[~df['industry'].isna()]
+    df_clean = df_clean[df_clean['industry'].astype(str).str.strip() != '']
+    df_clean = df_clean[~df_clean['industry'].astype(str).str.lower().isin(['nan', 'none'])]
+    
+    # Normalizing "補習班" out or specific outliers if requested
+    df_clean = df_clean[~df_clean['industry'].astype(str).str.contains('補習班', na=False)]
     
     # Filter industries with enough data points
     ind_counts = df_clean['industry'].value_counts()
@@ -407,9 +413,15 @@ def get_dashboard_stats(df, filters=None):
         if not valid_salaries.empty:
             # Use 99.5th percentile to be safe but effective against 1M+ outliers
             threshold = valid_salaries.quantile(0.995)
-            # Keep rows within threshold OR rows with 0 salary (negotiable)
-            mask_keep = (filtered_df['salary_avg'] <= threshold) | (filtered_df['salary_avg'].isna())
-            filtered_df = filtered_df[mask_keep]
+            
+            # FILTER 1: Remove impossible monthly salaries (e.g. hourly wage 190)
+            # Assuming monthly salary < 5000 is invalid/hourly
+            mask_valid_min = (filtered_df['salary_avg'] >= 5000) | (filtered_df['salary_avg'].isna()) | (filtered_df['salary_avg'] == 0)
+            
+            # FILTER 2: Remove High Outliers
+            mask_valid_max = (filtered_df['salary_avg'] <= threshold) | (filtered_df['salary_avg'].isna())
+            
+            filtered_df = filtered_df[mask_valid_min & mask_valid_max]
 
     # Calculate map salary data (all cities)
     map_salary_data = []
