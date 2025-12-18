@@ -70,23 +70,32 @@ def load_job_data_from_db(limit=None):
             # print(f"  -> Filtered out Hourly/Daily. {original_count} -> {len(df_view)} rows.")
             
             # Normalize: Annual -> Monthly (/13)
-            # Normalize: Annual -> Monthly (/13)
-            # Use strict string stripping and check unique values
+            # Normalize: Annual -> Monthly (/13), Hourly -> Monthly (*174), Daily -> Monthly (*22)
             if 'salary_type' in df_view.columns:
                 df_view['salary_type'] = df_view['salary_type'].fillna('')
                 # DEBUG: Print unique salary types seen by pandas
                 unique_types = df_view['salary_type'].unique()
                 print(f"DEBUG: Unique salary_types found: {unique_types}")
                 
-                # Normalize
+                # Masks
                 mask_annual = df_view['salary_type'].astype(str).str.strip() == '年薪'
+                mask_hourly = df_view['salary_type'].astype(str).str.strip() == '時薪'
+                mask_daily  = df_view['salary_type'].astype(str).str.strip() == '日薪'
                 
-                # Apply conversion
+                # Apply conversions
                 if mask_annual.any():
                     df_view.loc[mask_annual, 'salary_min'] = df_view.loc[mask_annual, 'salary_min'] / 13.0
                     df_view.loc[mask_annual, 'salary_max'] = df_view.loc[mask_annual, 'salary_max'] / 13.0
+
+                if mask_hourly.any():
+                    df_view.loc[mask_hourly, 'salary_min'] = df_view.loc[mask_hourly, 'salary_min'] * 174.0
+                    df_view.loc[mask_hourly, 'salary_max'] = df_view.loc[mask_hourly, 'salary_max'] * 174.0
+                    
+                if mask_daily.any():
+                    df_view.loc[mask_daily, 'salary_min'] = df_view.loc[mask_daily, 'salary_min'] * 22.0
+                    df_view.loc[mask_daily, 'salary_max'] = df_view.loc[mask_daily, 'salary_max'] * 22.0
             
-            # Final Integer Cast (Handle NaN)
+            # Final Integer Cast
             df_view['salary_min'] = df_view['salary_min'].fillna(0).astype(int)
             df_view['salary_max'] = df_view['salary_max'].fillna(0).astype(int)
             

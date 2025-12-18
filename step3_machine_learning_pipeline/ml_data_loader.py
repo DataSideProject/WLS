@@ -69,21 +69,36 @@ def load_job_data_from_db(limit=None):
             # df_view = df_view[df_view['salary_type'].isin(['月薪', '年薪'])].copy()
             # print(f"  -> Filtered out Hourly/Daily. {original_count} -> {len(df_view)} rows.")
             
-            # Normalize: Annual -> Monthly (/13)
-            # Use strict string stripping and check unique values
+            # Normalize: Annual -> Monthly (/13), Hourly -> Monthly (*174), Daily -> Monthly (*22)
             if 'salary_type' in df_view.columns:
                 df_view['salary_type'] = df_view['salary_type'].fillna('')
                 unique_types = df_view['salary_type'].unique()
                 print(f"DEBUG: Unique salary_types found: {unique_types}")
-
-                mask_annual = df_view['salary_type'].astype(str).str.strip() == '年薪'
                 
-                # Apply conversion
+                # Masks
+                mask_annual = df_view['salary_type'].astype(str).str.strip() == '年薪'
+                mask_hourly = df_view['salary_type'].astype(str).str.strip() == '時薪'
+                mask_daily  = df_view['salary_type'].astype(str).str.strip() == '日薪'
+
+                # Apply conversions
+                # Annual / 13
                 if mask_annual.any():
                     df_view.loc[mask_annual, 'salary_min'] = df_view.loc[mask_annual, 'salary_min'] / 13.0
                     df_view.loc[mask_annual, 'salary_max'] = df_view.loc[mask_annual, 'salary_max'] / 13.0
+                
+                # Hourly * 174 (Standard monthly working hours approx)
+                if mask_hourly.any():
+                    print(f"  -> Normalizing {mask_hourly.sum()} Hourly jobs (* 174)...")
+                    df_view.loc[mask_hourly, 'salary_min'] = df_view.loc[mask_hourly, 'salary_min'] * 174.0
+                    df_view.loc[mask_hourly, 'salary_max'] = df_view.loc[mask_hourly, 'salary_max'] * 174.0
+                
+                # Daily * 22 (Standard monthly working days approx)
+                if mask_daily.any():
+                    print(f"  -> Normalizing {mask_daily.sum()} Daily jobs (* 22)...")
+                    df_view.loc[mask_daily, 'salary_min'] = df_view.loc[mask_daily, 'salary_min'] * 22.0
+                    df_view.loc[mask_daily, 'salary_max'] = df_view.loc[mask_daily, 'salary_max'] * 22.0
             
-            # Round to integer (Fill NaN with 0 first to prevent crash for Negotiable jobs)
+            # Final Integer Cast
             df_view['salary_min'] = df_view['salary_min'].fillna(0).astype(int)
             df_view['salary_max'] = df_view['salary_max'].fillna(0).astype(int)
             print("  -> Normalized '年薪' to Monthly (div 13).")
