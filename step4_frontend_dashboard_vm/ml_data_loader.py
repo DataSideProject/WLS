@@ -138,6 +138,10 @@ def load_job_data_from_db(limit=None):
         df_merged = df_view.merge(df_skills, on='posting_id', how='left')
         df_merged = df_merged.merge(df_cats, on='posting_id', how='left')
         df_merged = df_merged.merge(df_benefits, on='posting_id', how='left')
+
+        # 3.1 Fetch Predictions & Merge (REVERTED due to dedupe handling in app.py)
+        # Predictions are handled by app.py / consumers to manage history versions
+        pass 
         
         # 4. Rename Columns to match ML model expectations
         renames = {
