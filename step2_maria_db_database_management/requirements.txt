@@ -1,6 +1,5 @@
-flask
 pandas
-numpy
 sqlalchemy
 pymysql
 python-dotenv
+mysql-connector-python

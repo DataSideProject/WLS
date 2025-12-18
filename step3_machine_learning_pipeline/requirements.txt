@@ -1,0 +1,11 @@
+pandas
+numpy
+scikit-learn
+xgboost
+catboost
+matplotlib
+seaborn
+sqlalchemy
+pymysql
+jieba
+python-dotenv

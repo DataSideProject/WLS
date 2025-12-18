@@ -1,0 +1,6 @@
+Model Evaluation Summary
+=========================
+Total Training Samples: 169
+Features Used: 82
+Average R2: 0.2508
+Average MAE: 15995 TWD

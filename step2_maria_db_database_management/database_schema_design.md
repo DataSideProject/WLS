@@ -213,3 +213,38 @@ erDiagram
 | `source_id`   | **Foreign Key Index** | **來源篩選**: `WHERE source_id = 1`                                       |
 
 這些索引能顯著提升前端 Dashboard 查詢與 Model 訓練撈取資料的速度。
+
+---
+
+## 6. 關鍵 Key 設定與設計決策 (Key Design Decisions)
+
+本段落統整資料庫中各類型 Key (Primary Key, Foreign Key, Business Key) 的設定邏輯與原因：
+
+### 6.1 主鍵選擇 (Primary Key Strategy)
+
+- **Surrogate Key (代理鍵)**: `fact_job_postings.posting_id`
+  - **設定**: 使用自動遞增整數 (Auto Integers)。
+  - **原因**:
+    1. **歷史追蹤**: 104 的 `job_id` 會重複 (例如同一職缺下架後又上架)，若直接用 `job_id` 當 PK 會無法儲存歷史快照。
+    2. **效能優化**: 整數 Join 比字串 Join 快得多，且佔用空間更小。
+- **Composite Key (複合鍵)**: Bridge Table (e.g., `bridge_job_skills`)
+  - **設定**: `(posting_id, skill_id)` 聯合成為 PK。
+  - **原因**: 確保同一份職缺不會重複標記相同的技能 (De-duplication)。
+
+### 6.2 業務鍵 (Business Key)
+
+- **Business Key**: `fact_job_postings.job_id`
+  - **設定**: 來自來源網站的原始 ID (例如 104 的英數 ID)。
+  - **原因**: 這是使用者識別職缺的唯一依據 (用來生成 URL)，也是 ETL 去重與更新邏輯的基礎 (`Upsert` 邏輯)。
+
+### 6.3 外鍵與維度設計 (Foreign Keys & Dimensions)
+
+- **Source Key**: `source_id`
+  - **設定**: 指向 `dim_sources` (1=104, 2=CakeResume)。
+  - **原因**: **統一事實表 (Unified Fact Table)** 策略。透過此 FK，我們可以在同一張表存儲不同來源的資料，而不需為每個來源建立新表，大幅簡化跨平台薪資分析的 SQL 語法。
+- **Company/Location/Category FKs**:
+  - **原因**: **星狀綱要 (Star Schema)** 標準設計。將重複出現的字串 (如 "台積電", "台北市") 抽離到維度表，事實表只存 ID，能減少約 60% 的資料儲存空間 (Normalization)。
+
+### 6.4 索引鍵 (Indexing Keys)
+
+- **查詢優化**: 針對 Dashboard 最常用的篩選條件 (`salary_min`, `post_date`, `source_id`) 建立 B-Tree 索引，確保前台查詢延遲低於 100ms。
