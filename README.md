@@ -31,19 +31,22 @@
 ### [Step 3] 機器學習與預測 (Machine Learning Pipeline)
 
 - **目錄**: `step3_machine_learning_pipeline/`
-- **功能**: 訓練薪資預測模型，並對現有職缺進行估價。
+- **功能**: 訓練薪資預測模型，並對現有職缺進行估價。採用進階的 **Granular Segmentation** 策略。
 - **核心檔案**:
-  - `ml_data_loader.py`: 從資料庫讀取訓練資料。
-  - `predict_salary_model.py`: 訓練 Ensemble 模型 (RF, XGB, CatBoost) 並保存模型。
-  - `generate_predictions.py`: 載入模型，對資料庫中所有職缺產生預測結果，並寫回資料庫 (`fact_job_predictions`)。
-- **詳細說明**: 請參閱 [ML README](step3_machine_learning_pipeline/salary_prediction_readme.md)。
+  - `ml_data_loader.py`: 從資料庫讀取訓練資料（含薪資正規化）。
+  - **`generate_predictions.py`**: **[Production]** 正式預測腳本 (Training + Prediction + DB Write)。
+  - `predict_salary_model.py`: **[Development]** 開發與診斷腳本 (用於驗證 R² 與分群效果)。
+- **技術亮點**:
+  - **細緻分群 (Granular Segmentation)**: 自動區分 `104_Senior`, `104_Junior`, `104_Unspecified`, `CakeResume` 四種情境，採用不同模型預測，R² 最高達 0.52。
+  - **防資料洩漏 (Leakage Fix)**: 訓練階段嚴格排除面議/0 元職缺，確保模型準確度。
+- **詳細說明**: 請參閱 [ML README](step3_machine_learning_pipeline/README.md)。
 
 ### [Step 4] 前端儀表板 (Frontend Dashboard)
 
 - **目錄**: `step4_frontend_dashboard_vm/`
 - **功能**: 最終的 Web 應用程式，用於呈現互動式報表。
 - **核心檔案**:
-  - `app.py`: Flask 後端，直接查詢 MariaDB。
+  - `app.py`: Flask 後端，直接查詢 MariaDB (含最新的預測數據 `fact_job_predictions`)。
   - `templates/index.html`: ECharts 互動式圖表介面。
   - `deployment_readme.md`: **部署指南 (包含 GCP VM 架設與 Git Sparse Checkout 教學)**。
 - **部署**: 此資料夾設計為可獨立部署至 VM，包含完整的 `requirements.txt` 與部署腳本。
@@ -76,8 +79,6 @@ python 09_create_ml_view.py
 
 ```bash
 cd "../step3_machine_learning_pipeline"
-# 訓練模型
-python predict_salary_model.py
 # 產生預測與寫回資料庫
 python generate_predictions.py
 ```
@@ -92,11 +93,11 @@ python app.py
 
 ---
 
-## 🔄 自動化維護
+## 🔄 自動化維護 (Maintenance)
 
 日常更新只需執行以下流程：
 
-1. `Crawler` (Step 1) -> 產出新 CSV-> 匯入 rawdata DB。
-2. `ETL` (Step 2) -> 讀取 rawdata DB 匯入 job_data_warehouse DB。 -> 更新 view_ml_dataset View
-3. `Prediction` (Step 3) -> 讀取 view_ml_dataset View -> 對新資料產生預測。
-4. `Frontend` (Step 4) -> 用戶重新整理網頁即可看到最新資料 (無需重啟 App)。
+1. **Crawler** (Step 1) -> 產出新 CSV -> 匯入 Rawdata DB。
+2. **ETL** (Step 2) -> 執行 `run_etl.py` 匯入 Warehouse。
+3. **Prediction** (Step 3) -> 執行 `generate_predictions.py` (自動讀取新資料、訓練、預測並寫入 DB)。
+4. **Frontend** (Step 4) -> 重啟 Web App 以載入最新預測。
