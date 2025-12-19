@@ -6,7 +6,7 @@
 ## 核心架構 (Core Architecture)
 
 ```mermaid
-graph TD
+graph LR
     %% 定義樣式
     classDef database fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
     classDef process fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
