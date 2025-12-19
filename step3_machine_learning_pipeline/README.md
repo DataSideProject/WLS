@@ -14,7 +14,7 @@ graph LR
     classDef output fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,shape:parallelogram;
 
     subgraph Data_Source [資料來源與處理]
-        RawDB[(MariaDB<br>Raw Jobs)]:::database -->|Load Data| Cleaner[Data Cleaning<br>排除極端值 & 0值]:::process
+        RawDB[(MariaDB<br>ml view)]:::database -->|Load Data| Cleaner[Data Cleaning<br>排除極端值 & 0值]:::process
         Cleaner --> Splitter{分流策略<br>Segment Logic}:::process
     end
 
