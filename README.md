@@ -4,6 +4,34 @@
 
 ---
 
+## 🏗️ 系統架構 (System Architecture)
+
+```mermaid
+graph LR
+    %% 定義樣式
+    classDef source fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
+    classDef process fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
+    classDef storage fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef app fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef user fill:#e1bee7,stroke:#8e24aa,stroke-width:2px;
+
+    subgraph Data Sources
+        Src1(Step 1: 104 Crawler):::source
+        Src2(CakeResume Import<br>Json/CSV):::source
+    end
+
+    Src1 & Src2 -->|Raw Data| Step2(Step 2: ETL Process<br>Data Cleaning):::process
+    Step2 --> DB[(MariaDB<br>Data Warehouse)]:::storage
+
+    DB --> Step3(Step 3: ML Pipeline<br>Ensemble Models):::process
+    Step3 -->|Predictions| DB
+
+    DB --> Step4(Step 4: Frontend<br>Flask + ECharts):::app
+    User((User)):::user -->|Browser| Step4
+```
+
+---
+
 ## 📂 專案架構 (Project Structure)
 
 本專案分為四個核心階段，請依序執行：
