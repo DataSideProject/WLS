@@ -230,8 +230,10 @@ def main():
         gb = GradientBoostingRegressor(n_estimators=100, random_state=42)
         xgb = XGBRegressor(n_estimators=200, learning_rate=0.05, max_depth=6, random_state=42, n_jobs=-1)
         # Use unique train_dir to avoid conflict
+        # Use unique train_dir to avoid conflict
         cat = CatBoostRegressor(iterations=200, depth=8, learning_rate=0.05, random_seed=42, verbose=0, 
-                               train_dir=os.path.join(current_dir, f'catboost_info_{segment_name}'))
+                               train_dir=os.path.join(current_dir, f'catboost_info_{segment_name}'),
+                               early_stopping_rounds=50) # Prevent Overfitting
         return VotingRegressor([('rf', rf), ('xgb', xgb), ('gb', gb), ('cat', cat)])
 
     # Identify Segments
