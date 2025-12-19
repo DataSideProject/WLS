@@ -20,13 +20,14 @@ graph LR
         Src2(CakeResume Import<br>Json/CSV):::source
     end
 
-    Src1 & Src2 -->|Raw Data| Step2(Step 2: ETL Process<br>Data Cleaning):::process
-    Step2 --> DB[(MariaDB<br>Data Warehouse)]:::storage
+    Src1 & Src2 -->|Import| RawDB[(MariaDB<br>Raw Data DB)]:::storage
+    RawDB --> Step2(Step 2: ETL Process<br>Data Cleaning):::process
+    Step2 --> WarehouseDB[(MariaDB<br>job_data_warehouse)]:::storage
 
-    DB --> Step3(Step 3: ML Pipeline<br>Ensemble Models):::process
-    Step3 -->|Predictions| DB
+    WarehouseDB --> Step3(Step 3: ML Pipeline<br>Ensemble Models):::process
+    Step3 -->|Predictions| WarehouseDB
 
-    DB --> Step4(Step 4: Frontend<br>Flask + ECharts):::app
+    WarehouseDB --> Step4(Step 4: Frontend<br>Flask + ECharts):::app
     User((User)):::user -->|Browser| Step4
 ```
 
