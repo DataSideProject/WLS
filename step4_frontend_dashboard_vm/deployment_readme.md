@@ -103,8 +103,15 @@ _(保存離開：按 `Ctrl+O` -> `Enter` -> `Ctrl+X`)_
 python 09_create_ml_view.py
 ```
 
-> **注意：空的資料庫？**
-> 如果這是全新的 VM，您的資料庫是空的。請參考 **[data_migration_guide.md](data_migration_guide.md)** 將本機資料匯入 VM。
+> **注意：驗證資料庫資料**
+> 由於您的 VM 可能已經有歷史資料，請執行以下指令檢查：
+>
+> ```bash
+> mariadb -u root -p job_data_warehouse -e "SELECT count(*) FROM fact_job_postings;"
+> ```
+>
+> 如果看到的數字 > 0 (例如數千筆)，代表資料已就緒，可直接跳到底下 Step 7 啟動網站。
+> 若為 0，則代表需要進行資料遷移 (請另行查詢 mysqldump 匯出匯入教學)。
 
 ### Step 7: 啟動網站 (背景執行)
 
