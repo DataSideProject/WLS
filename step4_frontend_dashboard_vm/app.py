@@ -192,6 +192,7 @@ def get_jobs():
         is_manager = request.args.get('is_manager', type=int)
         remote_work = request.args.get('remote_work')
         search = request.args.get('search')
+        source = request.args.get('source')
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
         
@@ -203,6 +204,10 @@ def get_jobs():
             filtered_df = filtered_df[filtered_df['salary_min'] >= salary_min]
         if salary_max is not None:
             filtered_df = filtered_df[filtered_df['salary_max'] <= salary_max]
+        if source and source != 'All':
+            # Ensure filtering works for '104' stored as int or string
+            filtered_df = filtered_df[filtered_df['source'].astype(str) == str(source)]
+            
         if category and category != 'All':
             cat_col = f'cat_{category}'
             if cat_col in filtered_df.columns:
